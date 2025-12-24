@@ -176,33 +176,43 @@ async function startServer() {
   try {
     logger.info('Starting Resume Diagnosis Engine...');
     
-    // Initialize database connection
-    await connectDatabase();
-    logger.info('✓ Database connected');
+    // In Vercel, we don't need to explicitly start connections
+    // They will be initialized on first use
+    if (!process.env.VERCEL) {
+      // Initialize database connection
+      await connectDatabase();
+      logger.info('✓ Database connected');
 
-    // Initialize Redis connection
-    await connectRedis();
-    logger.info('✓ Redis connected');
+      // Initialize Redis connection
+      await connectRedis();
+      logger.info('✓ Redis connected');
 
-    // Initialize Groq client
+      // Start cleanup job
+      startCleanupJob();
+      logger.info('✓ Cleanup job started');
+    }
+
+    // Initialize Groq client (this is just setting up the client, no connection)
     initializeGroq();
     logger.info('✓ Groq client initialized');
 
-    // Start cleanup job
-    startCleanupJob();
-    logger.info('✓ Cleanup job started');
-
-    // Start HTTP server
-    app.listen(PORT, () => {
-      logger.info(`✓ Server running on port ${PORT}`);
-      logger.info(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`✓ API: http://localhost:${PORT}/api`);
-      logger.info(`✓ Frontend: http://localhost:${PORT}`);
-    });
+    // Start HTTP server (only in non-Vercel environments)
+    if (!process.env.VERCEL) {
+      app.listen(PORT, () => {
+        logger.info(`✓ Server running on port ${PORT}`);
+        logger.info(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+        logger.info(`✓ API: http://localhost:${PORT}/api`);
+        logger.info(`✓ Frontend: http://localhost:${PORT}`);
+      });
+    } else {
+      logger.info('✓ Vercel serverless environment detected');
+    }
     
   } catch (error) {
     logger.error('Failed to start server:', error);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 }
 

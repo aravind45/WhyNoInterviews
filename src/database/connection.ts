@@ -46,13 +46,14 @@ export const getPool = (): Pool => {
 };
 
 export const query = async <T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
+  // Auto-connect if not connected (for serverless environments)
   if (!pool) {
-    throw new Error('Database pool not initialized');
+    await connectDatabase();
   }
   
   const start = Date.now();
   try {
-    const result = await pool.query<T>(text, params);
+    const result = await pool!.query<T>(text, params);
     const duration = Date.now() - start;
     
     if (duration > 1000) {
@@ -67,10 +68,11 @@ export const query = async <T extends QueryResultRow = any>(text: string, params
 };
 
 export const getClient = async (): Promise<PoolClient> => {
+  // Auto-connect if not connected (for serverless environments)
   if (!pool) {
-    throw new Error('Database pool not initialized');
+    await connectDatabase();
   }
-  return pool.connect();
+  return pool!.connect();
 };
 
 export const transaction = async <T>(
