@@ -390,6 +390,10 @@
           </div>
         </div>
         
+        <div style="background: #1e1e2e; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #94a3b8; margin: 16px 0;">
+          💡 These are <strong>AI-suggested job matches</strong> based on your search. Click "View on Indeed" to find actual postings.
+        </div>
+        
         <h3 style="margin: 20px 0 16px;">Jobs Ranked by Your Match Score</h3>
         <div id="bulk-job-list"></div>
       </div>
@@ -1118,7 +1122,9 @@ async function analyzeBulkJobs() {
       return;
     }
     
-    displayBulkResults(bulkJobs, data.data.source);
+    // Store the original URL for linking back
+    const originalUrl = document.getElementById('bulk-url-input').value.trim();
+    displayBulkResults(bulkJobs, data.data.source, originalUrl);
     showToast(`Analyzed ${bulkJobs.length} jobs!`, 'success');
     
   } catch (err) {
@@ -1131,7 +1137,7 @@ async function analyzeBulkJobs() {
   }
 }
 
-function displayBulkResults(jobList, source) {
+function displayBulkResults(jobList, source, originalUrl) {
   document.getElementById('bulk-results').style.display = 'block';
   
   const highMatch = jobList.filter(j => j.matchScore >= 80).length;
@@ -1148,7 +1154,6 @@ function displayBulkResults(jobList, source) {
     
     const searchQuery = encodeURIComponent(`${job.title} ${job.company}`);
     const linkedInUrl = `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
-    const indeedUrl = `https://www.indeed.com/jobs?q=${searchQuery}`;
     
     return `
       <div class="job-card ${cardClass}">
@@ -1174,8 +1179,8 @@ function displayBulkResults(jobList, source) {
         <p style="color: #a5b4fc; font-size: 0.85rem; margin-top: 8px; font-style: italic;">${job.quickTake || ''}</p>
         
         <div class="flex gap-2 flex-wrap mt-4">
-          <a href="${linkedInUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">🔗 Find on LinkedIn</a>
-          <a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">🔗 Indeed</a>
+          <a href="${originalUrl || '#'}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">🔗 View on Indeed</a>
+          <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">🔗 Search LinkedIn</a>
           <button class="btn btn-secondary btn-sm" onclick="saveBulkJob('${job.id}')">💾 Save to Tracker</button>
         </div>
       </div>

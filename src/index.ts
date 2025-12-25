@@ -647,21 +647,37 @@ Make listings realistic and varied. Include 2-3 excellent matches, 3-4 good matc
 
     // Score each job against resume
     const profileSkillsLower = (session.profile.hardSkills || []).map((s: string) => s.toLowerCase());
+    
+    // Also extract individual words from skills for better matching
+    const skillWords: string[] = [];
+    profileSkillsLower.forEach((skill: string) => {
+      skillWords.push(skill);
+      // Add individual words from multi-word skills
+      skill.split(/[\s,&:]+/).forEach(word => {
+        if (word.length > 2) skillWords.push(word);
+      });
+    });
+    const uniqueSkillWords = [...new Set(skillWords)];
 
     const scoredJobs = extractedJobs.map((job, index) => {
       const jobText = `${job.title} ${job.company} ${job.description || ''} ${(job.requirements || []).join(' ')}`.toLowerCase();
       
       let matchedSkills: string[] = [];
-      profileSkillsLower.forEach((skill: string) => {
+      let matchCount = 0;
+      
+      uniqueSkillWords.forEach((skill: string) => {
         if (jobText.includes(skill)) {
-          matchedSkills.push(skill);
+          matchCount++;
+          // Only add to display if it's a meaningful skill (not just "and", "the", etc.)
+          if (skill.length > 3 && !matchedSkills.includes(skill)) {
+            matchedSkills.push(skill);
+          }
         }
       });
       
-      const skillScore = profileSkillsLower.length > 0 
-        ? (matchedSkills.length / profileSkillsLower.length) * 70 
-        : 40;
-      const score = Math.min(95, Math.round(skillScore + 25 + Math.random() * 10));
+      // Better scoring: base 40 + up to 55 based on matches
+      const matchRatio = uniqueSkillWords.length > 0 ? matchCount / uniqueSkillWords.length : 0;
+      const score = Math.min(95, Math.round(40 + (matchRatio * 55) + Math.random() * 5));
       
       return {
         ...job,
