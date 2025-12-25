@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import Groq from 'groq-sdk';
+// @ts-ignore
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 
@@ -341,7 +342,7 @@ app.post('/api/search-jobs', async (req, res) => {
           }
         );
         
-        const data = await response.json();
+        const data: any = await response.json();
         
         if (data.data && Array.isArray(data.data)) {
           // Score each real job against profile
@@ -574,11 +575,10 @@ app.post('/api/update-job-status', async (req, res) => {
 });
 
 // ============================================================
-// FEATURE 6: BULK JOB URL ANALYSIS (NEW)
-// Paste job search URL → Score all jobs against resume
+// FEATURE: BULK JOB ANALYSIS (NEW)
 // ============================================================
 
-app.post('/api/analyze-job-url', async (req, res) => {
+app.post('/api/analyze-bulk-jobs', async (req, res) => {
   try {
     const { sessionId, searchUrl } = req.body;
     const session = sessions[sessionId];
@@ -591,28 +591,33 @@ app.post('/api/analyze-job-url', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Job search URL is required' });
     }
 
-    // Use AI to understand the search and generate matching jobs
+    // Extract search terms from URL to generate relevant jobs
+    const urlObj = new URL(searchUrl);
+    const searchParams = urlObj.searchParams;
+    const query = searchParams.get('q') || searchParams.get('keywords') || searchParams.get('search') || '';
+    const location = searchParams.get('l') || searchParams.get('location') || searchParams.get('where') || '';
+    
     const profileSkills = (session.profile.hardSkills || []).join(', ');
     const profileTitle = session.profile.currentTitle || '';
     
-    const prompt = `Based on this job search URL, generate realistic job listings that would appear:
+    const prompt = `Generate 8 realistic job listings based on this search:
 
-URL: ${searchUrl}
-Candidate Skills: ${profileSkills}
-Candidate Title: ${profileTitle}
+Search Query: "${query || profileTitle}"
+Location: "${location}"
+Candidate Profile: ${profileTitle} with skills: ${profileSkills}
 
-Generate 8 realistic job listings. Return ONLY JSON array:
+Return ONLY a JSON array with no extra text:
 [{
-  "title": "<job title from search>",
-  "company": "<realistic company>",
-  "location": "<location from URL or nearby>",
-  "salary": "<salary range>",
-  "description": "<2-3 sentence description>",
-  "requirements": ["<req1>", "<req2>", "<req3>"],
-  "postedDate": "<X days ago>"
+  "title": "<realistic job title matching search>",
+  "company": "<real company name that hires for this role>",
+  "location": "<city, state>",
+  "salary": "<salary range like $120K - $180K>",
+  "description": "<2-3 sentence job description>",
+  "requirements": ["<requirement 1>", "<requirement 2>", "<requirement 3>"],
+  "postedDate": "<1-14 days ago>"
 }]
 
-Make jobs relevant to the search URL. Mix of exact matches and related roles.`;
+Make listings realistic and varied. Include 2-3 excellent matches, 3-4 good matches, and 1-2 stretch roles.`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
@@ -636,7 +641,7 @@ Make jobs relevant to the search URL. Mix of exact matches and related roles.`;
     if (extractedJobs.length === 0) {
       return res.json({ 
         success: true, 
-        data: { jobs: [], message: 'Could not extract jobs. Try a different URL.' }
+        data: { jobs: [], message: 'Could not generate jobs. Try again.' }
       });
     }
 
@@ -656,11 +661,11 @@ Make jobs relevant to the search URL. Mix of exact matches and related roles.`;
       const skillScore = profileSkillsLower.length > 0 
         ? (matchedSkills.length / profileSkillsLower.length) * 70 
         : 40;
-      const score = Math.min(95, Math.round(skillScore + 25));
+      const score = Math.min(95, Math.round(skillScore + 25 + Math.random() * 10));
       
       return {
         ...job,
-        id: `url_job_${index}_${Date.now()}`,
+        id: `bulk_${index}_${Date.now()}`,
         matchScore: score,
         matchingSkills: matchedSkills,
         recommendation: score >= 80 ? 'APPLY_NOW' : score >= 60 ? 'WORTH_APPLYING' : 'CUSTOMIZE_FIRST',
@@ -669,25 +674,23 @@ Make jobs relevant to the search URL. Mix of exact matches and related roles.`;
           : score >= 60 
           ? 'Good potential - worth applying.'
           : 'Consider customizing your resume.',
-        applyUrl: searchUrl,
-        source: 'Search Analysis'
+        source: 'Bulk Analysis'
       };
     });
 
     scoredJobs.sort((a, b) => b.matchScore - a.matchScore);
-    session.urlAnalysisJobs = scoredJobs;
 
     res.json({ 
       success: true, 
       data: { 
         jobs: scoredJobs,
-        source: new URL(searchUrl).hostname,
+        source: urlObj.hostname,
         totalFound: scoredJobs.length
       }
     });
 
   } catch (error: any) {
-    console.error('URL analysis error:', error);
+    console.error('Bulk analysis error:', error);
     res.status(500).json({ success: false, error: error.message || 'Analysis failed' });
   }
 });

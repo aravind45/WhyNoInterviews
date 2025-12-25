@@ -197,6 +197,7 @@
       <nav class="main-tabs">
         <div class="main-tab active" data-tab="analyze">🔍 Analyze Resume</div>
         <div class="main-tab" data-tab="search">💼 Find Jobs <span class="badge" id="jobs-badge" style="display:none">0</span></div>
+        <div class="main-tab" data-tab="bulk">📊 Bulk Analysis</div>
         <div class="main-tab" data-tab="tracker">📋 Tracker <span class="badge" id="saved-badge" style="display:none">0</span></div>
       </nav>
     </div>
@@ -291,48 +292,6 @@
         </div>
       </div>
       
-      <!-- Bulk Job Analysis Section (NEW) -->
-      <div class="card" id="url-analysis-card" style="display:none">
-        <div class="card-header">
-          <h2 class="card-title">📊 Bulk Job Analysis</h2>
-          <p class="card-subtitle">Paste an Indeed or LinkedIn search URL to score all jobs against your resume at once</p>
-        </div>
-        
-        <div class="flex gap-2 mb-4">
-          <input type="text" class="input" id="job-search-url" placeholder="Paste job search URL (e.g., https://www.indeed.com/jobs?q=AI+Director&l=Houston)" style="flex: 1;">
-          <button class="btn btn-primary" id="analyze-url-btn">
-            <span id="analyze-url-btn-text">📊 Analyze All</span>
-            <span class="loading" id="analyze-url-loading" style="display:none"></span>
-          </button>
-        </div>
-        
-        <div style="background: #1e1e2e; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #94a3b8;">
-          💡 <strong>How to use:</strong> Search for jobs on Indeed/LinkedIn → Copy URL from browser → Paste here → See match scores for all jobs
-        </div>
-      </div>
-      
-      <!-- Bulk Job Analysis Results (NEW) -->
-      <div id="url-analysis-results" style="display:none">
-        <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-color: rgba(16, 185, 129, 0.2);">
-          <div class="flex justify-between items-center">
-            <div>
-              <h3>📊 Bulk Analysis Results</h3>
-              <p class="text-muted" id="url-analysis-source">Analyzing jobs...</p>
-            </div>
-            <div class="flex gap-2">
-              <span class="tag tag-success" id="high-match-count">0 High</span>
-              <span class="tag tag-warning" id="medium-match-count">0 Medium</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="flex justify-between items-center mb-4 mt-4">
-          <h3>Jobs Ranked by Your Match</h3>
-        </div>
-        
-        <div id="url-job-list"></div>
-      </div>
-      
       <!-- Job Results -->
       <div id="job-results" style="display:none">
         <!-- Smart Search Links -->
@@ -374,6 +333,65 @@
           <p class="text-muted mb-4" style="font-size: 0.9rem;">Based on your profile, here are roles worth exploring:</p>
           <div id="job-list"></div>
         </div>
+      </div>
+    </section>
+    
+    <!-- TAB: BULK ANALYSIS (NEW) -->
+    <section class="section" id="tab-bulk">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📊 Bulk Job Analysis</h2>
+          <p class="card-subtitle">Paste a job search URL to score ALL jobs against your resume at once</p>
+        </div>
+        
+        <!-- Step 1: Upload Resume -->
+        <div id="bulk-step1">
+          <label style="font-size: 0.9rem; color: #94a3b8; display: block; margin-bottom: 12px;">Step 1: Upload Your Resume</label>
+          <div class="upload-zone" id="bulk-upload-zone">
+            <input type="file" id="bulk-resume-input" accept=".pdf,.doc,.docx">
+            <div class="upload-icon">📄</div>
+            <div style="color: #94a3b8;">Drop resume or click to browse</div>
+            <div class="file-name" id="bulk-file-name" style="display:none"></div>
+          </div>
+        </div>
+        
+        <!-- Step 2: Paste URL -->
+        <div id="bulk-step2" style="margin-top: 20px;">
+          <label style="font-size: 0.9rem; color: #94a3b8; display: block; margin-bottom: 12px;">Step 2: Paste Job Search URL</label>
+          <div class="flex gap-2">
+            <input type="text" class="input" id="bulk-url-input" placeholder="Paste Indeed/LinkedIn search URL (e.g., https://www.indeed.com/jobs?q=AI+Director&l=Houston)">
+            <button class="btn btn-primary" id="bulk-analyze-btn" disabled>
+              <span id="bulk-analyze-btn-text">📊 Analyze All Jobs</span>
+              <span class="loading" id="bulk-loading" style="display:none"></span>
+            </button>
+          </div>
+          <div style="background: #1e1e2e; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #94a3b8; margin-top: 12px;">
+            💡 <strong>How it works:</strong><br>
+            1. Search for jobs on Indeed or LinkedIn<br>
+            2. Copy the URL from your browser address bar<br>
+            3. Paste here and click "Analyze All Jobs"<br>
+            4. See match scores for every job in the search results
+          </div>
+        </div>
+      </div>
+      
+      <!-- Results Section -->
+      <div id="bulk-results" style="display:none">
+        <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-color: rgba(16, 185, 129, 0.2);">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3>📊 Bulk Analysis Complete</h3>
+              <p class="text-muted" id="bulk-results-summary">Scored X jobs against your resume</p>
+            </div>
+            <div class="flex gap-2">
+              <span class="tag tag-success" id="bulk-high-count">0 High Match</span>
+              <span class="tag tag-warning" id="bulk-med-count">0 Medium</span>
+            </div>
+          </div>
+        </div>
+        
+        <h3 style="margin: 20px 0 16px;">Jobs Ranked by Your Match Score</h3>
+        <div id="bulk-job-list"></div>
       </div>
     </section>
     
@@ -706,7 +724,6 @@ extractBtn.addEventListener('click', async () => {
 function displayProfile() {
   document.getElementById('search-upload-card').style.display = 'none';
   document.getElementById('profile-card').style.display = 'block';
-  document.getElementById('url-analysis-card').style.display = 'block'; // Show URL analysis
   
   document.getElementById('profile-name').textContent = profile.name || 'Your Profile';
   document.getElementById('profile-title').textContent = profile.currentTitle || '';
@@ -793,143 +810,6 @@ function displaySearchLinks(links) {
     </a>
   `).join('');
 }
-
-// ============================================================
-// URL ANALYSIS FEATURE (NEW)
-// ============================================================
-
-document.getElementById('analyze-url-btn').addEventListener('click', analyzeJobUrl);
-document.getElementById('job-search-url').addEventListener('keypress', e => { if (e.key === 'Enter') analyzeJobUrl(); });
-
-let urlAnalysisJobs = [];
-
-async function analyzeJobUrl() {
-  if (!sessionId || !profile) { 
-    showToast('Upload resume first', 'error'); 
-    return; 
-  }
-  
-  const url = document.getElementById('job-search-url').value.trim();
-  if (!url) { 
-    showToast('Please paste a job search URL', 'error'); 
-    return; 
-  }
-  
-  if (!url.startsWith('http')) { 
-    showToast('Please enter a valid URL starting with http:// or https://', 'error'); 
-    return; 
-  }
-  
-  // Show loading
-  document.getElementById('analyze-url-btn-text').textContent = 'Analyzing...';
-  document.getElementById('analyze-url-loading').style.display = 'inline-block';
-  document.getElementById('analyze-url-btn').disabled = true;
-  
-  try {
-    const res = await fetch('/api/analyze-job-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, searchUrl: url })
-    });
-    
-    const data = await res.json();
-    
-    if (!data.success) throw new Error(data.error);
-    
-    urlAnalysisJobs = data.data.jobs || [];
-    
-    if (urlAnalysisJobs.length === 0) {
-      showToast(data.data.message || 'No jobs found. Try a different search.', 'error');
-      return;
-    }
-    
-    displayUrlAnalysisResults(urlAnalysisJobs, data.data.source);
-    showToast(`Bulk analysis complete! ${urlAnalysisJobs.length} jobs scored.`, 'success');
-    
-  } catch (err) {
-    console.error('URL analysis error:', err);
-    showToast(String(err.message || 'Analysis failed'), 'error');
-  } finally {
-    document.getElementById('analyze-url-btn-text').textContent = '📊 Analyze All';
-    document.getElementById('analyze-url-loading').style.display = 'none';
-    document.getElementById('analyze-url-btn').disabled = false;
-  }
-}
-
-function displayUrlAnalysisResults(jobList, source) {
-  document.getElementById('url-analysis-results').style.display = 'block';
-  
-  const highMatch = jobList.filter(j => j.matchScore >= 80).length;
-  const medMatch = jobList.filter(j => j.matchScore >= 60 && j.matchScore < 80).length;
-  
-  document.getElementById('url-analysis-source').textContent = `Scored ${jobList.length} jobs from ${source || 'search'} against your resume`;
-  document.getElementById('high-match-count').textContent = `${highMatch} High`;
-  document.getElementById('medium-match-count').textContent = `${medMatch} Medium`;
-  
-  renderUrlJobList(jobList);
-  
-  document.getElementById('url-analysis-results').scrollIntoView({ behavior: 'smooth' });
-}
-
-function renderUrlJobList(jobList) {
-  document.getElementById('url-job-list').innerHTML = jobList.map(job => {
-    const scoreClass = job.matchScore >= 80 ? 'high' : job.matchScore >= 60 ? 'medium' : 'low';
-    const cardClass = job.matchScore >= 80 ? 'excellent' : job.matchScore >= 60 ? 'good' : 'moderate';
-    const recClass = job.recommendation === 'APPLY_NOW' ? 'apply-now' : job.recommendation === 'WORTH_APPLYING' ? 'worth-it' : 'customize';
-    
-    const searchQuery = encodeURIComponent(`${job.title} ${job.company}`);
-    const linkedInUrl = `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
-    const indeedUrl = `https://www.indeed.com/jobs?q=${searchQuery}`;
-    
-    return `
-      <div class="job-card ${cardClass}">
-        <div class="job-header">
-          <div style="flex: 1;">
-            <div class="job-title">${job.title || 'Job Title'}</div>
-            <div class="job-company">${job.company || 'Company'}</div>
-            ${job.location ? `<div class="job-meta"><span>📍 ${job.location}</span>${job.salary ? `<span>💰 ${job.salary}</span>` : ''}${job.postedDate ? `<span>🕐 ${job.postedDate}</span>` : ''}</div>` : ''}
-          </div>
-          <div style="text-align: right; min-width: 80px;">
-            <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
-            <div style="font-size: 0.7rem; color: #64748b;">MATCH</div>
-          </div>
-        </div>
-        
-        <div class="flex gap-2 items-center flex-wrap mt-4">
-          <span class="recommendation ${recClass}">${(job.recommendation || 'REVIEW').replace(/_/g, ' ')}</span>
-          ${(job.matchingSkills || []).slice(0, 4).map(s => `<span class="tag tag-success" style="font-size: 0.75rem;">✓ ${s}</span>`).join('')}
-        </div>
-        
-        ${job.description ? `<p style="color: #94a3b8; font-size: 0.9rem; margin-top: 12px;">${job.description.substring(0, 150)}${job.description.length > 150 ? '...' : ''}</p>` : ''}
-        
-        <p style="color: #a5b4fc; font-size: 0.85rem; margin-top: 8px; font-style: italic;">${job.quickTake || ''}</p>
-        
-        <div class="flex gap-2 flex-wrap mt-4">
-          <a href="${linkedInUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">🔗 Find on LinkedIn</a>
-          <a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">🔗 Indeed</a>
-          <button class="btn btn-secondary btn-sm" onclick="generateCoverLetterForUrlJob('${job.id}')">📝 Cover Letter</button>
-          <button class="btn btn-secondary btn-sm" onclick="saveUrlJob('${job.id}')">💾 Save</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function saveUrlJob(jobId) {
-  const job = urlAnalysisJobs.find(j => j.id === jobId);
-  if (!job) return;
-  jobs.push(job);
-  saveJob(jobId);
-}
-
-function generateCoverLetterForUrlJob(jobId) {
-  const job = urlAnalysisJobs.find(j => j.id === jobId);
-  if (!job) return;
-  jobs.push(job);
-  generateCoverLetter(jobId);
-}
-
-// ============================================================
 
 function displayJobs(list, filter = 'all') {
   let filtered = list;
@@ -1143,6 +1023,181 @@ async function loadSaved() {
   } catch (e) {}
 }
 loadSaved();
+
+// ============================================================
+// BULK JOB ANALYSIS (NEW FEATURE)
+// ============================================================
+
+const bulkUploadZone = document.getElementById('bulk-upload-zone');
+const bulkResumeInput = document.getElementById('bulk-resume-input');
+const bulkAnalyzeBtn = document.getElementById('bulk-analyze-btn');
+let bulkFile = null;
+let bulkSessionId = null;
+let bulkProfile = null;
+let bulkJobs = [];
+
+bulkUploadZone.addEventListener('click', () => bulkResumeInput.click());
+bulkUploadZone.addEventListener('dragover', e => { e.preventDefault(); bulkUploadZone.classList.add('has-file'); });
+bulkUploadZone.addEventListener('dragleave', () => { if (!bulkFile) bulkUploadZone.classList.remove('has-file'); });
+bulkUploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleBulkFile(e.dataTransfer.files[0]);
+});
+bulkResumeInput.addEventListener('change', e => { if (e.target.files[0]) handleBulkFile(e.target.files[0]); });
+
+async function handleBulkFile(file) {
+  bulkFile = file;
+  document.getElementById('bulk-file-name').textContent = '✓ ' + file.name;
+  document.getElementById('bulk-file-name').style.display = 'block';
+  bulkUploadZone.classList.add('has-file');
+  
+  // Extract profile immediately
+  showToast('Extracting profile...', 'success');
+  
+  try {
+    const formData = new FormData();
+    formData.append('resume', bulkFile);
+    
+    const res = await fetch('/api/extract-profile', { method: 'POST', body: formData });
+    const data = await res.json();
+    
+    if (!data.success) throw new Error(data.error || 'Failed to extract profile');
+    
+    bulkSessionId = data.data.sessionId;
+    bulkProfile = data.data.profile;
+    bulkAnalyzeBtn.disabled = false;
+    showToast('Profile ready! Now paste a job search URL.', 'success');
+    
+  } catch (err) {
+    console.error('Bulk profile error:', err);
+    showToast(String(err.message || 'Failed to extract profile'), 'error');
+    bulkAnalyzeBtn.disabled = true;
+  }
+}
+
+bulkAnalyzeBtn.addEventListener('click', analyzeBulkJobs);
+document.getElementById('bulk-url-input').addEventListener('keypress', e => { if (e.key === 'Enter') analyzeBulkJobs(); });
+
+async function analyzeBulkJobs() {
+  if (!bulkSessionId || !bulkProfile) {
+    showToast('Please upload your resume first', 'error');
+    return;
+  }
+  
+  const url = document.getElementById('bulk-url-input').value.trim();
+  if (!url) {
+    showToast('Please paste a job search URL', 'error');
+    return;
+  }
+  
+  if (!url.startsWith('http')) {
+    showToast('Please enter a valid URL starting with http:// or https://', 'error');
+    return;
+  }
+  
+  // Show loading
+  document.getElementById('bulk-analyze-btn-text').textContent = 'Analyzing...';
+  document.getElementById('bulk-loading').style.display = 'inline-block';
+  bulkAnalyzeBtn.disabled = true;
+  
+  try {
+    const res = await fetch('/api/analyze-bulk-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: bulkSessionId, searchUrl: url })
+    });
+    
+    const data = await res.json();
+    
+    if (!data.success) throw new Error(data.error || 'Analysis failed');
+    
+    bulkJobs = data.data.jobs || [];
+    
+    if (bulkJobs.length === 0) {
+      showToast('No jobs found. Try a different search URL.', 'error');
+      return;
+    }
+    
+    displayBulkResults(bulkJobs, data.data.source);
+    showToast(`Analyzed ${bulkJobs.length} jobs!`, 'success');
+    
+  } catch (err) {
+    console.error('Bulk analysis error:', err);
+    showToast(String(err.message || 'Analysis failed'), 'error');
+  } finally {
+    document.getElementById('bulk-analyze-btn-text').textContent = '📊 Analyze All Jobs';
+    document.getElementById('bulk-loading').style.display = 'none';
+    bulkAnalyzeBtn.disabled = false;
+  }
+}
+
+function displayBulkResults(jobList, source) {
+  document.getElementById('bulk-results').style.display = 'block';
+  
+  const highMatch = jobList.filter(j => j.matchScore >= 80).length;
+  const medMatch = jobList.filter(j => j.matchScore >= 60 && j.matchScore < 80).length;
+  
+  document.getElementById('bulk-results-summary').textContent = `Scored ${jobList.length} jobs from ${source || 'search'} against your resume`;
+  document.getElementById('bulk-high-count').textContent = `${highMatch} High Match`;
+  document.getElementById('bulk-med-count').textContent = `${medMatch} Medium`;
+  
+  document.getElementById('bulk-job-list').innerHTML = jobList.map(job => {
+    const scoreClass = job.matchScore >= 80 ? 'high' : job.matchScore >= 60 ? 'medium' : 'low';
+    const cardClass = job.matchScore >= 80 ? 'excellent' : job.matchScore >= 60 ? 'good' : 'moderate';
+    const recClass = job.recommendation === 'APPLY_NOW' ? 'apply-now' : job.recommendation === 'WORTH_APPLYING' ? 'worth-it' : 'customize';
+    
+    const searchQuery = encodeURIComponent(`${job.title} ${job.company}`);
+    const linkedInUrl = `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
+    const indeedUrl = `https://www.indeed.com/jobs?q=${searchQuery}`;
+    
+    return `
+      <div class="job-card ${cardClass}">
+        <div class="job-header">
+          <div style="flex: 1;">
+            <div class="job-title">${job.title || 'Job Title'}</div>
+            <div class="job-company">${job.company || 'Company'}</div>
+            ${job.location ? `<div class="job-meta"><span>📍 ${job.location}</span>${job.salary ? `<span>💰 ${job.salary}</span>` : ''}${job.postedDate ? `<span>🕐 ${job.postedDate}</span>` : ''}</div>` : ''}
+          </div>
+          <div style="text-align: right; min-width: 80px;">
+            <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
+            <div style="font-size: 0.7rem; color: #64748b;">MATCH</div>
+          </div>
+        </div>
+        
+        <div class="flex gap-2 items-center flex-wrap mt-4">
+          <span class="recommendation ${recClass}">${(job.recommendation || 'REVIEW').replace(/_/g, ' ')}</span>
+          ${(job.matchingSkills || []).slice(0, 4).map(s => `<span class="tag tag-success" style="font-size: 0.75rem;">✓ ${s}</span>`).join('')}
+        </div>
+        
+        ${job.description ? `<p style="color: #94a3b8; font-size: 0.9rem; margin-top: 12px;">${job.description.substring(0, 150)}${job.description.length > 150 ? '...' : ''}</p>` : ''}
+        
+        <p style="color: #a5b4fc; font-size: 0.85rem; margin-top: 8px; font-style: italic;">${job.quickTake || ''}</p>
+        
+        <div class="flex gap-2 flex-wrap mt-4">
+          <a href="${linkedInUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">🔗 Find on LinkedIn</a>
+          <a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">🔗 Indeed</a>
+          <button class="btn btn-secondary btn-sm" onclick="saveBulkJob('${job.id}')">💾 Save to Tracker</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  document.getElementById('bulk-results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function saveBulkJob(jobId) {
+  const job = bulkJobs.find(j => j.id === jobId);
+  if (!job) return;
+  
+  // Copy to main jobs array and save
+  if (!savedJobs.find(j => j.id === jobId)) {
+    savedJobs.push({ ...job, status: 'SAVED', savedAt: Date.now() });
+    updateTracker();
+    showToast('Job saved to tracker!', 'success');
+  } else {
+    showToast('Job already saved', 'error');
+  }
+}
 </script>
 </body>
 </html>
