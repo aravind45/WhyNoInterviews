@@ -316,8 +316,14 @@
           
           <div class="divider"></div>
           
-          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🌐 More Job Boards</h4>
-          <div id="secondary-links" class="flex gap-2 flex-wrap"></div>
+          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🌐 General Job Boards</h4>
+          <div id="secondary-links" class="flex gap-2 flex-wrap mb-4"></div>
+          
+          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">💻 Tech & Startups</h4>
+          <div id="tech-links" class="flex gap-2 flex-wrap mb-4"></div>
+          
+          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🏠 Remote Jobs</h4>
+          <div id="remote-links" class="flex gap-2 flex-wrap"></div>
         </div>
         
         <!-- AI Suggestions -->
@@ -761,15 +767,28 @@ function generateSearchLinksClientSide() {
   
   return {
     primary: [
-      { name: 'LinkedIn', icon: '💼', url: `https://www.linkedin.com/jobs/search/?keywords=${encode(title)}&location=${encode(location)}`, description: 'Most professional jobs' },
-      { name: 'Indeed', icon: '🔍', url: `https://www.indeed.com/jobs?q=${encode(title)}&l=${encode(location)}`, description: 'Largest job board' },
-      { name: 'Glassdoor', icon: '🚪', url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(title)}&locKeyword=${encode(location)}`, description: 'Jobs + salary info' }
+      { name: 'LinkedIn', icon: '💼', url: `https://www.linkedin.com/jobs/search/?keywords=${encode(title)}&location=${encode(location)}` },
+      { name: 'Indeed', icon: '🔍', url: `https://www.indeed.com/jobs?q=${encode(title)}&l=${encode(location)}` },
+      { name: 'Glassdoor', icon: '⭐', url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(title)}&locKeyword=${encode(location)}` },
+      { name: 'Google Jobs', icon: '🔎', url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs` }
     ],
     secondary: [
-      { name: 'Google Jobs', icon: '🔎', url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs` },
       { name: 'ZipRecruiter', icon: '⚡', url: `https://www.ziprecruiter.com/jobs-search?search=${encode(title)}&location=${encode(location)}` },
-      { name: 'Dice (Tech)', icon: '🎲', url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}` },
-      { name: 'Wellfound', icon: '🚀', url: `https://wellfound.com/jobs?query=${encode(title)}` }
+      { name: 'Monster', icon: '👾', url: `https://www.monster.com/jobs/search?q=${encode(title)}&where=${encode(location)}` },
+      { name: 'CareerBuilder', icon: '🏗️', url: `https://www.careerbuilder.com/jobs?keywords=${encode(title)}&location=${encode(location)}` },
+      { name: 'SimplyHired', icon: '✨', url: `https://www.simplyhired.com/search?q=${encode(title)}&l=${encode(location)}` }
+    ],
+    tech: [
+      { name: 'Dice', icon: '🎲', url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}` },
+      { name: 'Built In', icon: '🏢', url: `https://builtin.com/jobs?search=${encode(title)}&location=${encode(location)}` },
+      { name: 'Wellfound', icon: '🚀', url: `https://wellfound.com/jobs?query=${encode(title)}` },
+      { name: 'Levels.fyi', icon: '📊', url: `https://www.levels.fyi/jobs?searchText=${encode(title)}&location=${encode(location)}` }
+    ],
+    remote: [
+      { name: 'We Work Remotely', icon: '🌍', url: `https://weworkremotely.com/remote-jobs/search?term=${encode(title)}` },
+      { name: 'Remote OK', icon: '🏠', url: `https://remoteok.com/remote-${encode(title.replace(/\s+/g, '-'))}-jobs` },
+      { name: 'FlexJobs', icon: '🧘', url: `https://www.flexjobs.com/search?search=${encode(title)}&location=${encode(location)}` },
+      { name: 'Remote.co', icon: '💻', url: `https://remote.co/remote-jobs/search/?search_keywords=${encode(title)}` }
     ],
     bySkill: (profile.hardSkills || []).slice(0, 5).map(skill => ({
       skill,
@@ -791,8 +810,22 @@ function displaySearchLinks(links) {
     </a>
   `).join('');
   
-  // Secondary job boards
+  // Secondary job boards (General)
   document.getElementById('secondary-links').innerHTML = links.secondary.map(l => `
+    <a href="${l.url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">
+      ${l.icon} ${l.name}
+    </a>
+  `).join('');
+  
+  // Tech job boards
+  document.getElementById('tech-links').innerHTML = links.tech.map(l => `
+    <a href="${l.url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">
+      ${l.icon} ${l.name}
+    </a>
+  `).join('');
+  
+  // Remote job boards
+  document.getElementById('remote-links').innerHTML = links.remote.map(l => `
     <a href="${l.url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">
       ${l.icon} ${l.name}
     </a>
