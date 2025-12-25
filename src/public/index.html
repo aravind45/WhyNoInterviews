@@ -708,32 +708,50 @@ function generateSearchLinksClientSide() {
   const location = document.getElementById('search-location').value || profile.location || '';
   const encode = encodeURIComponent;
   
-  // ATS sites for Fresh Jobs
+  // ATS sites for Fresh Jobs - EXACT list from Boolean hack
   const atsSites = [
-    { name: 'Workday', site: 'myworkdayjobs.com' },
-    { name: 'Greenhouse', site: 'greenhouse.io' },
-    { name: 'Lever', site: 'lever.co' },
-    { name: 'iCIMS', site: 'icims.com' },
-    { name: 'SmartRecruiters', site: 'smartrecruiters.com' },
-    { name: 'Taleo', site: 'taleo.net' },
-    { name: 'Jobvite', site: 'jobvite.com' },
-    { name: 'ADP', site: 'workforcenow.adp.com' },
-    { name: 'BambooHR', site: 'bamboohr.com' },
-    { name: 'JazzHR', site: 'jazzhr.com' }
+    'myworkdayjobs.com',
+    'greenhouse.io', 
+    'lever.co',
+    'icims.com',
+    'smartrecruiters.com',
+    'taleo.net',
+    'jobvite.com',
+    'workforcenow.adp.com',
+    'bamboohr.com',
+    'brassring.com',
+    'breezy.hr',
+    'bullhorn.com',
+    'jazzhr.com',
+    'jobdiva.com',
+    'successfactors.com'
   ];
   
-  // Build location string for search
-  const locationQuery = location ? ` "${location}"` : '';
+  // Build proper Google Boolean query - EXACT format
+  const jobTitle = title.replace(/"/g, '');
+  const loc = location.replace(/"/g, '');
   
   // Individual ATS site searches (last 24h)
-  const freshJobsIndividual = atsSites.slice(0, 6).map(ats => ({
-    name: ats.name,
-    url: `https://www.google.com/search?q=site:${ats.site}+"${title}"${locationQuery}&tbs=qdr:d`
-  }));
+  const topSites = ['myworkdayjobs.com', 'greenhouse.io', 'lever.co', 'icims.com', 'smartrecruiters.com', 'taleo.net'];
+  const freshJobsIndividual = topSites.map(site => {
+    const siteName = site.split('.')[0].replace('myworkday', 'Workday');
+    const displayName = siteName.charAt(0).toUpperCase() + siteName.slice(1);
+    const query = loc 
+      ? `site:${site} ("${jobTitle}") ("${loc}" OR "remote")`
+      : `site:${site} ("${jobTitle}") ("remote" OR "worldwide" OR "work from anywhere")`;
+    return {
+      name: displayName,
+      url: `https://www.google.com/search?q=${encodeURIComponent(query)}&tbs=qdr:d`
+    };
+  });
   
-  // Combined ALL ATS sites search (last 24h)
-  const allSitesQuery = atsSites.map(s => `site:${s.site}`).join(' OR ');
-  const freshJobsAllUrl = `https://www.google.com/search?q=(${allSitesQuery}) "${title}"${locationQuery}&tbs=qdr:d`;
+  // Combined ALL ATS sites search (last 24h) - EXACT Boolean format
+  const allSitesQuery = atsSites.map(s => `site:${s}`).join(' OR ');
+  const locationPart = loc 
+    ? `("${loc}" OR "remote" OR "worldwide" OR "work from anywhere")`
+    : `("remote" OR "worldwide" OR "work from anywhere")`;
+  const fullQuery = `(${allSitesQuery}) ("${jobTitle}") ${locationPart}`;
+  const freshJobsAllUrl = `https://www.google.com/search?q=${encodeURIComponent(fullQuery)}&tbs=qdr:d`;
   
   return {
     primary: [
