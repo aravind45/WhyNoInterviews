@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import Groq from 'groq-sdk';
+// @ts-ignore
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 
@@ -341,7 +342,7 @@ app.post('/api/search-jobs', async (req, res) => {
           }
         );
         
-        const data = await response.json();
+        const data: any = await response.json();
         
         if (data.data && Array.isArray(data.data)) {
           // Score each real job against profile
