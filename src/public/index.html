@@ -686,10 +686,8 @@ async function searchJobs() {
   const searchLinks = generateSearchLinksClientSide();
   displaySearchLinks(searchLinks);
   document.getElementById('job-results').style.display = 'block';
-  showToast('Search links ready!', 'success');
-  
-  // Optionally try to get AI suggestions in background (non-blocking)
-  tryGetSuggestions();
+  document.getElementById('suggestions-section').style.display = 'none'; // Hide suggestions section
+  showToast('Search links ready! Click any to find jobs.', 'success');
 }
 
 function generateSearchLinksClientSide() {
@@ -719,43 +717,6 @@ function generateSearchLinksClientSide() {
       indeed: `https://www.indeed.com/jobs?q=${encode(t)}&l=${encode(location)}`
     }))
   };
-}
-
-async function tryGetSuggestions() {
-  // Try to get AI suggestions in background - don't block UI
-  setLoading('search', true, 'Getting suggestions...');
-  
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s max
-    
-    const res = await fetch('/api/search-jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        searchQuery: document.getElementById('search-query').value,
-        location: document.getElementById('search-location').value
-      }),
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    const data = await res.json();
-    
-    if (data.success && data.data.jobs && data.data.jobs.length > 0) {
-      jobs = data.data.jobs;
-      document.getElementById('suggestions-section').style.display = 'block';
-      displayJobs(jobs);
-      document.getElementById('jobs-badge').textContent = jobs.length;
-      document.getElementById('jobs-badge').style.display = 'inline';
-    }
-  } catch (err) {
-    // Silently fail - links already work
-    console.log('AI suggestions unavailable (links still work)');
-  } finally {
-    setLoading('search', false, '🔍 Search Jobs');
-  }
 }
 
 function displaySearchLinks(links) {
