@@ -198,8 +198,9 @@
     /* ========================================
        JOB SEARCH SECTION
        ======================================== */
-    .job-section { margin-top: 40px; padding-top: 40px; border-top: 2px solid var(--border); }
-    .job-section.locked .locked-content { opacity: 0.5; pointer-events: none; }
+    .job-section { display: none; margin-top: 40px; padding-top: 40px; border-top: 2px solid var(--border); }
+    .job-section.visible { display: block; }
+    .job-section.locked { opacity: 0.6; pointer-events: none; }
 
     .job-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .job-header-left { display: flex; align-items: center; gap: 14px; }
@@ -325,8 +326,7 @@
         </a>
         <nav>
           <a href="#upload">Analyze</a>
-          <a href="#job-section">🔍 Job Search</a>
-          <a href="#tracker">📋 Tracker</a>
+          <a href="#job-section">Jobs</a>
           <a href="/api">API</a>
         </nav>
       </div>
@@ -439,21 +439,30 @@
         </div>
       </section>
 
-      <!-- Job Search Section - Always Visible -->
+      <!-- Job Search Section -->
       <section class="job-section" id="job-section">
         <div class="job-header">
           <div class="job-header-left">
             <div class="job-header-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
-            <div><h2>Job Search & Tracker</h2><p>Search 15+ ATS platforms • Track applications</p></div>
+            <div><h2>Job Search & Tracker</h2><p>Find jobs across 15+ ATS platforms</p></div>
           </div>
+          <div class="unlock-badge" id="unlock-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>Score 75+ Unlocked!</span>
+          </div>
+        </div>
+
+        <div class="locked-message" id="locked-message" style="display: none;">
+          <h4><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Feature Locked</h4>
+          <p>Job search features require a diagnosis confidence score of 75+. Improve your resume based on the recommendations above to unlock.</p>
         </div>
 
         <div class="job-tabs">
           <button class="job-tab active" data-tab="search">🔍 Search Generator</button>
-          <button class="job-tab" data-tab="tracker" id="tracker">📋 Application Tracker</button>
+          <button class="job-tab" data-tab="tracker">📋 Application Tracker</button>
         </div>
 
-        <!-- Search Generator Tab - Always Available -->
+        <!-- Search Generator Tab -->
         <div class="job-tab-content active" id="tab-search">
           <div class="search-generator">
             <div class="search-form">
@@ -530,19 +539,9 @@
           </div>
         </div>
 
-        <!-- Application Tracker Tab - Requires Analysis -->
+        <!-- Application Tracker Tab -->
         <div class="job-tab-content" id="tab-tracker">
-          <div class="tracker-login-required" id="tracker-login-msg">
-            <div style="background: var(--blue-bg); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-sm); padding: 20px; text-align: center; margin-bottom: 24px;">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--blue)" stroke-width="2" style="margin-bottom: 8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-              <h4 style="color: var(--blue); margin-bottom: 6px;">Upload Resume to Track Applications</h4>
-              <p style="color: var(--text-secondary); font-size: 0.9rem;">Complete a resume analysis first to unlock the application tracker and link it to your job search.</p>
-              <a href="#upload" class="btn btn-secondary" style="margin-top: 12px; width: auto; display: inline-flex;">↑ Go to Upload</a>
-            </div>
-          </div>
-          
-          <div class="tracker-content" id="tracker-content" style="display: none;">
-            <div class="tracker-stats" id="tracker-stats">
+          <div class="tracker-stats" id="tracker-stats">
             <div class="stat-card"><div class="stat-value blue" id="stat-total">0</div><div class="stat-label">Total</div></div>
             <div class="stat-card"><div class="stat-value" id="stat-applied">0</div><div class="stat-label">Applied</div></div>
             <div class="stat-card"><div class="stat-value yellow" id="stat-interviewing">0</div><div class="stat-label">Interviewing</div></div>
@@ -597,7 +596,6 @@
               </div>
             </div>
           </div>
-          </div><!-- end tracker-content -->
         </div>
       </section>
     </div>
@@ -629,6 +627,7 @@
     const statusMessage = document.getElementById('status-message');
     const statusText = document.getElementById('status-text');
     const resultsSection = document.getElementById('results-section');
+    const jobSection = document.getElementById('job-section');
 
     // Helpers
     const formatBytes = (bytes) => {
@@ -678,6 +677,7 @@
       analyzeBtn.disabled = true;
       hideStatus();
       resultsSection.classList.remove('visible');
+      jobSection.classList.remove('visible');
 
       try {
         showStatus('Uploading resume...', 'warning');
@@ -703,6 +703,9 @@
 
         displayResults(analyzeResult.data);
         showStatus('Analysis complete!', 'success');
+
+        // Set search job title from analyzed job
+        document.getElementById('search-job-title').value = targetJob.value.trim();
 
       } catch (error) {
         console.error('Error:', error);
@@ -771,12 +774,17 @@
       resultsSection.classList.add('visible');
       resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-      // Unlock application tracker (search generator is always available)
-      document.getElementById('tracker-login-msg').style.display = 'none';
-      document.getElementById('tracker-content').style.display = 'block';
-
-      // Pre-fill search with analyzed job title
-      document.getElementById('search-job-title').value = targetJob.value.trim();
+      // Show job section
+      jobSection.classList.add('visible');
+      if (confidence >= 75) {
+        jobSection.classList.remove('locked');
+        document.getElementById('unlock-badge').style.display = 'flex';
+        document.getElementById('locked-message').style.display = 'none';
+      } else {
+        jobSection.classList.add('locked');
+        document.getElementById('unlock-badge').style.display = 'none';
+        document.getElementById('locked-message').style.display = 'block';
+      }
 
       loadApplications();
     }
@@ -789,9 +797,7 @@
         const result = await res.json();
         if (result.success) {
           resultsSection.classList.remove('visible');
-          // Reset tracker to login state
-          document.getElementById('tracker-login-msg').style.display = 'block';
-          document.getElementById('tracker-content').style.display = 'none';
+          jobSection.classList.remove('visible');
           showStatus('Your data has been deleted.', 'success');
           currentSessionId = null;
         } else throw new Error(result.error);
