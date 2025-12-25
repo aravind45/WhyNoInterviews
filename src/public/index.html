@@ -3,965 +3,475 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resume Diagnosis Engine | Why No Interviews?</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400&display=swap" rel="stylesheet">
+  <title>Resume Match Analyzer</title>
   <style>
-    :root {
-      --bg-primary: #09090b;
-      --bg-secondary: #18181b;
-      --bg-card: #1c1c21;
-      --bg-elevated: #27272a;
-      --text-primary: #fafafa;
-      --text-secondary: #a1a1aa;
-      --text-muted: #71717a;
-      --accent: #6366f1;
-      --accent-light: #818cf8;
-      --accent-glow: rgba(99, 102, 241, 0.25);
-      --success: #22c55e;
-      --success-bg: rgba(34, 197, 94, 0.1);
-      --warning: #f59e0b;
-      --warning-bg: rgba(245, 158, 11, 0.1);
-      --error: #ef4444;
-      --error-bg: rgba(239, 68, 68, 0.1);
-      --blue: #3b82f6;
-      --blue-bg: rgba(59, 130, 246, 0.1);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-light: rgba(255, 255, 255, 0.12);
-      --radius: 16px;
-      --radius-sm: 8px;
-    }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-
+    
     body {
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
       min-height: 100vh;
-      line-height: 1.6;
+      padding: 20px;
     }
-
-    .bg-gradient {
-      position: fixed;
-      inset: 0;
-      background: 
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
-        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(139, 92, 246, 0.08), transparent);
-      pointer-events: none;
-      z-index: 0;
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
     }
-
-    .container { position: relative; z-index: 10; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-
-    /* Header */
-    header { padding: 20px 0; border-bottom: 1px solid var(--border); }
-    .header-content { display: flex; justify-content: space-between; align-items: center; }
-    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-primary); }
-    .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-    .logo-icon svg { width: 22px; height: 22px; color: white; }
-    .logo-text { font-family: 'Instrument Serif', serif; font-size: 1.4rem; letter-spacing: -0.02em; }
-    nav { display: flex; gap: 24px; }
-    nav a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
-    nav a:hover { color: var(--text-primary); }
-
-    /* Hero */
-    .hero { text-align: center; padding: 60px 0 50px; }
-    .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; }
-    .badge-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    .hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 400; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 20px; }
-    .hero h1 em { font-style: italic; color: var(--accent-light); }
-    .hero p { font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
-
-    /* Main layout */
-    .main-grid { display: grid; grid-template-columns: 1fr 360px; gap: 32px; padding-bottom: 60px; }
-    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
-
-    /* Cards */
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
-    .card-header { margin-bottom: 20px; }
-    .card-title { font-size: 1.2rem; font-weight: 500; margin-bottom: 4px; }
-    .card-subtitle { color: var(--text-secondary); font-size: 0.9rem; }
-
-    /* Upload */
-    .upload-card { position: relative; overflow: hidden; }
-    .upload-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-light)); border-radius: var(--radius) var(--radius) 0 0; }
-    .drop-zone { border: 2px dashed var(--border-light); border-radius: var(--radius-sm); padding: 40px 24px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(99, 102, 241, 0.02); }
-    .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(99, 102, 241, 0.06); }
-    .drop-zone-icon { width: 56px; height: 56px; margin: 0 auto 12px; background: var(--bg-secondary); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--accent-light); }
-    .drop-zone-icon svg { width: 26px; height: 26px; }
-    .drop-zone h3 { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
-    .drop-zone p { color: var(--text-muted); font-size: 0.85rem; }
-    .drop-zone .browse { color: var(--accent-light); text-decoration: underline; }
-
-    /* File preview */
-    .file-preview { display: none; align-items: center; gap: 14px; padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-top: 14px; }
-    .file-preview.visible { display: flex; }
-    .file-icon { width: 44px; height: 44px; background: rgba(99, 102, 241, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent-light); }
-    .file-info { flex: 1; }
-    .file-name { font-weight: 500; font-size: 0.95rem; margin-bottom: 2px; }
-    .file-size { font-size: 0.8rem; color: var(--text-muted); }
-    .file-remove { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; transition: color 0.2s; }
-    .file-remove:hover { color: var(--error); }
-
-    /* Form */
-    .form-group { margin-top: 18px; }
-    .form-group label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 6px; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.95rem; font-family: inherit; transition: all 0.2s ease; }
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-    .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-muted); }
-    .form-group textarea { resize: vertical; min-height: 80px; }
-    .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
-
-    /* Buttons */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: white; width: 100%; margin-top: 20px; }
-    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary); }
-    .btn-secondary:hover { background: var(--bg-secondary); border-color: var(--border-light); }
-    .btn-success { background: var(--success); color: white; }
-    .btn-success:hover { background: #16a34a; }
-    .btn .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    .btn.loading .spinner { display: inline-block; }
-    .btn.loading .btn-text { display: none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Status messages */
-    .status-message { display: none; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: var(--radius-sm); margin-top: 14px; font-size: 0.85rem; }
-    .status-message.visible { display: flex; }
-    .status-message.error { background: var(--error-bg); border: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; }
-    .status-message.success { background: var(--success-bg); border: 1px solid rgba(34, 197, 94, 0.2); color: #86efac; }
-    .status-message.warning { background: var(--warning-bg); border: 1px solid rgba(245, 158, 11, 0.2); color: #fcd34d; }
-
-    /* Sidebar */
-    .sidebar-card h3 { font-size: 1rem; font-weight: 500; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .sidebar-card h3 svg { width: 18px; height: 18px; color: var(--accent-light); }
-    .features-list { list-style: none; }
-    .features-list li { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .features-list li:last-child { border-bottom: none; }
-    .feature-icon { width: 28px; height: 28px; min-width: 28px; background: var(--bg-secondary); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--accent-light); }
-    .feature-icon svg { width: 14px; height: 14px; }
-    .feature-text strong { display: block; font-weight: 500; margin-bottom: 2px; font-size: 0.9rem; }
-    .feature-text span { font-size: 0.8rem; color: var(--text-secondary); }
-
-    /* Results */
-    .results-section { display: none; margin-top: 40px; }
-    .results-section.visible { display: block; }
-    .results-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
-    .results-icon { width: 52px; height: 52px; background: var(--success-bg); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--success); }
-    .results-icon svg { width: 26px; height: 26px; }
-    .results-title h2 { font-size: 1.4rem; font-weight: 500; margin-bottom: 4px; }
-    .results-title p { color: var(--text-secondary); font-size: 0.9rem; }
-
-    /* Confidence */
-    .confidence-card { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
-    .confidence-score { width: 90px; height: 90px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-    .confidence-score::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--bg-card); }
-    .confidence-score .value { position: relative; font-size: 1.8rem; font-weight: 600; line-height: 1; }
-    .confidence-score .label { position: relative; font-size: 0.7rem; color: var(--text-muted); }
-    .confidence-high { background: conic-gradient(var(--success) calc(var(--score) * 3.6deg), var(--bg-elevated) 0); }
-    .confidence-medium { background: conic-gradient(var(--warning) calc(var(--score) * 3.6deg), var(--bg-elevated) 0); }
-    .confidence-low { background: conic-gradient(var(--error) calc(var(--score) * 3.6deg), var(--bg-elevated) 0); }
-    .confidence-info { flex: 1; }
-    .confidence-info h3 { font-size: 1rem; margin-bottom: 4px; }
-    .confidence-info p { color: var(--text-secondary); font-size: 0.85rem; }
-    .competitive-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 500; margin-top: 6px; }
-    .competitive-yes { background: var(--success-bg); color: var(--success); }
-    .competitive-no { background: var(--warning-bg); color: var(--warning); }
-
-    /* Section titles */
-    .section-title { font-size: 1.1rem; font-weight: 500; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-
-    /* Root causes & Recommendations */
-    .root-cause-card, .recommendation-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px; margin-bottom: 14px; }
-    .root-cause-header, .recommendation-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
-    .root-cause-priority, .recommendation-priority { width: 26px; height: 26px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; flex-shrink: 0; }
-    .recommendation-priority { background: var(--success); }
-    .root-cause-title, .recommendation-title { flex: 1; font-weight: 500; font-size: 0.95rem; }
-    .root-cause-scores, .recommendation-meta { display: flex; gap: 10px; flex-wrap: wrap; }
-    .score-badge, .meta-badge { display: flex; align-items: center; gap: 4px; padding: 3px 8px; background: var(--bg-elevated); border-radius: 100px; font-size: 0.7rem; }
-    .score-badge.severity { color: var(--error); }
-    .score-badge.impact { color: var(--warning); }
-    .root-cause-description, .recommendation-description { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px; line-height: 1.5; }
-    .root-cause-category { display: inline-block; padding: 3px 8px; background: var(--bg-elevated); border-radius: 4px; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-    .evidence-section h4, .implementation-steps h4 { font-size: 0.8rem; font-weight: 500; margin-bottom: 8px; color: var(--text-secondary); }
-    .evidence-item { background: var(--bg-card); border-left: 3px solid var(--accent); padding: 10px; margin-bottom: 6px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-    .evidence-item p { font-size: 0.8rem; margin-bottom: 4px; }
-    .evidence-citation { font-style: italic; color: var(--text-muted); font-size: 0.75rem; }
-    .implementation-steps ol { margin: 0; padding-left: 18px; }
-    .implementation-steps li { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.4; }
-
-    /* ========================================
-       JOB SEARCH SECTION
-       ======================================== */
-    .job-section { margin-top: 40px; padding-top: 40px; border-top: 2px solid var(--border); }
-    .job-section.locked .locked-content { opacity: 0.5; pointer-events: none; }
-
-    .job-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-    .job-header-left { display: flex; align-items: center; gap: 14px; }
-    .job-header-icon { width: 52px; height: 52px; background: var(--blue-bg); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--blue); }
-    .job-header-icon svg { width: 26px; height: 26px; }
-    .job-header h2 { font-size: 1.4rem; font-weight: 500; margin-bottom: 4px; }
-    .job-header p { color: var(--text-secondary); font-size: 0.9rem; }
-
-    .unlock-badge { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--success-bg); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 100px; color: var(--success); font-size: 0.85rem; font-weight: 500; }
-    .unlock-badge svg { width: 16px; height: 16px; }
-
-    .locked-message { background: var(--warning-bg); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px; }
-    .locked-message h4 { color: var(--warning); font-size: 0.95rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-    .locked-message p { color: var(--text-secondary); font-size: 0.85rem; }
-
-    /* Tabs */
-    .job-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-    .job-tab { padding: 10px 18px; background: transparent; border: none; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; cursor: pointer; border-radius: var(--radius-sm); transition: all 0.2s; }
-    .job-tab:hover { color: var(--text-primary); background: var(--bg-secondary); }
-    .job-tab.active { color: var(--accent-light); background: rgba(99, 102, 241, 0.1); }
-
-    .job-tab-content { display: none; }
-    .job-tab-content.active { display: block; }
-
-    /* Search Generator */
-    .search-generator { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-    .search-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 600px) { .search-form { grid-template-columns: 1fr; } }
-
-    .search-results { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
-    .search-url-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 12px; }
-    .search-url-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-    .search-url-label.hot { color: var(--error); }
-    .search-url-link { display: flex; align-items: center; gap: 10px; }
-    .search-url-link a { flex: 1; color: var(--accent-light); font-size: 0.85rem; word-break: break-all; text-decoration: none; }
-    .search-url-link a:hover { text-decoration: underline; }
-    .copy-btn { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
-    .copy-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
-
-    .boolean-box { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); word-break: break-all; max-height: 120px; overflow-y: auto; }
-
-    /* Application Tracker */
-    .tracker-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; text-align: center; }
-    .stat-value { font-size: 1.8rem; font-weight: 600; margin-bottom: 4px; }
-    .stat-value.blue { color: var(--blue); }
-    .stat-value.green { color: var(--success); }
-    .stat-value.yellow { color: var(--warning); }
-    .stat-value.red { color: var(--error); }
-    .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-
-    .add-application-form { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
-    .add-application-form h4 { font-size: 1rem; font-weight: 500; margin-bottom: 16px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
-
-    .applications-list { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .applications-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px; gap: 12px; padding: 12px 16px; background: var(--bg-secondary); font-size: 0.75rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .application-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; }
-    .application-row:last-child { border-bottom: none; }
-    .application-row:hover { background: var(--bg-secondary); }
-    .app-job { font-weight: 500; font-size: 0.9rem; }
-    .app-company { color: var(--text-secondary); font-size: 0.85rem; }
-    .app-date { color: var(--text-muted); font-size: 0.8rem; }
-
-    .status-select { padding: 6px 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); font-size: 0.8rem; cursor: pointer; }
-    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 500; }
-    .status-applied { background: var(--blue-bg); color: var(--blue); }
-    .status-screening { background: rgba(139, 92, 246, 0.1); color: #a78bfa; }
-    .status-interviewing { background: var(--warning-bg); color: var(--warning); }
-    .status-offer { background: var(--success-bg); color: var(--success); }
-    .status-rejected { background: var(--error-bg); color: var(--error); }
-    .status-ghosted { background: rgba(113, 113, 122, 0.2); color: var(--text-muted); }
-
-    .app-actions { display: flex; gap: 6px; }
-    .app-action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; transition: color 0.2s; }
-    .app-action-btn:hover { color: var(--text-primary); }
-    .app-action-btn.delete:hover { color: var(--error); }
-
-    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
-    .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
-    .empty-state p { font-size: 0.9rem; }
-
-    /* Metadata */
-    .metadata-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 18px; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 20px; }
-    .metadata-item strong { color: var(--text-secondary); }
-
-    /* Delete section */
-    .delete-section { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
-    .btn-danger { background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); color: var(--error); padding: 10px 20px; }
-    .btn-danger:hover { background: var(--error-bg); border-color: var(--error); }
-
-    /* Footer */
-    footer { text-align: center; padding: 28px 0; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 60px; }
-    footer a { color: var(--text-secondary); text-decoration: none; }
-    footer a:hover { color: var(--accent-light); }
-
-    /* Animations */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.4s ease-out; }
-
-    #file-input { display: none; }
-
+    
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    header p {
+      color: #94a3b8;
+    }
+    
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
     @media (max-width: 768px) {
-      .hero { padding: 40px 0 30px; }
-      .card { padding: 20px; }
-      .applications-header { display: none; }
-      .application-row { grid-template-columns: 1fr; gap: 8px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+    
+    /* File Upload */
+    .upload-zone {
+      border: 2px dashed #334155;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .upload-zone:hover {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .upload-zone.has-file {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .upload-zone input {
+      display: none;
+    }
+    
+    .upload-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .upload-text {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    
+    .file-name {
+      color: #10b981;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    
+    /* Textarea */
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 16px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+    
+    textarea:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+    
+    textarea::placeholder {
+      color: #64748b;
+    }
+    
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    /* Results */
+    .results {
+      display: none;
+    }
+    
+    .results.show {
+      display: block;
+    }
+    
+    .score-display {
+      text-align: center;
+      padding: 30px;
+      background: #0f172a;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .score-number {
+      font-size: 5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    
+    .score-label {
+      color: #94a3b8;
+      font-size: 1.1rem;
+      margin-top: 8px;
+    }
+    
+    .score-high { color: #10b981; }
+    .score-medium { color: #f59e0b; }
+    .score-low { color: #ef4444; }
+    
+    .feedback-box {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+    
+    .skills-section {
+      margin-top: 20px;
+    }
+    
+    .skills-section h3 {
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .skill-tag {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .skill-match {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    
+    .skill-missing {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    
+    /* Loading */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      background: #ef4444;
+      color: white;
+      border-radius: 8px;
+      font-weight: 500;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
 <body>
-  <div class="bg-gradient"></div>
-
-  <header>
-    <div class="container">
-      <div class="header-content">
-        <a href="/" class="logo">
-          <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+  <div class="container">
+    <header>
+      <h1>📄 Resume Match Analyzer</h1>
+      <p>See how well your resume matches a job description</p>
+    </header>
+    
+    <div class="card">
+      <div class="grid">
+        <!-- Resume Upload -->
+        <div>
+          <h2>📄 Your Resume</h2>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="resume-input" accept=".pdf,.doc,.docx">
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">Drop your resume here or click to browse</div>
+            <div class="upload-text" style="font-size: 0.8rem; margin-top: 4px;">PDF or Word</div>
+            <div class="file-name" id="file-name"></div>
           </div>
-          <span class="logo-text">Resume Diagnosis</span>
-        </a>
-        <nav>
-          <a href="#upload">Analyze</a>
-          <a href="#job-section">🔍 Job Search</a>
-          <a href="#tracker">📋 Tracker</a>
-          <a href="/api">API</a>
-        </nav>
+        </div>
+        
+        <!-- Job Description -->
+        <div>
+          <h2>📋 Job Description</h2>
+          <textarea id="job-description" placeholder="Paste the job description here...
+
+Example:
+We are looking for a Senior Software Engineer with 5+ years of experience in Python, AWS, and building scalable systems...
+
+Requirements:
+- Python, JavaScript
+- AWS or GCP
+- SQL databases
+- etc."></textarea>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" id="analyze-btn" style="margin-top: 20px;" disabled>
+        <span id="btn-text">🎯 Analyze Match</span>
+        <span class="loading" id="btn-loading" style="display: none;"></span>
+      </button>
+    </div>
+    
+    <!-- Results -->
+    <div class="card results" id="results">
+      <h2>📊 Analysis Results</h2>
+      
+      <div class="score-display">
+        <div class="score-number" id="score">--</div>
+        <div class="score-label">Match Score</div>
+      </div>
+      
+      <div class="feedback-box" id="feedback">
+        Analysis feedback will appear here...
+      </div>
+      
+      <div class="grid">
+        <div class="skills-section">
+          <h3>✅ Matching Skills</h3>
+          <div class="skills-list" id="matching-skills"></div>
+        </div>
+        
+        <div class="skills-section">
+          <h3>❌ Missing Skills</h3>
+          <div class="skills-list" id="missing-skills"></div>
+        </div>
       </div>
     </div>
-  </header>
-
-  <main>
-    <div class="container">
-      <section class="hero">
-        <div class="hero-badge"><span class="badge-dot"></span> AI-Powered Resume Analysis</div>
-        <h1>Discover why you're not<br>getting <em>interviews</em></h1>
-        <p>Upload your resume, get AI diagnosis, then search and track job applications—all in one place.</p>
-      </section>
-
-      <div class="main-grid" id="upload">
-        <div class="card upload-card">
-          <div class="card-header">
-            <h2 class="card-title">Upload Your Resume</h2>
-            <p class="card-subtitle">PDF and Word documents up to 10MB</p>
-          </div>
-
-          <div class="drop-zone" id="drop-zone">
-            <div class="drop-zone-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-            <h3>Drag & drop your resume</h3>
-            <p>or <span class="browse">browse files</span></p>
-          </div>
-
-          <input type="file" id="file-input" accept=".pdf,.doc,.docx">
-
-          <div class="file-preview" id="file-preview">
-            <div class="file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
-            <div class="file-info">
-              <div class="file-name" id="file-name">document.pdf</div>
-              <div class="file-size" id="file-size">2.4 MB</div>
-            </div>
-            <button class="file-remove" id="file-remove"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-          </div>
-
-          <div class="form-group">
-            <label for="target-job">Target Job Title *</label>
-            <input type="text" id="target-job" placeholder="e.g., Senior Software Engineer" required>
-            <p class="form-hint">Be specific—"Developer" is too generic</p>
-          </div>
-
-          <div class="form-group">
-            <label for="job-description">Job Description (optional)</label>
-            <textarea id="job-description" placeholder="Paste the job description for more accurate analysis..."></textarea>
-          </div>
-
-          <button class="btn btn-primary" id="analyze-btn" disabled>
-            <span class="btn-text">Analyze Resume</span>
-            <span class="spinner"></span>
-          </button>
-
-          <div class="status-message" id="status-message"><span id="status-text"></span></div>
-        </div>
-
-        <aside>
-          <div class="card sidebar-card">
-            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> How it works</h3>
-            <ul class="features-list">
-              <li><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div class="feature-text"><strong>1. Upload securely</strong><span>Encrypted, auto-deleted in 24h</span></div></li>
-              <li><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div class="feature-text"><strong>2. Get AI diagnosis</strong><span>Root causes & recommendations</span></div></li>
-              <li><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="feature-text"><strong>3. Search jobs</strong><span>Score 75+ unlocks job search</span></div></li>
-              <li><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div class="feature-text"><strong>4. Track applications</strong><span>Monitor your job search progress</span></div></li>
-            </ul>
-          </div>
-        </aside>
-      </div>
-
-      <!-- Results Section -->
-      <section class="results-section" id="results-section">
-        <div class="results-header">
-          <div class="results-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-          <div class="results-title"><h2>Diagnosis Complete</h2><p>Here's what we found</p></div>
-        </div>
-
-        <div class="card confidence-card fade-in">
-          <div class="confidence-score confidence-high" id="confidence-ring" style="--score: 75">
-            <span class="value" id="confidence-value">75</span>
-            <span class="label">confidence</span>
-          </div>
-          <div class="confidence-info">
-            <h3>Analysis Confidence</h3>
-            <p id="confidence-explanation">Based on resume completeness and job match.</p>
-            <div class="competitive-badge competitive-no" id="competitive-badge"><span id="competitive-text">Needs improvement</span></div>
-          </div>
-        </div>
-
-        <div class="card fade-in" style="margin-top: 20px;">
-          <h3 class="section-title">🎯 Root Causes</h3>
-          <div id="root-causes-container"></div>
-        </div>
-
-        <div class="card fade-in" style="margin-top: 20px;">
-          <h3 class="section-title">✅ Recommendations</h3>
-          <div id="recommendations-container"></div>
-        </div>
-
-        <div class="metadata-card fade-in" id="metadata-section">
-          <div class="metadata-item"><strong>Model:</strong> <span id="meta-model">-</span></div>
-          <div class="metadata-item"><strong>Processing:</strong> <span id="meta-time">-</span></div>
-          <div class="metadata-item"><strong>Data Quality:</strong> <span id="meta-quality">-</span></div>
-        </div>
-
-        <div class="delete-section">
-          <button class="btn btn-danger" id="delete-btn">Delete My Data</button>
-        </div>
-      </section>
-
-      <!-- Job Search Section - Always Visible -->
-      <section class="job-section" id="job-section">
-        <div class="job-header">
-          <div class="job-header-left">
-            <div class="job-header-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
-            <div><h2>Job Search & Tracker</h2><p>Search 15+ ATS platforms • Track applications</p></div>
-          </div>
-        </div>
-
-        <div class="job-tabs">
-          <button class="job-tab active" data-tab="search">🔍 Search Generator</button>
-          <button class="job-tab" data-tab="tracker" id="tracker">📋 Application Tracker</button>
-        </div>
-
-        <!-- Search Generator Tab - Always Available -->
-        <div class="job-tab-content active" id="tab-search">
-          <div class="search-generator">
-            <div class="search-form">
-              <div class="form-group">
-                <label for="search-job-title">Job Title</label>
-                <input type="text" id="search-job-title" placeholder="e.g., Product Manager">
-              </div>
-              <div class="form-group">
-                <label for="search-location">Location</label>
-                <input type="text" id="search-location" value="remote" placeholder="City or 'remote'">
-              </div>
-              <div class="form-group">
-                <label for="search-location-type">Work Type</label>
-                <select id="search-location-type">
-                  <option value="remote">Remote</option>
-                  <option value="hybrid">Hybrid</option>
-                  <option value="onsite">On-site</option>
-                  <option value="any">Any</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="search-experience">Experience Level</label>
-                <select id="search-experience">
-                  <option value="">Any Level</option>
-                  <option value="entry">Entry Level</option>
-                  <option value="mid">Mid Level</option>
-                  <option value="senior">Senior</option>
-                  <option value="lead">Lead/Principal</option>
-                  <option value="executive">Executive</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-primary" id="generate-search-btn" style="margin-top: 20px;">
-              <span class="btn-text">🔍 Generate Search Links</span>
-              <span class="spinner"></span>
-            </button>
-
-            <div class="search-results" id="search-results" style="display: none;">
-              <h4 style="margin-bottom: 16px; font-size: 1rem;">Your Job Search Links</h4>
-              
-              <div class="search-url-box">
-                <div class="search-url-label hot">🔥 Last 24 Hours (Apply First!)</div>
-                <div class="search-url-link">
-                  <a href="#" id="url-24h" target="_blank">Loading...</a>
-                  <button class="copy-btn" data-url="url-24h">Copy</button>
-                </div>
-              </div>
-
-              <div class="search-url-box">
-                <div class="search-url-label">📅 Last 7 Days</div>
-                <div class="search-url-link">
-                  <a href="#" id="url-week" target="_blank">Loading...</a>
-                  <button class="copy-btn" data-url="url-week">Copy</button>
-                </div>
-              </div>
-
-              <div class="search-url-box">
-                <div class="search-url-label">📋 All Time</div>
-                <div class="search-url-link">
-                  <a href="#" id="url-all" target="_blank">Loading...</a>
-                  <button class="copy-btn" data-url="url-all">Copy</button>
-                </div>
-              </div>
-
-              <div style="margin-top: 20px;">
-                <h4 style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-secondary);">Boolean String (for manual search)</h4>
-                <div class="boolean-box" id="boolean-string"></div>
-              </div>
-
-              <div style="margin-top: 16px; padding: 12px; background: var(--success-bg); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--success);">
-                💡 <strong>Pro tip:</strong> Check the 24-hour link daily and apply within 48 hours for best results!
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Application Tracker Tab - Requires Analysis -->
-        <div class="job-tab-content" id="tab-tracker">
-          <div class="tracker-login-required" id="tracker-login-msg">
-            <div style="background: var(--blue-bg); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-sm); padding: 20px; text-align: center; margin-bottom: 24px;">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--blue)" stroke-width="2" style="margin-bottom: 8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-              <h4 style="color: var(--blue); margin-bottom: 6px;">Upload Resume to Track Applications</h4>
-              <p style="color: var(--text-secondary); font-size: 0.9rem;">Complete a resume analysis first to unlock the application tracker and link it to your job search.</p>
-              <a href="#upload" class="btn btn-secondary" style="margin-top: 12px; width: auto; display: inline-flex;">↑ Go to Upload</a>
-            </div>
-          </div>
-          
-          <div class="tracker-content" id="tracker-content" style="display: none;">
-            <div class="tracker-stats" id="tracker-stats">
-            <div class="stat-card"><div class="stat-value blue" id="stat-total">0</div><div class="stat-label">Total</div></div>
-            <div class="stat-card"><div class="stat-value" id="stat-applied">0</div><div class="stat-label">Applied</div></div>
-            <div class="stat-card"><div class="stat-value yellow" id="stat-interviewing">0</div><div class="stat-label">Interviewing</div></div>
-            <div class="stat-card"><div class="stat-value green" id="stat-offers">0</div><div class="stat-label">Offers</div></div>
-            <div class="stat-card"><div class="stat-value red" id="stat-rejected">0</div><div class="stat-label">Rejected</div></div>
-            <div class="stat-card"><div class="stat-value" id="stat-rate">0%</div><div class="stat-label">Interview Rate</div></div>
-          </div>
-
-          <div class="add-application-form">
-            <h4>➕ Add Application</h4>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="app-job-title">Job Title *</label>
-                <input type="text" id="app-job-title" placeholder="e.g., Software Engineer">
-              </div>
-              <div class="form-group">
-                <label for="app-company">Company *</label>
-                <input type="text" id="app-company" placeholder="e.g., Google">
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="app-url">Job URL</label>
-                <input type="text" id="app-url" placeholder="https://...">
-              </div>
-              <div class="form-group">
-                <label for="app-date">Applied Date</label>
-                <input type="date" id="app-date">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="app-notes">Notes</label>
-              <textarea id="app-notes" placeholder="Any notes about this application..." rows="2"></textarea>
-            </div>
-            <button class="btn btn-success" id="add-app-btn" style="width: auto; margin-top: 16px;">
-              <span class="btn-text">Add Application</span>
-            </button>
-          </div>
-
-          <div class="applications-list" id="applications-list">
-            <div class="applications-header">
-              <div>Job Title</div>
-              <div>Company</div>
-              <div>Applied</div>
-              <div>Status</div>
-              <div>Actions</div>
-            </div>
-            <div id="applications-container">
-              <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                <p>No applications tracked yet.<br>Start applying and track your progress!</p>
-              </div>
-            </div>
-          </div>
-          </div><!-- end tracker-content -->
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <footer>
-    <div class="container">
-      <p>Resume Diagnosis Engine v1.0.0 — Built with privacy in mind</p>
-    </div>
-  </footer>
+  </div>
+  
+  <div class="toast" id="toast"></div>
 
   <script>
-    // State
-    let selectedFile = null;
-    let currentSessionId = null;
-    let currentDiagnosisScore = 0;
-    let applications = [];
-
-    // DOM Elements
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-    const filePreview = document.getElementById('file-preview');
-    const fileName = document.getElementById('file-name');
-    const fileSize = document.getElementById('file-size');
-    const fileRemove = document.getElementById('file-remove');
-    const targetJob = document.getElementById('target-job');
+    // Elements
+    const uploadZone = document.getElementById('upload-zone');
+    const resumeInput = document.getElementById('resume-input');
+    const fileNameDisplay = document.getElementById('file-name');
     const jobDescription = document.getElementById('job-description');
     const analyzeBtn = document.getElementById('analyze-btn');
-    const statusMessage = document.getElementById('status-message');
-    const statusText = document.getElementById('status-text');
-    const resultsSection = document.getElementById('results-section');
-
-    // Helpers
-    const formatBytes = (bytes) => {
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    const showStatus = (message, type) => {
-      statusMessage.className = `status-message visible ${type}`;
-      statusText.textContent = message;
-    };
-
-    const hideStatus = () => statusMessage.className = 'status-message';
-
-    const updateAnalyzeButton = () => {
-      analyzeBtn.disabled = !selectedFile || !targetJob.value.trim();
-    };
-
-    // File handling
-    const handleFileSelection = (file) => {
-      if (!file) return;
+    const btnText = document.getElementById('btn-text');
+    const btnLoading = document.getElementById('btn-loading');
+    const results = document.getElementById('results');
+    
+    let selectedFile = null;
+    
+    // File upload handling
+    uploadZone.addEventListener('click', () => resumeInput.click());
+    
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = '#6366f1';
+    });
+    
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.style.borderColor = selectedFile ? '#10b981' : '#334155';
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+    
+    resumeInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+    
+    function handleFile(file) {
       const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!validTypes.includes(file.type)) { showStatus('Please upload a PDF or Word document.', 'error'); return; }
-      if (file.size > 10 * 1024 * 1024) { showStatus('File size exceeds 10MB limit.', 'error'); return; }
-      selectedFile = file;
-      fileName.textContent = file.name;
-      fileSize.textContent = formatBytes(file.size);
-      filePreview.classList.add('visible');
-      hideStatus();
-      updateAnalyzeButton();
-    };
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFileSelection(e.dataTransfer.files[0]); });
-    fileInput.addEventListener('change', (e) => handleFileSelection(e.target.files[0]));
-    fileRemove.addEventListener('click', () => { selectedFile = null; fileInput.value = ''; filePreview.classList.remove('visible'); updateAnalyzeButton(); });
-    targetJob.addEventListener('input', updateAnalyzeButton);
-
-    // Analyze
-    analyzeBtn.addEventListener('click', async () => {
-      if (!selectedFile || !targetJob.value.trim()) return;
-      analyzeBtn.classList.add('loading');
-      analyzeBtn.disabled = true;
-      hideStatus();
-      resultsSection.classList.remove('visible');
-
-      try {
-        showStatus('Uploading resume...', 'warning');
-        const formData = new FormData();
-        formData.append('resume', selectedFile);
-        formData.append('targetJobTitle', targetJob.value.trim());
-        if (jobDescription.value.trim()) formData.append('jobDescription', jobDescription.value.trim());
-
-        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-        const uploadResult = await uploadRes.json();
-        if (!uploadResult.success) throw new Error(uploadResult.error || 'Upload failed');
-
-        currentSessionId = uploadResult.data.sessionId;
-        showStatus('Analyzing resume... This may take up to 60 seconds.', 'warning');
-
-        const analyzeRes = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: currentSessionId, targetJobTitle: targetJob.value.trim(), jobDescription: jobDescription.value.trim() || undefined })
-        });
-        const analyzeResult = await analyzeRes.json();
-        if (!analyzeResult.success) throw new Error(analyzeResult.error || 'Analysis failed');
-
-        displayResults(analyzeResult.data);
-        showStatus('Analysis complete!', 'success');
-
-      } catch (error) {
-        console.error('Error:', error);
-        showStatus(error.message || 'An error occurred. Please try again.', 'error');
-      } finally {
-        analyzeBtn.classList.remove('loading');
-        updateAnalyzeButton();
-      }
-    });
-
-    // Display results
-    function displayResults(data) {
-      const confidence = data.overallConfidence;
-      currentDiagnosisScore = confidence;
-      
-      const confidenceRing = document.getElementById('confidence-ring');
-      confidenceRing.style.setProperty('--score', confidence);
-      confidenceRing.className = `confidence-score ${confidence >= 70 ? 'confidence-high' : confidence >= 40 ? 'confidence-medium' : 'confidence-low'}`;
-      document.getElementById('confidence-value').textContent = confidence;
-      document.getElementById('confidence-explanation').textContent = data.confidenceExplanation;
-
-      const badge = document.getElementById('competitive-badge');
-      const badgeText = document.getElementById('competitive-text');
-      if (data.isCompetitive) { badge.className = 'competitive-badge competitive-yes'; badgeText.textContent = '✓ Competitive Resume'; }
-      else { badge.className = 'competitive-badge competitive-no'; badgeText.textContent = 'Needs improvement'; }
-
-      // Root causes
-      document.getElementById('root-causes-container').innerHTML = data.rootCauses.map(rc => `
-        <div class="root-cause-card">
-          <div class="root-cause-header">
-            <span class="root-cause-priority">${rc.priority}</span>
-            <span class="root-cause-title">${rc.title}</span>
-            <div class="root-cause-scores">
-              <span class="score-badge severity">Severity: ${rc.severityScore}/10</span>
-              <span class="score-badge impact">Impact: ${rc.impactScore}/10</span>
-            </div>
-          </div>
-          <span class="root-cause-category">${rc.category.replace(/_/g, ' ')}</span>
-          <p class="root-cause-description">${rc.description}</p>
-          ${rc.evidence?.length ? `<div class="evidence-section"><h4>Evidence</h4>${rc.evidence.map(e => `<div class="evidence-item"><p>${e.description}</p><p class="evidence-citation">"${e.citation}"</p></div>`).join('')}</div>` : ''}
-        </div>
-      `).join('');
-
-      // Recommendations
-      document.getElementById('recommendations-container').innerHTML = data.recommendations.map(rec => `
-        <div class="recommendation-card">
-          <div class="recommendation-header">
-            <span class="recommendation-priority">${rec.priority}</span>
-            <span class="recommendation-title">${rec.title}</span>
-            <div class="recommendation-meta">
-              <span class="meta-badge">Impact: ${rec.expectedImpact}/10</span>
-              <span class="meta-badge">${rec.difficulty}</span>
-              <span class="meta-badge">${rec.timeEstimate}</span>
-            </div>
-          </div>
-          <p class="recommendation-description">${rec.description}</p>
-          <div class="implementation-steps"><h4>Steps:</h4><ol>${rec.implementationSteps.map(s => `<li>${s}</li>`).join('')}</ol></div>
-        </div>
-      `).join('');
-
-      // Metadata
-      document.getElementById('meta-model').textContent = data.processingMetadata.modelUsed;
-      document.getElementById('meta-time').textContent = `${Math.round(data.processingMetadata.totalTime / 1000)}s`;
-      document.getElementById('meta-quality').textContent = `${data.processingMetadata.dataCompleteness}%`;
-
-      resultsSection.classList.add('visible');
-      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      // Unlock application tracker (search generator is always available)
-      document.getElementById('tracker-login-msg').style.display = 'none';
-      document.getElementById('tracker-content').style.display = 'block';
-
-      // Pre-fill search with analyzed job title
-      document.getElementById('search-job-title').value = targetJob.value.trim();
-
-      loadApplications();
-    }
-
-    // Delete data
-    document.getElementById('delete-btn').addEventListener('click', async () => {
-      if (!currentSessionId || !confirm('Delete all your data? This cannot be undone.')) return;
-      try {
-        const res = await fetch(`/api/session/${currentSessionId}`, { method: 'DELETE' });
-        const result = await res.json();
-        if (result.success) {
-          resultsSection.classList.remove('visible');
-          // Reset tracker to login state
-          document.getElementById('tracker-login-msg').style.display = 'block';
-          document.getElementById('tracker-content').style.display = 'none';
-          showStatus('Your data has been deleted.', 'success');
-          currentSessionId = null;
-        } else throw new Error(result.error);
-      } catch (error) { showStatus('Failed to delete: ' + error.message, 'error'); }
-    });
-
-    // Job Tabs
-    document.querySelectorAll('.job-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.job-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.job-tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-      });
-    });
-
-    // Generate Search
-    document.getElementById('generate-search-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('generate-search-btn');
-      const jobTitle = document.getElementById('search-job-title').value.trim();
-      if (!jobTitle) { alert('Please enter a job title'); return; }
-
-      btn.classList.add('loading');
-      try {
-        const res = await fetch('/api/jobs/generate-search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jobTitle,
-            location: document.getElementById('search-location').value.trim() || 'remote',
-            locationType: document.getElementById('search-location-type').value,
-            experienceLevel: document.getElementById('search-experience').value || undefined
-          })
-        });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
-
-        document.getElementById('url-24h').href = result.data.urls.last24Hours;
-        document.getElementById('url-24h').textContent = 'Open Google Search (24h)';
-        document.getElementById('url-week').href = result.data.urls.lastWeek;
-        document.getElementById('url-week').textContent = 'Open Google Search (7 days)';
-        document.getElementById('url-all').href = result.data.urls.allTime;
-        document.getElementById('url-all').textContent = 'Open Google Search (All time)';
-        document.getElementById('boolean-string').textContent = result.data.booleanString;
-        document.getElementById('search-results').style.display = 'block';
-
-      } catch (error) { alert('Error: ' + error.message); }
-      finally { btn.classList.remove('loading'); }
-    });
-
-    // Copy buttons
-    document.querySelectorAll('.copy-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const url = document.getElementById(btn.dataset.url).href;
-        navigator.clipboard.writeText(url);
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy', 2000);
-      });
-    });
-
-    // Application Tracker
-    document.getElementById('app-date').valueAsDate = new Date();
-
-    async function loadApplications() {
-      if (!currentSessionId) return;
-      try {
-        const [appsRes, statsRes] = await Promise.all([
-          fetch(`/api/jobs/applications/${currentSessionId}`),
-          fetch(`/api/jobs/applications/${currentSessionId}/stats`)
-        ]);
-        const appsData = await appsRes.json();
-        const statsData = await statsRes.json();
-
-        if (appsData.success) {
-          applications = appsData.data.applications;
-          renderApplications();
-        }
-        if (statsData.success) {
-          const s = statsData.data.stats;
-          document.getElementById('stat-total').textContent = s.totalApplications;
-          document.getElementById('stat-applied').textContent = s.applied;
-          document.getElementById('stat-interviewing').textContent = s.interviewing;
-          document.getElementById('stat-offers').textContent = s.offers;
-          document.getElementById('stat-rejected').textContent = s.rejected;
-          document.getElementById('stat-rate').textContent = s.interviewRate + '%';
-        }
-      } catch (e) { console.error('Failed to load applications:', e); }
-    }
-
-    function renderApplications() {
-      const container = document.getElementById('applications-container');
-      if (applications.length === 0) {
-        container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><p>No applications tracked yet.</p></div>`;
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx)$/i)) {
+        showToast('Please upload a PDF or Word document');
         return;
       }
-      container.innerHTML = applications.map(app => `
-        <div class="application-row" data-id="${app.id}">
-          <div class="app-job">${app.jobTitle}</div>
-          <div class="app-company">${app.company}</div>
-          <div class="app-date">${new Date(app.appliedDate).toLocaleDateString()}</div>
-          <div>
-            <select class="status-select" onchange="updateAppStatus('${app.id}', this.value)">
-              <option value="applied" ${app.status === 'applied' ? 'selected' : ''}>Applied</option>
-              <option value="screening" ${app.status === 'screening' ? 'selected' : ''}>Screening</option>
-              <option value="interviewing" ${app.status === 'interviewing' ? 'selected' : ''}>Interviewing</option>
-              <option value="offer" ${app.status === 'offer' ? 'selected' : ''}>Offer</option>
-              <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-              <option value="ghosted" ${app.status === 'ghosted' ? 'selected' : ''}>Ghosted</option>
-            </select>
-          </div>
-          <div class="app-actions">
-            ${app.jobUrl ? `<a href="${app.jobUrl}" target="_blank" class="app-action-btn" title="View Job"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
-            <button class="app-action-btn delete" onclick="deleteApp('${app.id}')" title="Delete"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-          </div>
-        </div>
-      `).join('');
+      
+      selectedFile = file;
+      fileNameDisplay.textContent = '✓ ' + file.name;
+      uploadZone.classList.add('has-file');
+      updateButton();
     }
-
-    document.getElementById('add-app-btn').addEventListener('click', async () => {
-      if (!currentSessionId) { alert('Please complete a resume analysis first'); return; }
-      const jobTitle = document.getElementById('app-job-title').value.trim();
-      const company = document.getElementById('app-company').value.trim();
-      if (!jobTitle || !company) { alert('Job title and company are required'); return; }
-
+    
+    // Job description input
+    jobDescription.addEventListener('input', updateButton);
+    
+    function updateButton() {
+      const hasResume = selectedFile !== null;
+      const hasJD = jobDescription.value.trim().length > 50;
+      analyzeBtn.disabled = !(hasResume && hasJD);
+    }
+    
+    // Analyze button
+    analyzeBtn.addEventListener('click', async () => {
+      if (!selectedFile || !jobDescription.value.trim()) {
+        showToast('Please upload resume and paste job description');
+        return;
+      }
+      
+      // Show loading
+      btnText.textContent = 'Analyzing...';
+      btnLoading.style.display = 'inline-block';
+      analyzeBtn.disabled = true;
+      results.classList.remove('show');
+      
       try {
-        const res = await fetch(`/api/jobs/applications/${currentSessionId}`, {
+        const formData = new FormData();
+        formData.append('resume', selectedFile);
+        formData.append('jobDescription', jobDescription.value.trim());
+        
+        const response = await fetch('/api/analyze-match', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jobTitle,
-            company,
-            jobUrl: document.getElementById('app-url').value.trim() || undefined,
-            appliedDate: document.getElementById('app-date').value,
-            notes: document.getElementById('app-notes').value.trim() || undefined,
-            status: 'applied'
-          })
+          body: formData
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
-
-        // Clear form
-        document.getElementById('app-job-title').value = '';
-        document.getElementById('app-company').value = '';
-        document.getElementById('app-url').value = '';
-        document.getElementById('app-notes').value = '';
-        document.getElementById('app-date').valueAsDate = new Date();
-
-        loadApplications();
-      } catch (e) { alert('Error: ' + e.message); }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Analysis failed');
+        }
+        
+        // Display results
+        displayResults(data.data);
+        
+      } catch (error) {
+        showToast(error.message || 'Something went wrong');
+      } finally {
+        btnText.textContent = '🎯 Analyze Match';
+        btnLoading.style.display = 'none';
+        updateButton();
+      }
     });
-
-    window.updateAppStatus = async (appId, status) => {
-      if (!currentSessionId) return;
-      try {
-        await fetch(`/api/jobs/applications/${currentSessionId}/${appId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
-        });
-        loadApplications();
-      } catch (e) { console.error('Failed to update:', e); }
-    };
-
-    window.deleteApp = async (appId) => {
-      if (!currentSessionId || !confirm('Delete this application?')) return;
-      try {
-        await fetch(`/api/jobs/applications/${currentSessionId}/${appId}`, { method: 'DELETE' });
-        loadApplications();
-      } catch (e) { console.error('Failed to delete:', e); }
-    };
+    
+    function displayResults(data) {
+      const score = data.score || 0;
+      const scoreEl = document.getElementById('score');
+      
+      scoreEl.textContent = score + '%';
+      scoreEl.className = 'score-number ' + (score >= 70 ? 'score-high' : score >= 50 ? 'score-medium' : 'score-low');
+      
+      document.getElementById('feedback').textContent = data.feedback || 'No feedback available';
+      
+      // Matching skills
+      const matchingEl = document.getElementById('matching-skills');
+      matchingEl.innerHTML = (data.matchingSkills || [])
+        .map(skill => `<span class="skill-tag skill-match">${skill}</span>`)
+        .join('') || '<span style="color: #64748b;">None identified</span>';
+      
+      // Missing skills
+      const missingEl = document.getElementById('missing-skills');
+      missingEl.innerHTML = (data.missingSkills || [])
+        .map(skill => `<span class="skill-tag skill-missing">${skill}</span>`)
+        .join('') || '<span style="color: #64748b;">None identified</span>';
+      
+      results.classList.add('show');
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
   </script>
 </body>
 </html>
