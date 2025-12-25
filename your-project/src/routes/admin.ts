@@ -75,7 +75,7 @@ router.get('/health', adminAuth, asyncHandler(async (req: Request, res: Response
   // Groq health
   health.services.groq = {
     configured: isGroqAvailable(),
-    model: process.env.GROQ_MODEL || 'llama3-8b-8192'
+    model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
   };
   
   // System info
