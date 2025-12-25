@@ -150,6 +150,10 @@
     .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-top: 4px; }
     @media (max-width: 600px) { .tracker-stats { grid-template-columns: repeat(2, 1fr); } }
     
+    /* Search Links Grid */
+    .search-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 700px) { .search-links-grid { grid-template-columns: 1fr; } }
+    
     /* Actions */
     .action-list { list-style: none; }
     .action-list li { padding: 12px 14px; background: #0a0a0f; border-radius: 8px; margin-bottom: 6px; border-left: 3px solid; }
@@ -289,20 +293,45 @@
       
       <!-- Job Results -->
       <div id="job-results" style="display:none">
-        <div class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05)); border-color: rgba(99, 102, 241, 0.2); margin-bottom: 16px;">
-          <p style="font-size: 0.9rem; color: #a5b4fc;">
-            💡 <strong>These are AI-suggested job matches</strong> based on your profile. Click "LinkedIn" or "Indeed" to find real listings for each role.
-          </p>
-        </div>
-        <div class="flex justify-between items-center mb-4">
-          <h3><span id="jobs-count">0</span> Job Matches</h3>
-          <div class="flex gap-2">
-            <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
-            <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
-            <button class="btn btn-sm btn-secondary filter-btn" data-filter="good">🔵 Good</button>
+        <!-- Smart Search Links -->
+        <div class="card" id="search-links-card">
+          <h3 class="mb-4">🔗 Search Real Jobs</h3>
+          <p class="text-muted mb-4">Click to search major job boards with your profile:</p>
+          
+          <div id="primary-links" class="flex gap-4 flex-wrap mb-4"></div>
+          
+          <div class="divider"></div>
+          
+          <div class="search-links-grid">
+            <div>
+              <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🎯 Search by Your Target Roles</h4>
+              <div id="title-links"></div>
+            </div>
+            <div>
+              <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">💡 Search by Your Skills</h4>
+              <div id="skill-links" class="flex flex-wrap gap-2"></div>
+            </div>
           </div>
+          
+          <div class="divider"></div>
+          
+          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🌐 More Job Boards</h4>
+          <div id="secondary-links" class="flex gap-2 flex-wrap"></div>
         </div>
-        <div id="job-list"></div>
+        
+        <!-- AI Suggestions -->
+        <div id="suggestions-section" style="display: none;">
+          <div class="flex justify-between items-center mb-4">
+            <h3>💡 Suggested Matches (<span id="jobs-count">0</span>)</h3>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
+              <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
+              <button class="btn btn-sm btn-secondary filter-btn" data-filter="good">🔵 Good</button>
+            </div>
+          </div>
+          <p class="text-muted mb-4" style="font-size: 0.9rem;">Based on your profile, here are roles worth exploring:</p>
+          <div id="job-list"></div>
+        </div>
       </div>
     </section>
     
@@ -652,17 +681,9 @@ document.getElementById('search-query').addEventListener('keypress', e => { if (
 
 async function searchJobs() {
   if (!sessionId) { showToast('Upload resume first', 'error'); return; }
-  setLoading('search', true, 'Searching (may take 10-15s)...');
-  
-  // Set a timeout warning
-  const timeoutId = setTimeout(() => {
-    document.getElementById('search-btn-text').textContent = 'Still searching...';
-  }, 5000);
+  setLoading('search', true, 'Searching...');
   
   try {
-    const controller = new AbortController();
-    const fetchTimeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
-    
     const res = await fetch('/api/search-jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -670,38 +691,69 @@ async function searchJobs() {
         sessionId,
         searchQuery: document.getElementById('search-query').value,
         location: document.getElementById('search-location').value
-      }),
-      signal: controller.signal
+      })
     });
-    
-    clearTimeout(fetchTimeout);
     
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     
-    jobs = data.data.jobs || [];
+    // Display search links (always available)
+    if (data.data.searchLinks) {
+      displaySearchLinks(data.data.searchLinks);
+    }
     
-    if (jobs.length === 0) {
-      showToast('No jobs found. Try different keywords.', 'error');
-    } else {
+    // Display job suggestions if available
+    jobs = data.data.jobs || [];
+    if (jobs.length > 0) {
+      document.getElementById('suggestions-section').style.display = 'block';
       displayJobs(jobs);
-      document.getElementById('job-results').style.display = 'block';
       document.getElementById('jobs-badge').textContent = jobs.length;
       document.getElementById('jobs-badge').style.display = 'inline';
-      showToast(`Found ${jobs.length} job matches!`, 'success');
+    } else {
+      document.getElementById('suggestions-section').style.display = 'none';
     }
+    
+    document.getElementById('job-results').style.display = 'block';
+    showToast('Search links ready!', 'success');
     
   } catch (err) {
     console.error('Search error:', err);
-    if (err.name === 'AbortError') {
-      showToast('Search timed out. Please try again.', 'error');
-    } else {
-      showToast(err.message || 'Search failed. Check console for details.', 'error');
-    }
+    showToast(err.message || 'Search failed', 'error');
   } finally {
-    clearTimeout(timeoutId);
     setLoading('search', false, '🔍 Search Jobs');
   }
+}
+
+function displaySearchLinks(links) {
+  // Primary job boards
+  document.getElementById('primary-links').innerHTML = links.primary.map(l => `
+    <a href="${l.url}" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+      ${l.icon} ${l.name}
+    </a>
+  `).join('');
+  
+  // Secondary job boards
+  document.getElementById('secondary-links').innerHTML = links.secondary.map(l => `
+    <a href="${l.url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">
+      ${l.icon} ${l.name}
+    </a>
+  `).join('');
+  
+  // By title
+  document.getElementById('title-links').innerHTML = links.byTitle.map(t => `
+    <div style="margin-bottom: 8px;">
+      <span style="color: #e2e8f0; font-size: 0.9rem; margin-right: 8px;">${t.title}</span>
+      <a href="${t.linkedin}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; padding: 4px 8px; font-size: 0.75rem;">LinkedIn</a>
+      <a href="${t.indeed}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; padding: 4px 8px; font-size: 0.75rem;">Indeed</a>
+    </div>
+  `).join('');
+  
+  // By skill
+  document.getElementById('skill-links').innerHTML = links.bySkill.map(s => `
+    <a href="${s.url}" target="_blank" class="tag tag-info" style="text-decoration: none; cursor: pointer;">
+      ${s.skill} →
+    </a>
+  `).join('');
 }
 
 function displayJobs(list, filter = 'all') {
@@ -718,23 +770,23 @@ function displayJobs(list, filter = 'all') {
       const cardClass = job.matchScore >= 80 ? 'excellent' : job.matchScore >= 60 ? 'good' : 'moderate';
       const recClass = job.recommendation === 'APPLY_NOW' ? 'apply-now' : job.recommendation === 'WORTH_APPLYING' ? 'worth-it' : job.recommendation === 'CUSTOMIZE_FIRST' ? 'customize' : 'skip';
       
-      // Create search URLs for real job boards
+      // For suggestions, create search URLs. For real jobs, use applyUrl
       const searchQuery = encodeURIComponent(`${job.title} ${job.company}`);
-      const linkedInUrl = `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
+      const linkedInUrl = job.applyUrl || job.searchUrl || `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
       const indeedUrl = `https://www.indeed.com/jobs?q=${searchQuery}`;
-      const googleUrl = `https://www.google.com/search?q=${searchQuery}+jobs`;
       
       return `
         <div class="job-card ${cardClass}">
           <div class="job-header">
             <div>
               <div class="job-title">${job.title}</div>
-              <div class="job-company">${job.company}</div>
-              <div class="job-meta">
+              <div class="job-company">${job.company}${job.isSuggestion ? ' <span style="font-size:0.75rem; color:#64748b;">(suggested)</span>' : ''}</div>
+              ${job.location ? `<div class="job-meta">
                 <span>📍 ${job.location}</span>
                 ${job.salary ? `<span>💰 ${job.salary}</span>` : ''}
-                <span>🕐 ${job.postedDate}</span>
-              </div>
+                ${job.postedDate ? `<span>🕐 ${job.postedDate}</span>` : ''}
+                ${job.isRemote ? '<span>🏠 Remote</span>' : ''}
+              </div>` : ''}
             </div>
             <div style="text-align:right;">
               <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
@@ -742,15 +794,17 @@ function displayJobs(list, filter = 'all') {
             </div>
           </div>
           <div class="flex gap-2 items-center mt-4">
-            <span class="recommendation ${recClass}">${(job.recommendation || '').replace(/_/g, ' ')}</span>
+            <span class="recommendation ${recClass}">${(job.recommendation || 'WORTH_APPLYING').replace(/_/g, ' ')}</span>
             ${(job.matchingSkills || []).slice(0, 3).map(s => `<span class="tag tag-success" style="font-size:0.75rem;">${s}</span>`).join('')}
           </div>
-          <p style="color:#94a3b8; font-size:0.9rem; margin-top:12px;">${job.quickTake || job.description}</p>
+          <p style="color:#94a3b8; font-size:0.9rem; margin-top:12px;">${job.quickTake || job.description || ''}</p>
           <div class="flex gap-2 flex-wrap mt-4">
             <button class="btn btn-primary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
             <button class="btn btn-secondary btn-sm" onclick="saveJob('${job.id}')">💾 Save</button>
-            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm">🔗 LinkedIn</a>
-            <a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm">🔗 Indeed</a>
+            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">
+              ${job.applyUrl ? '🔗 Apply Now' : '🔗 Find on LinkedIn'}
+            </a>
+            ${!job.applyUrl ? `<a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">🔗 Indeed</a>` : ''}
           </div>
         </div>
       `;
@@ -857,7 +911,7 @@ function updateTracker() {
   document.getElementById('no-saved-jobs').style.display = 'none';
   document.getElementById('saved-jobs-list').innerHTML = savedJobs.map(job => {
     const searchQuery = encodeURIComponent(`${job.title} ${job.company}`);
-    const linkedInUrl = `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
+    const applyUrl = job.applyUrl || job.searchUrl || `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
     return `
     <div class="job-card">
       <div class="job-header">
@@ -865,7 +919,7 @@ function updateTracker() {
           <div class="job-title">${job.title}</div>
           <div class="job-company">${job.company}</div>
           <div class="job-meta">
-            <span>📍 ${job.location}</span>
+            ${job.location ? `<span>📍 ${job.location}</span>` : ''}
             <span class="tag ${job.status === 'INTERVIEW' ? 'tag-success' : job.status === 'APPLIED' ? 'tag-warning' : job.status === 'REJECTED' ? 'tag-danger' : 'tag-info'}">${job.status}</span>
           </div>
         </div>
@@ -882,7 +936,7 @@ function updateTracker() {
           <option value="REJECTED" ${job.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
         </select>
         <button class="btn btn-secondary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
-        <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm">🔗 Find on LinkedIn</a>
+        <a href="${applyUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;">${job.applyUrl ? '🔗 Apply' : '🔗 Find Job'}</a>
       </div>
     </div>
   `;}).join('');

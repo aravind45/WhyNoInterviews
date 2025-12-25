@@ -244,65 +244,227 @@ ${resumeText.substring(0, 6000)}
 });
 
 // ============================================================
-// FEATURE 3: JOB SEARCH
+// FEATURE 3: JOB SEARCH - Smart Links + Optional Real API
 // ============================================================
+
+// Generate smart job board search URLs
+function generateJobSearchLinks(profile: any, customQuery?: string, customLocation?: string) {
+  const title = customQuery || profile.targetTitles?.[0] || profile.currentTitle || 'software engineer';
+  const location = customLocation || profile.location || '';
+  const skills = (profile.hardSkills || []).slice(0, 3).join(' ');
+  
+  const encode = encodeURIComponent;
+  
+  return {
+    primary: [
+      {
+        name: 'LinkedIn',
+        icon: '💼',
+        url: `https://www.linkedin.com/jobs/search/?keywords=${encode(title)}&location=${encode(location)}`,
+        description: 'Most professional jobs'
+      },
+      {
+        name: 'Indeed',
+        icon: '🔍',
+        url: `https://www.indeed.com/jobs?q=${encode(title)}&l=${encode(location)}`,
+        description: 'Largest job board'
+      },
+      {
+        name: 'Glassdoor',
+        icon: '🚪',
+        url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(title)}&locT=C&locKeyword=${encode(location)}`,
+        description: 'Jobs + salary info'
+      }
+    ],
+    secondary: [
+      {
+        name: 'Google Jobs',
+        icon: '🔎',
+        url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs`
+      },
+      {
+        name: 'ZipRecruiter',
+        icon: '⚡',
+        url: `https://www.ziprecruiter.com/jobs-search?search=${encode(title)}&location=${encode(location)}`
+      },
+      {
+        name: 'Dice (Tech)',
+        icon: '🎲',
+        url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}`
+      },
+      {
+        name: 'Wellfound (Startups)',
+        icon: '🚀',
+        url: `https://wellfound.com/jobs?query=${encode(title)}`
+      }
+    ],
+    bySkill: (profile.hardSkills || []).slice(0, 4).map((skill: string) => ({
+      skill,
+      url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill + ' ' + profile.experienceLevel)}&location=${encode(location)}`
+    })),
+    byTitle: (profile.targetTitles || []).slice(0, 4).map((t: string) => ({
+      title: t,
+      linkedin: `https://www.linkedin.com/jobs/search/?keywords=${encode(t)}&location=${encode(location)}`,
+      indeed: `https://www.indeed.com/jobs?q=${encode(t)}&l=${encode(location)}`
+    }))
+  };
+}
 
 app.post('/api/search-jobs', async (req, res) => {
   try {
-    const { sessionId, searchQuery, location } = req.body;
+    const { sessionId, searchQuery, location, useRealApi } = req.body;
     const session = sessions[sessionId];
     
     if (!session) {
       return res.status(400).json({ success: false, error: 'Session not found. Upload resume first.' });
     }
 
-    const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
-    const loc = location || session.profile.location || 'Remote';
-    const skills = (session.profile.hardSkills || []).slice(0, 5).join(', ');
-
-    // Simplified prompt for faster response
-    const prompt = `Generate 6 job listings for: "${query}" in "${loc}"
-Candidate skills: ${skills}
-
-Return ONLY a JSON array, no other text:
-[{"id":"j1","title":"<title>","company":"<company>","location":"<loc>","salary":"<range>","postedDate":"<X days ago>","description":"<2 sentences>","requirements":["<r1>","<r2>","<r3>"],"matchScore":<0-100>,"recommendation":"APPLY_NOW|WORTH_APPLYING|CUSTOMIZE_FIRST|SKIP","matchingSkills":["<s1>","<s2>"],"missingSkills":["<s1>"],"quickTake":"<1 sentence>"}]
-
-Mix: 2 high match (85-95%), 2 medium (65-80%), 2 lower (40-60%). Use realistic companies.`;
-
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 2000
-    });
-
-    const responseText = completion.choices[0]?.message?.content || '';
+    // Generate smart search links (always available)
+    const searchLinks = generateJobSearchLinks(session.profile, searchQuery, location);
     
-    // Try to extract JSON array
-    let jobs = [];
-    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    // If JSearch API key is provided and useRealApi is true, fetch real jobs
+    const JSEARCH_API_KEY = process.env.JSEARCH_API_KEY;
+    let realJobs: any[] = [];
     
-    if (jsonMatch) {
+    if (JSEARCH_API_KEY && useRealApi !== false) {
       try {
-        jobs = JSON.parse(jsonMatch[0]);
-      } catch (parseErr) {
-        console.error('JSON parse error:', parseErr);
-        // Return empty with helpful message
-        return res.json({ success: true, data: { jobs: [] }, message: 'Could not parse results' });
+        const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
+        const loc = location || session.profile.location || '';
+        
+        const response = await fetch(
+          `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query + ' in ' + loc)}&num_pages=1`,
+          {
+            headers: {
+              'X-RapidAPI-Key': JSEARCH_API_KEY,
+              'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
+            }
+          }
+        );
+        
+        const data = await response.json();
+        
+        if (data.data && Array.isArray(data.data)) {
+          // Score each real job against profile
+          realJobs = await Promise.all(data.data.slice(0, 8).map(async (job: any) => {
+            const score = quickMatchScore(session.profile, job);
+            return {
+              id: job.job_id,
+              title: job.job_title,
+              company: job.employer_name,
+              location: job.job_city ? `${job.job_city}, ${job.job_state}` : job.job_country,
+              salary: job.job_min_salary && job.job_max_salary 
+                ? `$${job.job_min_salary.toLocaleString()} - $${job.job_max_salary.toLocaleString()}`
+                : null,
+              postedDate: job.job_posted_at_datetime_utc ? getRelativeTime(job.job_posted_at_datetime_utc) : 'Recently',
+              description: job.job_description?.substring(0, 200) + '...',
+              applyUrl: job.job_apply_link,
+              companyLogo: job.employer_logo,
+              employmentType: job.job_employment_type,
+              isRemote: job.job_is_remote,
+              ...score
+            };
+          }));
+          
+          realJobs.sort((a, b) => b.matchScore - a.matchScore);
+        }
+      } catch (apiErr) {
+        console.error('JSearch API error:', apiErr);
+        // Continue without real jobs - links will still work
       }
     }
     
-    // Sort by score
-    jobs.sort((a: any, b: any) => (b.matchScore || 0) - (a.matchScore || 0));
-    session.jobs = jobs;
+    // If no API or API failed, generate AI suggestions
+    if (realJobs.length === 0 && process.env.GROQ_API_KEY) {
+      try {
+        const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
+        const skills = (session.profile.hardSkills || []).slice(0, 5).join(', ');
+        
+        const prompt = `Suggest 5 specific job titles and companies that would be good matches for someone with these skills: ${skills}, looking for: ${query}
 
-    res.json({ success: true, data: { jobs } });
+Return ONLY JSON array:
+[{"title":"<specific job title>","company":"<real company name>","matchScore":<70-95>,"reason":"<why good match>"}]`;
+
+        const completion = await groq.chat.completions.create({
+          model: 'llama-3.1-8b-instant',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 800
+        });
+
+        const responseText = completion.choices[0]?.message?.content || '';
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+        
+        if (jsonMatch) {
+          const suggestions = JSON.parse(jsonMatch[0]);
+          realJobs = suggestions.map((s: any, i: number) => ({
+            id: 'sug_' + i,
+            title: s.title,
+            company: s.company,
+            matchScore: s.matchScore,
+            quickTake: s.reason,
+            isSuggestion: true,
+            searchUrl: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(s.title + ' ' + s.company)}`
+          }));
+        }
+      } catch (aiErr) {
+        console.error('AI suggestion error:', aiErr);
+      }
+    }
+    
+    session.jobs = realJobs;
+    session.searchLinks = searchLinks;
+
+    res.json({ 
+      success: true, 
+      data: { 
+        jobs: realJobs,
+        searchLinks,
+        hasRealApi: !!process.env.JSEARCH_API_KEY
+      } 
+    });
 
   } catch (error: any) {
     console.error('Job search error:', error);
     res.status(500).json({ success: false, error: error.message || 'Search failed' });
   }
 });
+
+// Quick match score without AI (fast)
+function quickMatchScore(profile: any, job: any) {
+  const jobText = (job.job_title + ' ' + job.job_description + ' ' + (job.job_required_skills || []).join(' ')).toLowerCase();
+  const profileSkills = (profile.hardSkills || []).map((s: string) => s.toLowerCase());
+  
+  let matched = 0;
+  let matchingSkills: string[] = [];
+  
+  profileSkills.forEach((skill: string) => {
+    if (jobText.includes(skill.toLowerCase())) {
+      matched++;
+      matchingSkills.push(skill);
+    }
+  });
+  
+  const score = Math.min(95, Math.round((matched / Math.max(profileSkills.length, 1)) * 100) + 30);
+  
+  return {
+    matchScore: score,
+    matchingSkills,
+    recommendation: score >= 80 ? 'APPLY_NOW' : score >= 60 ? 'WORTH_APPLYING' : 'CUSTOMIZE_FIRST',
+    quickTake: score >= 80 ? 'Strong match for your skills!' : score >= 60 ? 'Good potential - worth applying' : 'Consider customizing your resume'
+  };
+}
+
+function getRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return '1 day ago';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${Math.floor(diffDays / 30)} months ago`;
+}
 
 // ============================================================
 // FEATURE 4: COVER LETTER GENERATION
