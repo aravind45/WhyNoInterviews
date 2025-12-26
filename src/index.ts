@@ -837,6 +837,16 @@ app.post('/api/generate-interview-prep', async (req, res) => {
       "Do you have any questions for us?"
     ];
 
+    // Questions candidate should ask the interviewer
+    const questionsToAskInterviewer = [
+      "Can you describe the company culture?",
+      "What does success look like in this role?",
+      "How does the team collaborate, and what's the typical workflow?",
+      "What are the biggest challenges the team or company is currently facing?",
+      "What opportunities are there for professional development and growth within the company?",
+      "Can you tell me about the next steps in the interview process?"
+    ];
+
     const prompt = `You are an interview preparation coach. Generate personalized answers for interview questions using ONLY the information provided below.
 
 CANDIDATE PROFILE:
@@ -907,6 +917,7 @@ Return ONLY the JSON array, no additional text.`;
       success: true,
       data: {
         questions: interviewPrep,
+        questionsToAsk: questionsToAskInterviewer,
         companyResearch: companyResearch,
         companyName: companyName
       }
