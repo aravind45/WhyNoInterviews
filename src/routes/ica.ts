@@ -17,6 +17,18 @@ import { getPool } from '../database/connection';
 
 const router = Router();
 
+/**
+ * Helper function to get session UUID from session token
+ */
+async function getSessionUuid(sessionToken: string): Promise<string | null> {
+  const pool = getPool();
+  const result = await pool.query(
+    'SELECT id FROM user_sessions WHERE session_token = $1 AND is_active = true AND expires_at > NOW()',
+    [sessionToken]
+  );
+  return result.rows.length > 0 ? result.rows[0].id : null;
+}
+
 // Configure multer for CSV file upload
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -44,16 +56,13 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
   }
 
   try {
-    // Validate session exists
-    const pool = getPool();
-    const sessionResult = await pool.query(
-      'SELECT id FROM user_sessions WHERE id = $1 AND is_active = true AND expires_at > NOW()',
-      [sessionId]
-    );
-
-    if (sessionResult.rows.length === 0) {
+    // Validate session and get UUID
+    const sessionUuid = await getSessionUuid(sessionId);
+    if (!sessionUuid) {
       return res.status(401).json({ success: false, error: 'Invalid or expired session' });
     }
+
+    const pool = getPool();
 
     // Validate CSV format
     validateLinkedInCSV(req.file.buffer);
@@ -71,7 +80,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
       `INSERT INTO contact_import_batches
        (id, session_id, filename, total_contacts, successful_imports, failed_imports)
        VALUES ($1, $2, $3, $4, 0, 0)`,
-      [batchId, sessionId, req.file.originalname, parseResult.totalRows]
+      [batchId, sessionUuid, req.file.originalname, parseResult.totalRows]
     );
 
     // Get user's target job title if available (for better categorization)
@@ -80,7 +89,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
        WHERE session_id = $1
        ORDER BY created_at DESC
        LIMIT 1`,
-      [sessionId]
+      [sessionUuid]
     );
     const targetJobTitle = analysisResult.rows[0]?.target_job_title;
 
@@ -102,7 +111,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
            ON CONFLICT (session_id, first_name, last_name, company)
            DO NOTHING`,
           [
-            sessionId,
+            sessionUuid,
             contact.firstName,
             contact.lastName,
             contact.emailAddress,
@@ -174,6 +183,11 @@ router.get('/contacts/:sessionId', async (req: Request, res: Response) => {
   const { category, search } = req.query;
 
   try {
+    const sessionUuid = await getSessionUuid(sessionId);
+    if (!sessionUuid) {
+      return res.status(401).json({ success: false, error: 'Invalid or expired session' });
+    }
+
     const pool = getPool();
     let query = `
       SELECT
@@ -184,7 +198,7 @@ router.get('/contacts/:sessionId', async (req: Request, res: Response) => {
       WHERE session_id = $1
     `;
 
-    const params: any[] = [sessionId];
+    const params: any[] = [sessionUuid];
     let paramIndex = 2;
 
     // Filter by category
@@ -348,10 +362,15 @@ router.get('/stats/:sessionId', async (req: Request, res: Response) => {
   const { sessionId } = req.params;
 
   try {
+    const sessionUuid = await getSessionUuid(sessionId);
+    if (!sessionUuid) {
+      return res.status(401).json({ success: false, error: 'Invalid or expired session' });
+    }
+
     const pool = getPool();
     const result = await pool.query(
       'SELECT * FROM ica_stats WHERE session_id = $1',
-      [sessionId]
+      [sessionUuid]
     );
 
     if (result.rows.length === 0) {
