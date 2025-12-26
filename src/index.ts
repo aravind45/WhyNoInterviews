@@ -777,6 +777,147 @@ Return ONLY the cover letter text, no additional commentary.`;
   }
 });
 
+// ============================================================
+// INTERVIEW PREPARATION GENERATOR
+// ============================================================
+app.post('/api/generate-interview-prep', async (req, res) => {
+  try {
+    const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
+    const session = sessions[sessionId] || {};
+
+    if (!jobDescription) {
+      return res.status(400).json({ success: false, error: 'Job description required' });
+    }
+
+    // Extract company name from job description
+    const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
+    const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
+
+    // Research company information
+    const companyResearch = await researchCompany(companyName);
+
+    const resumeText = session.resumeText || '';
+    const profile = session.profile || analysisData?.profile || {};
+
+    // Extract achievements from resume
+    const achievementPatterns = [
+      /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
+      /\d+%[^.]+\./gi,
+      /\$[\d,]+[^.]+\./gi
+    ];
+
+    let achievements: string[] = [];
+    achievementPatterns.forEach(pattern => {
+      const matches = resumeText.match(pattern);
+      if (matches) achievements.push(...matches);
+    });
+    achievements = [...new Set(achievements)].slice(0, 8);
+
+    // The 20 standard interview questions
+    const interviewQuestions = [
+      "Tell me about yourself",
+      "What are your strengths / weaknesses?",
+      "What do you like to do outside of work?",
+      "How do you handle difficult situations?",
+      "Do you like working alone or in a team?",
+      "Why did you leave your previous job?",
+      "Why should we hire you?",
+      "What do you know about this company?",
+      "Have you applied anywhere else?",
+      "Where do you see yourself in 5 years?",
+      "What are your salary expectations?",
+      "Describe your ability to work under pressure",
+      "What is the most challenging thing about working with you?",
+      "Talk about your achievements",
+      "How do you handle conflict?",
+      "What was your biggest challenge with your previous boss?",
+      "Why do you want to work with us?",
+      "Why do you think you deserve this job?",
+      "What motivates you?",
+      "Do you have any questions for us?"
+    ];
+
+    const prompt = `You are an interview preparation coach. Generate personalized answers for interview questions using ONLY the information provided below.
+
+CANDIDATE PROFILE:
+Name: ${profile.name || 'Candidate'}
+Current Role: ${profile.currentTitle || 'Professional'}
+Experience: ${profile.yearsExperience || 'Several'}+ years
+Key Skills: ${(profile.hardSkills || []).join(', ') || 'various technical skills'}
+Key Achievements:
+${achievements.length > 0 ? achievements.map((a, i) => `${i+1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
+
+COMPANY INFORMATION (${companyName}):
+${companyResearch}
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 3000)}
+
+ANALYSIS INSIGHTS:
+- Match Score: ${analysisData?.overallScore || 'N/A'}%
+- Strengths: ${(analysisData?.strengths || []).map((s: any) => s.skill).join(', ') || 'Multiple relevant skills'}
+- Gaps/Weaknesses: ${(analysisData?.dealbreakers || []).map((d: any) => d.requirement).join(', ') || 'None identified'}
+
+INTERVIEW QUESTIONS TO ANSWER:
+${interviewQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+
+For EACH question above, provide:
+1. The question number and text
+2. A personalized suggested answer based on the candidate's actual resume, achievements, and the specific job/company
+3. Use ONLY facts from the resume, job description, and company research
+4. For weakness/gap questions, acknowledge honestly but show how they're addressing it
+5. Keep each answer concise (2-4 sentences)
+
+Return ONLY a JSON array with this structure:
+[
+  {
+    "question": "Tell me about yourself",
+    "suggestedAnswer": "Based on resume and JD, explain who you are professionally...",
+    "tips": "Brief tip on how to deliver this answer"
+  }
+]
+
+CRITICAL RULES:
+- DO NOT fabricate achievements, skills, or experience
+- Use ONLY information from the resume provided
+- Reference company facts ONLY from the company research section
+- For gaps/weaknesses identified in analysis, provide honest but constructive answers
+- If resume lacks information for a question, suggest general professional response
+- Keep answers factual and authentic - this is someone's career opportunity
+
+Return ONLY the JSON array, no additional text.`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.5,
+      max_tokens: 4000
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+
+    if (!jsonMatch) {
+      throw new Error('Failed to generate interview preparation');
+    }
+
+    const interviewPrep = JSON.parse(jsonMatch[0]);
+
+    res.json({
+      success: true,
+      data: {
+        questions: interviewPrep,
+        companyResearch: companyResearch,
+        companyName: companyName
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Interview prep error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Generation failed' });
+  }
+});
+
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));

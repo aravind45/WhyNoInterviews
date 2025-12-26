@@ -609,7 +609,23 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- Interview Prep Modal -->
+  <div class="cl-modal" id="interview-prep-modal">
+    <div class="cl-modal-content" style="max-width: 900px;">
+      <div class="cl-modal-header">
+        <div>
+          <h3>🎯 Interview Preparation</h3>
+          <p class="text-muted" id="interview-prep-info">20 questions with personalized answers</p>
+        </div>
+        <button class="cl-modal-close" onclick="closeInterviewPrepModal()">×</button>
+      </div>
+      <div class="cl-modal-body">
+        <div id="interview-prep-content">Generating your personalized interview preparation...</div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 <script>
@@ -1320,7 +1336,27 @@ function displayAnalysisResults(d) {
       <div class="verdict-badge ${scoreClass}">${d.verdict || 'ANALYZED'}</div>
       <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
     </div>
-    
+
+    <!-- Action Buttons: Cover Letter & Interview Prep -->
+    <div class="grid-2" style="gap: 12px; margin-bottom: 20px;">
+      <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3); padding: 20px;">
+        <h4 style="color: #a78bfa; margin-bottom: 8px; font-size: 1rem;">✉️ Cover Letter</h4>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">Generate personalized cover letter</p>
+        <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
+          <span id="cover-letter-btn-text">✉️ Generate</span>
+          <span class="loading" id="cover-letter-loading" style="display:none"></span>
+        </button>
+      </div>
+      <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05)); border-color: rgba(16, 185, 129, 0.3); padding: 20px;">
+        <h4 style="color: #10b981; margin-bottom: 8px; font-size: 1rem;">🎯 Interview Prep</h4>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">20 questions with answers</p>
+        <button class="btn btn-primary btn-full" id="generate-interview-prep-btn" style="background: linear-gradient(135deg, #10b981, #059669);">
+          <span id="interview-prep-btn-text">🎯 Prepare</span>
+          <span class="loading" id="interview-prep-loading" style="display:none"></span>
+        </button>
+      </div>
+    </div>
+
     <div class="card">
       <div class="flex justify-between items-center mb-4">
         <span>Interview Probability</span>
@@ -1466,17 +1502,7 @@ function displayAnalysisResults(d) {
       </div>
       <p class="encouragement">${d.bottomLine?.encouragement || ''}</p>
     </div>
-    
-    <!-- COVER LETTER GENERATOR -->
-    <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3);">
-      <h3 style="color: #a78bfa; margin-bottom: 8px;">✉️ Generate Killer Cover Letter</h3>
-      <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Create a highly specific cover letter that shows exactly why YOU are perfect for THIS role</p>
-      <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
-        <span id="cover-letter-btn-text">✉️ Generate Cover Letter</span>
-        <span class="loading" id="cover-letter-loading" style="display:none"></span>
-      </button>
-    </div>
-    
+
     <!-- Cover Letter Output -->
     <div id="cover-letter-output" style="display:none">
       <div class="card">
@@ -1492,10 +1518,13 @@ function displayAnalysisResults(d) {
     </div>
   `;
   
-  // Attach cover letter button listener
+  // Attach button listeners
   setTimeout(() => {
     const clBtn = document.getElementById('generate-cover-letter-btn');
     if (clBtn) clBtn.addEventListener('click', generateAnalysisCoverLetter);
+
+    const ipBtn = document.getElementById('generate-interview-prep-btn');
+    if (ipBtn) ipBtn.addEventListener('click', generateInterviewPrep);
   }, 100);
   
   document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
@@ -1573,16 +1602,128 @@ function copyCoverLetter() {
   });
 }
 
+// ========== INTERVIEW PREP GENERATOR ==========
+async function generateInterviewPrep() {
+  const jobDesc = document.getElementById('job-description').value.trim();
+  if (!jobDesc) {
+    showToast('Job description is required for interview prep', 'error');
+    return;
+  }
+
+  if (!lastAnalysisData) {
+    showToast('Please analyze your resume first', 'error');
+    return;
+  }
+
+  // Ensure sessionId exists
+  if (!sessionId) {
+    if (currentUser && currentUser.email) {
+      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      localStorage.setItem('jobmatch_session', sessionId);
+    } else {
+      sessionId = 'temp_' + Date.now();
+      localStorage.setItem('jobmatch_session', sessionId);
+    }
+  }
+
+  // Show modal and loading state
+  document.getElementById('interview-prep-modal').classList.add('open');
+  document.getElementById('interview-prep-content').innerHTML = '<div class="loading" style="margin: 40px auto;"></div><p style="text-align: center; color: #94a3b8;">Generating personalized interview questions and answers...</p>';
+  document.getElementById('interview-prep-btn-text').textContent = 'Generating...';
+  document.getElementById('interview-prep-loading').style.display = 'inline-block';
+  document.getElementById('generate-interview-prep-btn').disabled = true;
+
+  try {
+    const res = await fetch('/api/generate-interview-prep', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        jobDescription: jobDesc,
+        analysisData: lastAnalysisData
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error || 'Generation failed');
+
+    // Display the interview prep
+    displayInterviewPrep(data.data.questions, data.data.companyName);
+    showToast('Interview prep generated!', 'success');
+
+  } catch (err) {
+    console.error('Interview prep error:', err);
+    document.getElementById('interview-prep-content').innerHTML = `<p style="color: #ef4444; text-align: center;">Failed to generate. Please try again.</p>`;
+    showToast(String(err.message || 'Generation failed'), 'error');
+  } finally {
+    document.getElementById('interview-prep-btn-text').textContent = '🎯 Prepare';
+    document.getElementById('interview-prep-loading').style.display = 'none';
+    document.getElementById('generate-interview-prep-btn').disabled = false;
+  }
+}
+
+function displayInterviewPrep(questions, companyName) {
+  const html = `
+    <div style="margin-bottom: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 8px;">
+      <h4 style="color: #10b981; margin-bottom: 8px;">🎯 Interview Preparation for ${companyName}</h4>
+      <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px;">Personalized answers based on your resume and the job requirements</p>
+      <button class="btn btn-secondary btn-sm" onclick="copyAllInterviewPrep()">📋 Copy All</button>
+    </div>
+    ${questions.map((q, i) => `
+      <div style="margin-bottom: 24px; padding: 20px; background: #1e1e2e; border-radius: 12px; border-left: 3px solid ${i % 3 === 0 ? '#6366f1' : i % 3 === 1 ? '#8b5cf6' : '#10b981'};">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+          <h4 style="color: #e2e8f0; margin: 0; flex: 1;">
+            <span style="color: #64748b; font-size: 0.85rem; font-weight: 500;">Q${i + 1}.</span> ${q.question}
+          </h4>
+          <button class="btn btn-secondary btn-sm" onclick="copyAnswer(${i})" style="margin-left: 12px;">📋</button>
+        </div>
+        <div style="background: #0a0a0f; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
+          <div style="color: #10b981; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">💡 Suggested Answer</div>
+          <p style="color: #cbd5e1; line-height: 1.7; margin: 0; white-space: pre-wrap;" id="answer-${i}">${q.suggestedAnswer}</p>
+        </div>
+        ${q.tips ? `<div style="padding: 12px; background: rgba(99, 102, 241, 0.1); border-radius: 6px;">
+          <div style="color: #818cf8; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">📌 TIP</div>
+          <p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">${q.tips}</p>
+        </div>` : ''}
+      </div>
+    `).join('')}
+  `;
+  document.getElementById('interview-prep-content').innerHTML = html;
+}
+
+function copyAnswer(index) {
+  const answer = document.getElementById(`answer-${index}`).textContent;
+  navigator.clipboard.writeText(answer).then(() => {
+    showToast('Answer copied!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy', 'error');
+  });
+}
+
+function copyAllInterviewPrep() {
+  const content = document.getElementById('interview-prep-content').innerText;
+  navigator.clipboard.writeText(content).then(() => {
+    showToast('All interview prep copied!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy', 'error');
+  });
+}
+
+function closeInterviewPrepModal() {
+  document.getElementById('interview-prep-modal').classList.remove('open');
+}
+
 function saveCurrentCoverLetter() {
   const content = document.getElementById('cover-letter-content').textContent;
   if (!content) {
     showToast('No cover letter to save', 'error');
     return;
   }
-  
+
   // Extract job info from the job description
   const jobDesc = document.getElementById('job-description').value || '';
-  
+
   // Try to extract company name
   const companyMatch = jobDesc.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i) ||
                        jobDesc.match(/([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+is\s+(?:seeking|hiring|looking)/i);
