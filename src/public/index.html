@@ -714,40 +714,59 @@ function generateSearchLinksClientSide() {
   const location = document.getElementById('search-location').value || profile.location || '';
   const encode = encodeURIComponent;
   
-  // ATS sites for Fresh Jobs - EXACT list from Boolean hack
+  // ATS sites for Fresh Jobs - all 15 sites
   const atsSites = [
-    'myworkdayjobs.com',
-    'greenhouse.io', 
-    'lever.co',
-    'icims.com',
-    'smartrecruiters.com',
-    'taleo.net',
-    'jobvite.com',
-    'workforcenow.adp.com',
-    'bamboohr.com',
-    'brassring.com',
-    'breezy.hr',
-    'bullhorn.com',
-    'jazzhr.com',
-    'jobdiva.com',
-    'successfactors.com'
+    'myworkdayjobs.com', 'greenhouse.io', 'lever.co', 'icims.com',
+    'smartrecruiters.com', 'taleo.net', 'jobvite.com', 'workforcenow.adp.com',
+    'bamboohr.com', 'brassring.com', 'breezy.hr', 'bullhorn.com',
+    'jazzhr.com', 'jobdiva.com', 'successfactors.com'
   ];
   
-  // Simplify job title - extract key job words only
-  const rawTitle = title.replace(/"/g, '').replace(/,/g, '');
-  // Remove common filler words and clean up
-  const stopWords = ['and', 'the', 'for', 'with', 'level', 'senior', 'junior', 'lead', 'staff', 'principal', 'or', 'of', 'in', 'a', 'an'];
-  const titleWords = rawTitle
-    .replace(/-level/gi, '')  // Remove "-level" suffix
-    .replace(/[-\/]/g, ' ')   // Replace dashes/slashes with spaces
-    .split(/\s+/)
-    .filter(w => w.length > 2 && !stopWords.includes(w.toLowerCase()));
-  const jobTitle = titleWords.slice(0, 3).join(' '); // Max 3 words like "Director Technology AI"
+  // Extract seniority levels from title
+  const seniorityLevels = ['Director', 'Head of', 'VP', 'Vice President', 'Principal', 'Lead', 'Senior', 'Manager', 'Chief', 'CTO', 'CIO'];
+  const foundSeniority = seniorityLevels.filter(level => 
+    title.toLowerCase().includes(level.toLowerCase()) || 
+    (profile.targetTitles || []).some(t => t.toLowerCase().includes(level.toLowerCase()))
+  );
+  const seniorityQuery = foundSeniority.length > 0 
+    ? foundSeniority.slice(0, 4) 
+    : ['Director', 'Manager', 'Lead']; // Default
   
-  // Simplify location - just city name
+  // Extract domain/field keywords from title and target roles
+  const domainKeywords = ['AI', 'Machine Learning', 'ML', 'Data', 'Engineering', 'Technology', 
+    'Enterprise Architecture', 'Platform', 'Digital Transformation', 'Automation', 
+    'Cloud', 'Software', 'Product', 'Analytics', 'Infrastructure', 'DevOps', 'Security'];
+  const titleAndTargets = [title, ...(profile.targetTitles || [])].join(' ');
+  const foundDomains = domainKeywords.filter(domain => 
+    titleAndTargets.toLowerCase().includes(domain.toLowerCase())
+  );
+  const domainQuery = foundDomains.length > 0 
+    ? foundDomains.slice(0, 5)
+    : ['Technology', 'Engineering', 'Software']; // Default
+  
+  // Extract tech skills from profile
+  const techSkills = (profile.hardSkills || []).slice(0, 6);
+  const skillsQuery = techSkills.length > 0 ? techSkills : ['Python', 'AWS', 'Cloud'];
+  
+  // Location - simplified
   const loc = location.replace(/"/g, '').split(',')[0].trim();
+  const locationQuery = loc 
+    ? [loc, 'remote', 'United States']
+    : ['remote', 'United States', 'worldwide'];
   
-  // Individual ATS site searches (last 7 days - more results)
+  // Build the smart Boolean query
+  // Format: (sites) (seniority) (domain) (skills) (location)
+  const sitesStr = atsSites.map(s => `site:${s}`).join(' OR ');
+  const seniorityStr = seniorityQuery.map(s => `"${s}"`).join(' OR ');
+  const domainStr = domainQuery.map(d => `"${d}"`).join(' OR ');
+  const skillsStr = skillsQuery.map(s => `"${s}"`).join(' OR ');
+  const locationStr = locationQuery.map(l => `"${l}"`).join(' OR ');
+  
+  const smartQuery = `(${sitesStr}) (${seniorityStr}) (${domainStr}) (${skillsStr}) (${locationStr})`;
+  const freshJobsAllUrl = `https://www.google.com/search?q=${encodeURIComponent(smartQuery)}&tbs=qdr:w`;
+  const freshJobs24hUrl = `https://www.google.com/search?q=${encodeURIComponent(smartQuery)}&tbs=qdr:d`;
+  
+  // Individual ATS site searches with simplified query
   const topSites = [
     { site: 'myworkdayjobs.com', name: 'Workday' },
     { site: 'greenhouse.io', name: 'Greenhouse' },
@@ -758,24 +777,12 @@ function generateSearchLinksClientSide() {
   ];
   
   const freshJobsIndividual = topSites.map(ats => {
-    // Simpler query - just site + job keywords + location OR remote
-    const query = loc 
-      ? `site:${ats.site} ${jobTitle} (${loc} OR remote)`
-      : `site:${ats.site} ${jobTitle} remote`;
+    const singleSiteQuery = `site:${ats.site} (${seniorityStr}) (${domainStr}) (${locationStr})`;
     return {
       name: ats.name,
-      url: `https://www.google.com/search?q=${encodeURIComponent(query)}&tbs=qdr:w` // w = past week
+      url: `https://www.google.com/search?q=${encodeURIComponent(singleSiteQuery)}&tbs=qdr:w`
     };
   });
-  
-  // Combined ALL ATS sites search (last week)
-  const allSitesQuery = atsSites.map(s => `site:${s}`).join(' OR ');
-  const locationPart = loc ? `(${loc} OR remote)` : 'remote';
-  const fullQuery = `(${allSitesQuery}) ${jobTitle} ${locationPart}`;
-  const freshJobsAllUrl = `https://www.google.com/search?q=${encodeURIComponent(fullQuery)}&tbs=qdr:w`;
-  
-  // Also provide 24h option for truly fresh jobs
-  const freshJobs24hUrl = `https://www.google.com/search?q=${encodeURIComponent(fullQuery)}&tbs=qdr:d`;
   
   return {
     primary: [
