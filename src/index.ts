@@ -8,6 +8,7 @@ import Groq from 'groq-sdk';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import icaRoutes from './routes/ica';
+import { connectDatabase } from './database/connection';
 
 const app = express();
 
@@ -786,6 +787,17 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 const PORT = process.env.PORT || 3000;
+
+// Initialize database connection
+connectDatabase()
+  .then(() => {
+    console.log('Database initialized successfully');
+  })
+  .catch((error) => {
+    console.error('Failed to initialize database:', error);
+    // Continue running without database for non-ICA features
+  });
+
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 }
