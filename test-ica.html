@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ICA Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        button {
+            padding: 10px 20px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background: #5558dd; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>ICA LinkedIn CSV Upload Test</h1>
+
+    <div class="step">
+        <h3>Step 1: Get Current Session</h3>
+        <p id="session-info">Session ID: <code id="session-id">Loading...</code></p>
+        <button onclick="getSession()">Refresh Session</button>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Create Test Session in Database</h3>
+        <button onclick="createTestSession()">Create/Update Session in DB</button>
+        <div id="create-result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Upload LinkedIn CSV</h3>
+        <input type="file" id="csvFile" accept=".csv">
+        <button onclick="uploadCSV()">Upload & Analyze</button>
+        <div id="upload-result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 4: View Statistics</h3>
+        <button onclick="getStats()">Get ICA Stats</button>
+        <div id="stats-result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 5: View Contacts</h3>
+        <button onclick="getContacts()">Get Contacts</button>
+        <div id="contacts-result"></div>
+    </div>
+
+    <script>
+        let sessionId = null;
+
+        function getSession() {
+            sessionId = localStorage.getItem('jobmatch_session');
+            if (!sessionId) {
+                sessionId = 'test_sess_' + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('jobmatch_session', sessionId);
+            }
+            document.getElementById('session-id').textContent = sessionId;
+        }
+
+        async function createTestSession() {
+            const resultDiv = document.getElementById('create-result');
+            try {
+                const response = await fetch('https://whynointerviews.vercel.app/api/test/create-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionToken: sessionId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `<strong>Success!</strong><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `<strong>Error:</strong> ${result.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function uploadCSV() {
+            const resultDiv = document.getElementById('upload-result');
+            const fileInput = document.getElementById('csvFile');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                resultDiv.innerHTML = '<em>Uploading...</em>';
+                const response = await fetch(`https://whynointerviews.vercel.app/api/ica/upload/${sessionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `<strong>Upload Successful!</strong><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `<strong>Error:</strong> ${result.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function getStats() {
+            const resultDiv = document.getElementById('stats-result');
+            try {
+                const response = await fetch(`https://whynointerviews.vercel.app/api/ica/stats/${sessionId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `<strong>Stats Retrieved!</strong><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `<strong>Error:</strong> ${result.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function getContacts() {
+            const resultDiv = document.getElementById('contacts-result');
+            try {
+                const response = await fetch(`https://whynointerviews.vercel.app/api/ica/contacts/${sessionId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `<strong>Contacts Retrieved!</strong><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `<strong>Error:</strong> ${result.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        // Initialize on page load
+        getSession();
+    </script>
+</body>
+</html>

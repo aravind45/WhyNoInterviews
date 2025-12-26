@@ -782,6 +782,38 @@ Return ONLY the cover letter text, no additional commentary.`;
 // ICA Routes
 app.use('/api/ica', icaRoutes);
 
+// Test endpoint to create/get session (for development)
+app.post('/api/test/create-session', async (req, res) => {
+  try {
+    const { getPool } = await import('./database/connection');
+    const pool = getPool();
+    const { sessionToken } = req.body;
+
+    if (!sessionToken) {
+      return res.status(400).json({ success: false, error: 'sessionToken required' });
+    }
+
+    // Create or update session
+    const result = await pool.query(
+      `INSERT INTO user_sessions (session_token, ip_address, user_agent, expires_at, is_active)
+       VALUES ($1, $2, $3, NOW() + INTERVAL '7 days', true)
+       ON CONFLICT (session_token)
+       DO UPDATE SET expires_at = NOW() + INTERVAL '7 days', is_active = true
+       RETURNING id, session_token, expires_at`,
+      [sessionToken, req.ip || '127.0.0.1', req.get('User-Agent') || 'Test']
+    );
+
+    res.json({
+      success: true,
+      session: result.rows[0],
+      message: 'Test session created/updated successfully'
+    });
+  } catch (error: any) {
+    console.error('Create session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
