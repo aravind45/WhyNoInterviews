@@ -202,13 +202,14 @@
     .dropdown-item:hover { background: #2e2e3e; color: #e2e8f0; }
     
     /* Modal */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: #12121a; border: 1px solid #2e2e3e; border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .modal-overlay.show { display: flex !important; }
+    .modal { background: #12121a; border: 1px solid #2e2e3e; border-radius: 16px; padding: 32px; width: 90%; max-width: 420px; position: relative; }
     .modal-header { text-align: center; margin-bottom: 24px; }
     .modal-header h2 { font-size: 1.4rem; margin-bottom: 8px; }
     .modal-header p { color: #64748b; font-size: 0.9rem; }
-    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #64748b; font-size: 1.5rem; cursor: pointer; }
+    .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #94a3b8; font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 4px; }
+    .modal-close:hover { color: #e2e8f0; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; }
     .form-group input { width: 100%; padding: 12px 16px; background: #1e1e2e; border: 1px solid #2e2e3e; border-radius: 8px; color: #e2e8f0; font-size: 0.95rem; }
@@ -239,8 +240,8 @@
       <div id="auth-section">
         <!-- Shown when logged out -->
         <div id="auth-buttons" class="auth-buttons">
-          <button class="btn btn-secondary" onclick="showAuthModal('login')">Log In</button>
-          <button class="btn btn-primary" onclick="showAuthModal('signup')">Sign Up</button>
+          <button type="button" class="btn btn-secondary" onclick="showAuthModal('login')">Log In</button>
+          <button type="button" class="btn btn-primary" onclick="showAuthModal('signup')">Sign Up</button>
         </div>
         
         <!-- Shown when logged in -->
@@ -571,14 +572,24 @@ function initAuth() {
 }
 
 function showAuthModal(mode) {
-  document.getElementById('auth-modal').classList.add('show');
-  switchAuthMode(mode);
+  const modal = document.getElementById('auth-modal');
+  if (modal) {
+    modal.classList.add('show');
+    modal.style.display = 'flex'; // Fallback
+    switchAuthMode(mode);
+  }
 }
 
 function hideAuthModal() {
-  document.getElementById('auth-modal').classList.remove('show');
-  document.getElementById('login-error').style.display = 'none';
-  document.getElementById('signup-error').style.display = 'none';
+  const modal = document.getElementById('auth-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none'; // Fallback
+  }
+  const loginErr = document.getElementById('login-error');
+  const signupErr = document.getElementById('signup-error');
+  if (loginErr) loginErr.style.display = 'none';
+  if (signupErr) signupErr.style.display = 'none';
 }
 
 function switchAuthMode(mode) {
@@ -668,6 +679,16 @@ function toggleUserDropdown() {
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.dropdown')) {
     document.getElementById('user-dropdown')?.classList.remove('show');
+  }
+  // Close auth modal when clicking overlay (not the modal itself)
+  if (e.target.id === 'auth-modal') {
+    hideAuthModal();
+  }
+  if (e.target.id === 'my-data-modal') {
+    hideMyDataModal();
+  }
+  if (e.target.id === 'cover-letters-modal') {
+    hideCoverLettersModal();
   }
 });
 
