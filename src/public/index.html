@@ -2832,12 +2832,11 @@ function displayJobs(list, filter = 'all') {
               <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
             </div>
           </div>
-          <div class="flex gap-2 justify-between items-center mt-3">
-            <div class="flex gap-2">
-              <button class="btn btn-primary btn-sm" onclick="saveJob('${job.id}')" style="padding: 6px 12px;">💾 Save</button>
-              <button class="btn btn-secondary btn-sm" onclick="findReferrals('${job.company}')" style="padding: 6px 12px;">👥 Referrals</button>
-            </div>
-            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; padding: 6px 12px;">🔗 Apply</a>
+          <div class="flex gap-2 flex-wrap mt-3">
+            <button class="btn btn-primary btn-sm" onclick="saveJob('${job.id}')" style="padding: 6px 12px;">💾 Save</button>
+            <button class="btn btn-secondary btn-sm" onclick="findReferrals('${job.company}')" style="padding: 6px 12px;">👥 Referrals</button>
+            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; padding: 6px 12px;">LinkedIn</a>
+            <a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; padding: 6px 12px;">Indeed</a>
           </div>
         </div>
       `;
@@ -2954,23 +2953,37 @@ function regenerateCoverLetter() { if (currentJob) generateCoverLetter(currentJo
 // ========== TRACKER ==========
 async function saveJob(jobId) {
   const job = jobs.find(j => j.id === jobId);
-  if (!job) return;
-  
+  if (!job) {
+    showToast('Job not found', 'error');
+    return;
+  }
+
+  // Ensure session exists
+  if (!sessionId) {
+    showToast('Please log in and upload your resume first', 'error');
+    return;
+  }
+
+  console.log('Saving job:', job.title, 'at', job.company, 'with sessionId:', sessionId);
+
   try {
     const res = await fetch('/api/save-job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId, job, status: 'SAVED' })
     });
-    
+
     const data = await res.json();
+    console.log('Save job response:', data);
+
     if (!data.success) throw new Error(data.error);
-    
+
     savedJobs = data.data.savedJobs;
     updateTracker();
-    showToast('Job saved!', 'success');
+    showToast(`✓ Saved ${job.company}!`, 'success');
   } catch (err) {
-    showToast(err.message, 'error');
+    console.error('Save job error:', err);
+    showToast(`Error: ${err.message}`, 'error');
   }
 }
 
