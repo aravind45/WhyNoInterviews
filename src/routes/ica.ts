@@ -9,7 +9,6 @@ import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import {
   parseLinkedInCSV,
-  validateLinkedInCSV,
   suggestICACategory,
   ParsedContact,
 } from '../services/linkedinParser';
@@ -79,10 +78,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
 
     const pool = getPool();
 
-    // Validate CSV format
-    validateLinkedInCSV(req.file.buffer);
-
-    // Parse CSV
+    // Parse CSV (validation happens inside parser)
     const parseResult = parseLinkedInCSV(req.file.buffer);
 
     if (parseResult.contacts.length === 0) {
