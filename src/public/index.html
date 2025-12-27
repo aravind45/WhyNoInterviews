@@ -3173,11 +3173,9 @@ icaSearch.addEventListener('input', () => {
 if (sessionId) {
   loadIcaStats().then(() => {
     loadIcaContacts().then(() => {
-      if (icaContacts.length > 0) {
-        icaStatsCard.style.display = 'block';
-        icaContactsCard.style.display = 'block';
-        loadHotLeads();
-      }
+      icaStatsCard.style.display = 'block';
+      icaContactsCard.style.display = 'block';
+      loadHotLeads();
     });
   });
 }
