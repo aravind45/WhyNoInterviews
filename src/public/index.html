@@ -918,6 +918,17 @@
         </div>
       </div>
 
+      <!-- Hot Leads Card -->
+      <div class="card" id="ica-hot-leads-card" style="display: none; margin-top: 20px;">
+        <div class="card-header">
+          <h3 class="card-title">🔥 Active Hiring Intelligence</h3>
+          <p class="card-subtitle">Prioritized contacts for immediate outreach</p>
+        </div>
+        <div id="ica-hot-leads-content">
+          <div style="padding: 20px; text-align: center; color: #64748b;">No hiring intelligence available yet</div>
+        </div>
+      </div>
+
       <!-- Contacts Table -->
       <div class="card" id="ica-contacts-card" style="display: none; margin-top: 20px;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
@@ -3165,9 +3176,161 @@ if (sessionId) {
       if (icaContacts.length > 0) {
         icaStatsCard.style.display = 'block';
         icaContactsCard.style.display = 'block';
+        loadHotLeads();
       }
     });
   });
+}
+
+// ============================================
+// Active Hiring Intelligence
+// ============================================
+
+async function loadHotLeads() {
+  if (!sessionId) return;
+
+  try {
+    // Get saved jobs to find target companies
+    const jobsRes = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
+    const jobsData = await jobsRes.json();
+    const targetCompanies = [...new Set((jobsData.data?.savedJobs || []).map(j => j.company))];
+
+    if (targetCompanies.length === 0) {
+      document.getElementById('ica-hot-leads-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          Save some jobs in the Tracker to see contacts at those companies!
+        </div>
+      `;
+      document.getElementById('ica-hot-leads-card').style.display = 'block';
+      return;
+    }
+
+    // Get all high-potential contacts (recruiters, hiring managers)
+    const contactsRes = await fetch(`/api/ica/contacts/${sessionId}?category=high_potential`);
+    const contactsData = await contactsRes.json();
+
+    if (!contactsData.success || contactsData.contacts.length === 0) {
+      document.getElementById('ica-hot-leads-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          No high-potential contacts (recruiters/hiring managers) found
+        </div>
+      `;
+      document.getElementById('ica-hot-leads-card').style.display = 'block';
+      return;
+    }
+
+    const allHighPotential = contactsData.contacts;
+
+    // Categorize hot leads
+    const hotLeads = {
+      atTargetCompanies: [],
+      recruiters: [],
+      hiringManagers: []
+    };
+
+    allHighPotential.forEach(contact => {
+      const position = (contact.position || '').toLowerCase();
+      const isAtTargetCompany = targetCompanies.some(company =>
+        contact.company && contact.company.toLowerCase().includes(company.toLowerCase())
+      );
+
+      if (isAtTargetCompany) {
+        hotLeads.atTargetCompanies.push(contact);
+      } else if (position.includes('recruit')) {
+        hotLeads.recruiters.push(contact);
+      } else if (position.includes('hiring') || position.includes('director') || position.includes('head of')) {
+        hotLeads.hiringManagers.push(contact);
+      }
+    });
+
+    // Render hot leads
+    let html = '';
+
+    if (hotLeads.atTargetCompanies.length > 0) {
+      html += `
+        <div style="margin-bottom: 24px;">
+          <h4 style="color: #22c55e; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span>🎯</span>
+            <span>At Your Target Companies (${hotLeads.atTargetCompanies.length})</span>
+          </h4>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            ${hotLeads.atTargetCompanies.slice(0, 5).map(contact => renderHotLead(contact, 'target')).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    if (hotLeads.recruiters.length > 0) {
+      html += `
+        <div style="margin-bottom: 24px;">
+          <h4 style="color: #f59e0b; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span>👔</span>
+            <span>Active Recruiters (${hotLeads.recruiters.length})</span>
+          </h4>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            ${hotLeads.recruiters.slice(0, 5).map(contact => renderHotLead(contact, 'recruiter')).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    if (hotLeads.hiringManagers.length > 0) {
+      html += `
+        <div style="margin-bottom: 24px;">
+          <h4 style="color: #6366f1; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span>💼</span>
+            <span>Hiring Managers & Leaders (${hotLeads.hiringManagers.length})</span>
+          </h4>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            ${hotLeads.hiringManagers.slice(0, 5).map(contact => renderHotLead(contact, 'manager')).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    if (!html) {
+      html = '<div style="padding: 20px; text-align: center; color: #64748b;">No hot leads found</div>';
+    }
+
+    document.getElementById('ica-hot-leads-content').innerHTML = html;
+    document.getElementById('ica-hot-leads-card').style.display = 'block';
+
+  } catch (error) {
+    console.error('Failed to load hot leads:', error);
+  }
+}
+
+function renderHotLead(contact, type) {
+  const bgColor = type === 'target' ? '#0f2818' : type === 'recruiter' ? '#2a1f0f' : '#1a1a2e';
+  const badge = type === 'target' ? '🎯 TARGET' : type === 'recruiter' ? '👔 RECRUITER' : '💼 LEADER';
+  const badgeColor = type === 'target' ? '#22c55e' : type === 'recruiter' ? '#f59e0b' : '#6366f1';
+
+  return `
+    <div style="padding: 16px; background: ${bgColor}; border-radius: 8px; border: 1px solid #2e2e3e;">
+      <div style="display: flex; justify-content: space-between; align-items: start; gap: 16px;">
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: #e2e8f0;">${contact.first_name} ${contact.last_name}</div>
+            <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${badge}</span>
+          </div>
+          <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px;">${contact.position || 'No position'}</div>
+          <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">📍 ${contact.company}</div>
+          ${contact.connected_on ? `<div style="font-size: 0.75rem; color: #64748b;">Connected: ${new Date(contact.connected_on).toLocaleDateString()}</div>` : ''}
+          ${type === 'target' ? '<div style="margin-top: 8px; padding: 8px; background: #22c55e20; border-left: 3px solid #22c55e; border-radius: 4px; font-size: 0.85rem; color: #22c55e;">💡 Reach out now - they work at a company you\'re targeting!</div>' : ''}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${contact.linkedin_profile_url ? `<a href="${contact.linkedin_profile_url}" target="_blank" class="btn btn-sm" style="padding: 8px 16px; background: #0a66c2; border: none; color: white; text-decoration: none; font-size: 0.85rem; white-space: nowrap;">LinkedIn</a>` : ''}
+          <button class="btn btn-sm" onclick="startOutreach('${contact.id}', '${contact.first_name}', '${type}')" style="padding: 8px 16px; background: #6366f1; border: none; color: white; font-size: 0.85rem; white-space: nowrap;">Reach Out</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function startOutreach(contactId, contactName, type) {
+  showToast(`Starting outreach campaign with ${contactName}...`, 'info');
+  // TODO: Implement outreach campaign manager (Option 3)
+  alert(`Outreach Campaign Manager coming soon!\n\nFor now, connect with ${contactName} on LinkedIn and send a personalized message.`);
 }
 </script>
 </body>
