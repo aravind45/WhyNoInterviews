@@ -121,8 +121,8 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
         await pool.query(
           `INSERT INTO linkedin_contacts
            (session_id, first_name, last_name, email_address, company, position,
-            connected_on, ica_category, import_batch_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            connected_on, linkedin_profile_url, ica_category, import_batch_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
            ON CONFLICT (session_id, first_name, last_name, company)
            DO NOTHING`,
           [
@@ -133,6 +133,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
             contact.company,
             contact.position,
             contact.connectedOn,
+            contact.linkedinUrl,
             suggestedCategory,
             batchId,
           ]

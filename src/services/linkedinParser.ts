@@ -34,6 +34,7 @@ export interface ParsedContact {
   position?: string;
   connectedOn?: Date | null;
   rawConnectedOn?: string;
+  linkedinUrl?: string;
 }
 
 /**
@@ -86,6 +87,7 @@ export function parseLinkedInCSV(csvContent: string | Buffer): ParseResult {
           company: record['Company'] || record['company'] || '',
           position: record['Position'] || record['position'] || record['Title'] || '',
           connectedOn: record['Connected On'] || record['connected_on'] || record['Connection Date'] || '',
+          linkedinUrl: record['URL'] || record['url'] || record['LinkedIn URL'] || '',
         };
 
         // Skip completely empty rows
@@ -104,6 +106,7 @@ export function parseLinkedInCSV(csvContent: string | Buffer): ParseResult {
           position: mappedRecord.position || undefined,
           connectedOn: connectedOnDate,
           rawConnectedOn: mappedRecord.connectedOn || undefined,
+          linkedinUrl: mappedRecord.linkedinUrl || undefined,
         };
 
         result.contacts.push(contact);
