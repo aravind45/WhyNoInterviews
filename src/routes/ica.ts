@@ -81,8 +81,25 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
     // Parse CSV (validation happens inside parser)
     const parseResult = parseLinkedInCSV(req.file.buffer);
 
+    console.log('Parse result:', {
+      totalRows: parseResult.totalRows,
+      successfulRows: parseResult.successfulRows,
+      failedRows: parseResult.failedRows,
+      contactsLength: parseResult.contacts.length,
+      errors: parseResult.errors
+    });
+
     if (parseResult.contacts.length === 0) {
-      return res.status(400).json({ success: false, error: 'No valid contacts found in CSV file' });
+      return res.status(400).json({
+        success: false,
+        error: 'No valid contacts found in CSV file',
+        parseResult: {
+          totalRows: parseResult.totalRows,
+          successfulRows: parseResult.successfulRows,
+          failedRows: parseResult.failedRows,
+          errors: parseResult.errors
+        }
+      });
     }
 
     // Create import batch record
@@ -179,9 +196,11 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
     });
   } catch (error) {
     console.error('ICA upload error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return res.status(500).json({
       success: false,
-      error: `Failed to process LinkedIn CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to process LinkedIn CSV: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: error instanceof Error ? error.stack : undefined
     });
   }
 });
