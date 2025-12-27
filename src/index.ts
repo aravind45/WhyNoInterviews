@@ -3,11 +3,13 @@ import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import Groq from 'groq-sdk';
 // @ts-ignore
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
-import { connectDatabase } from './database/connection';
+import { connectDatabase, getPool } from './database/connection';
+import icaRoutes from './routes/ica';
 
 const app = express();
 
@@ -46,34 +48,126 @@ async function parseResume(filePath: string, mimeType: string): Promise<string> 
   throw new Error('Unsupported file format');
 }
 
+/**
+ * Extract structured profile from resume text
+ */
+async function extractProfileFromResume(resumeText: string): Promise<any> {
+  try {
+    const prompt = `Extract a structured profile from this resume. Return ONLY JSON:
+
+RESUME:
+${resumeText.substring(0, 6000)}
+
+{
+  "name": "<full name>",
+  "email": "<email>",
+  "location": "<city, state>",
+  "currentTitle": "<most recent job title>",
+  "yearsExperience": <number>,
+  "experienceLevel": "ENTRY|MID|SENIOR|LEAD",
+  "targetTitles": ["<job titles they could apply for>"],
+  "hardSkills": ["<technical skills>"],
+  "softSkills": ["<soft skills>"],
+  "education": {"degree": "<degree>", "field": "<field>", "school": "<school>"},
+  "summary": "<2-3 sentence professional summary>",
+  "searchKeywords": ["<keywords for job search>"]
+}`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.2,
+      max_tokens: 1500
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+    if (!jsonMatch) return null;
+
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error('Profile extraction error:', error);
+    return null;
+  }
+}
+
 // ============================================================
 // FEATURE 1: RESUME ANALYSIS (Deep Diagnosis)
 // ============================================================
 
 app.post('/api/analyze-match', upload.single('resume'), async (req, res) => {
   let filePath = '';
-  
+
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'Resume file is required' });
     }
-    
+
     const jobDescription = req.body.jobDescription;
     if (!jobDescription || jobDescription.length < 50) {
       return res.status(400).json({ success: false, error: 'Job description is required (minimum 50 characters)' });
     }
-    
+
     filePath = req.file.path;
     const resumeText = await parseResume(filePath, req.file.mimetype);
-    
+
     if (!resumeText || resumeText.trim().length < 50) {
       return res.status(400).json({ success: false, error: 'Could not extract text from resume' });
     }
 
-    // Store for later use
-    const sessionId = req.body.sessionId || 'sess_' + Math.random().toString(36).substring(2);
-    sessions[sessionId] = sessions[sessionId] || {};
-    sessions[sessionId].resumeText = resumeText;
+    const sessionToken = req.body.sessionId || 'sess_' + Math.random().toString(36).substring(2);
+    const pool = getPool();
+
+    // Get or create session UUID
+    let sessionResult = await pool.query(
+      'SELECT id FROM user_sessions WHERE session_token = $1',
+      [sessionToken]
+    );
+
+    let sessionUuid;
+    if (sessionResult.rows.length === 0) {
+      const newSession = await pool.query(
+        `INSERT INTO user_sessions (session_token, ip_address, user_agent, expires_at, is_active)
+         VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', true)
+         RETURNING id`,
+        [sessionToken, req.ip || '127.0.0.1', req.get('user-agent') || 'Unknown']
+      );
+      sessionUuid = newSession.rows[0].id;
+    } else {
+      sessionUuid = sessionResult.rows[0].id;
+    }
+
+    // Calculate file hash for deduplication and caching
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+    const jobHash = crypto.createHash('sha256').update(jobDescription).digest('hex');
+
+    // Check if we already analyzed this exact resume + job combo
+    const cacheCheck = await pool.query(
+      `SELECT dr.* FROM diagnosis_results dr
+       JOIN resume_analyses ra ON dr.analysis_id = ra.id
+       WHERE ra.session_id = $1 AND ra.file_hash = $2
+       AND ra.job_description = $3
+       AND ra.created_at > NOW() - INTERVAL '7 days'
+       ORDER BY ra.created_at DESC LIMIT 1`,
+      [sessionUuid, fileHash, jobDescription]
+    );
+
+    if (cacheCheck.rows.length > 0) {
+      console.log('✅ Returning cached analysis');
+      const cached = cacheCheck.rows[0];
+      return res.json({
+        success: true,
+        data: JSON.parse(cached.confidence_explanation),
+        sessionId: sessionToken,
+        cached: true
+      });
+    }
+
+    // Store for in-memory session (backward compatibility)
+    sessions[sessionToken] = sessions[sessionToken] || {};
+    sessions[sessionToken].resumeText = resumeText;
 
     const prompt = `You are a brutally honest career coach who has reviewed 10,000+ resumes and knows exactly why people don't get interviews.
 
@@ -174,13 +268,81 @@ Return ONLY this JSON:
 
     const responseText = completion.choices[0]?.message?.content || '';
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    
+
     if (!jsonMatch) {
       throw new Error('Failed to analyze');
     }
 
     const analysis = JSON.parse(jsonMatch[0]);
-    res.json({ success: true, data: analysis, sessionId });
+
+    // Extract profile for skill-based scoring
+    const profileExtract = await extractProfileFromResume(resumeText);
+    const profileSkills = profileExtract?.hardSkills || [];
+
+    // Calculate REALISTIC match score based on skills (not AI's inflated score)
+    const jobText = jobDescription.toLowerCase();
+    let matchedSkills = 0;
+    const matchingSkills: string[] = [];
+
+    profileSkills.forEach((skill: string) => {
+      if (jobText.includes(skill.toLowerCase())) {
+        matchedSkills++;
+        matchingSkills.push(skill);
+      }
+    });
+
+    const realisticScore = profileSkills.length > 0
+      ? Math.min(95, Math.round((matchedSkills / profileSkills.length) * 100))
+      : 30;
+
+    // Override AI's inflated overallScore with realistic skill-based score
+    analysis.overallScore = realisticScore;
+    analysis.matchingSkills = matchingSkills;
+    analysis.skillMatchPercentage = realisticScore;
+
+    // Save resume to database
+    const encryptedContent = Buffer.from(resumeText); // In production, encrypt this
+    const resumeAnalysis = await pool.query(
+      `INSERT INTO resume_analyses
+       (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
+        target_job_title, job_description, status, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'completed', NOW() + INTERVAL '30 days')
+       RETURNING id`,
+      [
+        sessionUuid,
+        fileHash,
+        encryptedContent,
+        req.file.originalname,
+        path.extname(req.file.originalname).substring(1),
+        req.file.size,
+        'General Position', // Could extract from JD
+        jobDescription
+      ]
+    );
+
+    const analysisId = resumeAnalysis.rows[0].id;
+
+    // Cache the analysis result
+    await pool.query(
+      `INSERT INTO diagnosis_results
+       (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
+        model_used, resume_processing_time, analysis_time)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        analysisId,
+        realisticScore,
+        JSON.stringify(analysis),
+        realisticScore >= 70,
+        100,
+        'llama-3.1-8b-instant',
+        0,
+        0
+      ]
+    );
+
+    console.log(`✅ Saved analysis to database with realistic score: ${realisticScore}%`);
+
+    res.json({ success: true, data: analysis, sessionId: sessionToken });
 
   } catch (error: any) {
     console.error('Analysis error:', error);
