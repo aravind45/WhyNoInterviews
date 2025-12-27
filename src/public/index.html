@@ -775,9 +775,9 @@ function handleSignup(e) {
   currentUser = user;
   localStorage.setItem('jobmatch_user', JSON.stringify(user));
 
-  // Ensure sessionId is created for new user
+  // Ensure sessionId is created for new user (stable, based on email only)
   if (!sessionId) {
-    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    sessionId = 'sess_' + btoa(email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -804,9 +804,9 @@ function handleLogin(e) {
   currentUser = user;
   localStorage.setItem('jobmatch_user', JSON.stringify(user));
 
-  // Ensure sessionId is created/restored after login
+  // Ensure sessionId is created/restored after login (stable, based on email only)
   if (!sessionId) {
-    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    sessionId = 'sess_' + btoa(email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -916,10 +916,10 @@ function completeGoogleAuth(email, name, picture, googleId) {
   currentUser = user;
   localStorage.setItem('jobmatch_user', JSON.stringify(user));
 
-  // CRITICAL FIX: Ensure sessionId is created/restored after Google login
+  // CRITICAL FIX: Ensure sessionId is created/restored after Google login (stable, based on email only)
   if (!sessionId) {
-    // Create a new session tied to the user's email
-    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    // Create a stable session tied to the user's email
+    sessionId = 'sess_' + btoa(email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -1599,14 +1599,14 @@ async function generateAnalysisCoverLetter() {
     return;
   }
 
-  // Ensure sessionId exists before generating cover letter
+  // Ensure sessionId exists before generating cover letter (stable, based on email only)
   if (!sessionId) {
     if (currentUser && currentUser.email) {
-      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      sessionId = 'sess_' + btoa(currentUser.email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
       localStorage.setItem('jobmatch_session', sessionId);
     } else {
-      sessionId = 'temp_' + Date.now();
-      localStorage.setItem('jobmatch_session', sessionId);
+      showToast('Please log in first', 'error');
+      return;
     }
   }
 
@@ -2035,14 +2035,14 @@ async function generateCoverLetter(jobId) {
   const job = jobs.find(j => j.id === jobId) || savedJobs.find(j => j.id === jobId);
   if (!job) return;
 
-  // Ensure sessionId exists before generating cover letter
+  // Ensure sessionId exists before generating cover letter (stable, based on email only)
   if (!sessionId) {
     if (currentUser && currentUser.email) {
-      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      sessionId = 'sess_' + btoa(currentUser.email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
       localStorage.setItem('jobmatch_session', sessionId);
     } else {
-      sessionId = 'temp_' + Date.now();
-      localStorage.setItem('jobmatch_session', sessionId);
+      showToast('Please log in first', 'error');
+      return;
     }
   }
 
