@@ -1425,7 +1425,7 @@ function saveCoverLetter(coverLetter, jobTitle, companyName) {
   return false;
 }
 
-function loadSavedUserData() {
+async function loadSavedUserData() {
   if (!currentUser || !currentUser.savedProfile) return;
 
   // Auto-load profile into Find Jobs tab
@@ -1435,6 +1435,22 @@ function loadSavedUserData() {
   if (!sessionId) {
     sessionId = createStableSessionId(currentUser.email);
     localStorage.setItem('jobmatch_session', sessionId);
+  }
+
+  // Initialize backend session with saved profile data
+  try {
+    await fetch('/api/init-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: currentUser.email,
+        profile: currentUser.savedProfile,
+        resumeText: currentUser.lastResumeText || ''
+      })
+    });
+    console.log('✅ Backend session initialized:', sessionId);
+  } catch (error) {
+    console.warn('Failed to initialize backend session:', error);
   }
 
   // Display profile in Find Jobs tab
@@ -2545,7 +2561,19 @@ function generateSampleJobs() {
 }
 
 async function searchJobs() {
-  if (!sessionId || !profile) { showToast('Upload resume first', 'error'); return; }
+  if (!profile) { showToast('Upload resume first', 'error'); return; }
+
+  // Ensure session exists before generating jobs
+  if (!sessionId) {
+    if (currentUser && currentUser.email) {
+      sessionId = createStableSessionId(currentUser.email);
+      localStorage.setItem('jobmatch_session', sessionId);
+      console.log('✅ Created stable session:', sessionId);
+    } else {
+      showToast('Please log in to save jobs', 'error');
+      return;
+    }
+  }
 
   // Generate sample job listings based on user's profile
   jobs = generateSampleJobs();

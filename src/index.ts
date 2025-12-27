@@ -238,7 +238,16 @@ ${resumeText.substring(0, 6000)}
     if (!jsonMatch) throw new Error('Failed to parse profile');
 
     const profile = JSON.parse(jsonMatch[0]);
-    const sessionId = 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+    // Use stable session ID based on profile email if available
+    let sessionId;
+    if (profile.email) {
+      const cleanEmail = Buffer.from(profile.email).toString('base64').replace(/[=\/\+]/g, '').toLowerCase();
+      sessionId = 'sess_' + cleanEmail.substring(0, 15);
+    } else {
+      sessionId = 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    }
+
     sessions[sessionId] = { profile, resumeText, jobs: [], savedJobs: [] };
 
     res.json({ success: true, data: { sessionId, profile, resumeText } });
@@ -247,6 +256,39 @@ ${resumeText.substring(0, 6000)}
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+});
+
+// Initialize session with existing profile (for auto-loaded profiles)
+app.post('/api/init-session', async (req, res) => {
+  try {
+    const { email, profile, resumeText } = req.body;
+
+    if (!email || !profile) {
+      return res.status(400).json({ success: false, error: 'Email and profile required' });
+    }
+
+    // Create stable session ID from email
+    const cleanEmail = Buffer.from(email).toString('base64').replace(/[=\/\+]/g, '').toLowerCase();
+    const sessionId = 'sess_' + cleanEmail.substring(0, 15);
+
+    // Initialize or update session
+    if (!sessions[sessionId]) {
+      sessions[sessionId] = {
+        profile,
+        resumeText: resumeText || '',
+        jobs: [],
+        savedJobs: []
+      };
+      console.log(`✅ Session initialized for ${email}: ${sessionId}`);
+    } else {
+      console.log(`✓ Session already exists for ${email}: ${sessionId}`);
+    }
+
+    res.json({ success: true, data: { sessionId } });
+
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
