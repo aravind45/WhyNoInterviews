@@ -85,14 +85,14 @@ export function parseLinkedInCSV(csvContent: string | Buffer): ParseResult {
 
     records.forEach((record: any, index: number) => {
       try {
-        // Map LinkedIn export column names to our schema
+        // Map LinkedIn export column names to our schema (handles both "First Name" and "FirstName" formats)
         const mappedRecord = {
-          firstName: record['First Name'] || record['first_name'] || '',
-          lastName: record['Last Name'] || record['last_name'] || '',
-          emailAddress: record['Email Address'] || record['email_address'] || record['Email'] || '',
+          firstName: record['First Name'] || record['FirstName'] || record['first_name'] || '',
+          lastName: record['Last Name'] || record['LastName'] || record['last_name'] || '',
+          emailAddress: record['Email Address'] || record['EmailAddress'] || record['email_address'] || record['Email'] || '',
           company: record['Company'] || record['company'] || '',
           position: record['Position'] || record['position'] || record['Title'] || '',
-          connectedOn: record['Connected On'] || record['connected_on'] || record['Connection Date'] || '',
+          connectedOn: record['Connected On'] || record['ConnectedOn'] || record['connected_on'] || record['Connection Date'] || '',
           linkedinUrl: record['URL'] || record['url'] || record['LinkedIn URL'] || '',
         };
 
@@ -178,8 +178,8 @@ export function validateLinkedInCSV(csvContent: string | Buffer): boolean {
   // Check for CSV header presence
   const firstLine = content.split('\n')[0].toLowerCase();
   const hasLinkedInHeaders =
-    (firstLine.includes('first name') || firstLine.includes('first_name')) &&
-    (firstLine.includes('last name') || firstLine.includes('last_name'));
+    (firstLine.includes('first name') || firstLine.includes('firstname') || firstLine.includes('first_name')) &&
+    (firstLine.includes('last name') || firstLine.includes('lastname') || firstLine.includes('last_name'));
 
   if (!hasLinkedInHeaders) {
     throw new Error(
