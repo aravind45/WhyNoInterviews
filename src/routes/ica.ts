@@ -247,7 +247,7 @@ router.get('/contacts/:sessionId', async (req: Request, res: Response) => {
     let query = `
       SELECT
         id, first_name, last_name, email_address, company, position,
-        connected_on, ica_category, category_reason, notes, last_contacted,
+        connected_on, ica_category, notes, last_contacted,
         contact_frequency, relationship_strength, created_at, updated_at
       FROM linkedin_contacts
       WHERE session_id = $1
@@ -323,11 +323,7 @@ router.patch('/contacts/:sessionId/:contactId', async (req: Request, res: Respon
       paramIndex++;
     }
 
-    if (categoryReason !== undefined) {
-      updates.push(`category_reason = $${paramIndex}`);
-      params.push(categoryReason);
-      paramIndex++;
-    }
+    // categoryReason column doesn't exist in schema - removed
 
     if (notes !== undefined) {
       updates.push(`notes = $${paramIndex}`);
