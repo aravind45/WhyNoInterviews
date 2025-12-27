@@ -1938,11 +1938,16 @@ function displayAnalysisResults(d) {
   const score = d.overallScore || 0;
   const scoreClass = score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low';
   const heroClass = score >= 70 ? 'strong' : score >= 50 ? 'moderate' : 'weak';
-  
+
+  // Extract company name from job description
+  const jobDesc = document.getElementById('job-description').value || '';
+  const companyMatch = jobDesc.match(/(?:at|@|company[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
+  const companyName = companyMatch ? companyMatch[1].trim() : '';
+
   document.getElementById('analysis-results').style.display = 'block';
   document.getElementById('analysis-results').innerHTML = `
-    <!-- Single Row with 3 Columns: Score, Cover Letter, Interview Prep -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+    <!-- Single Row with 4 Columns: Score, Cover Letter, Interview Prep, Referrals -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
       <!-- Column 1: Score Card -->
       <div class="card score-hero ${heroClass}" style="padding: 12px; text-align: center;">
         <div class="score-ring ${scoreClass}" style="width: 70px; height: 70px; border-width: 3px; margin: 0 auto 8px;">
@@ -1950,13 +1955,12 @@ function displayAnalysisResults(d) {
           <div class="score-label" style="font-size: 0.6rem;">Match</div>
         </div>
         <div class="verdict-badge ${scoreClass}" style="padding: 4px 12px; font-size: 0.75rem; display: inline-block;">${d.verdict || 'ANALYZED'}</div>
-        <p style="color:#94a3b8; margin:8px 0 0; font-size: 0.75rem;">${d.summary || ''}</p>
       </div>
 
       <!-- Column 2: Cover Letter -->
       <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3); padding: 12px;">
         <h4 style="color: #a78bfa; margin-bottom: 4px; font-size: 0.85rem;">✉️ Cover Letter</h4>
-        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">Generate personalized cover letter</p>
+        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">Generate personalized</p>
         <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); padding: 8px 16px; font-size: 0.85rem;">
           <span id="cover-letter-btn-text">✉️ Generate</span>
           <span class="loading" id="cover-letter-loading" style="display:none"></span>
@@ -1966,12 +1970,23 @@ function displayAnalysisResults(d) {
       <!-- Column 3: Interview Prep -->
       <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05)); border-color: rgba(16, 185, 129, 0.3); padding: 12px;">
         <h4 style="color: #10b981; margin-bottom: 4px; font-size: 0.85rem;">🎯 Interview Prep</h4>
-        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">20 Q&A + questions to ask</p>
+        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">20 Q&A + questions</p>
         <button class="btn btn-primary btn-full" id="generate-interview-prep-btn" style="background: linear-gradient(135deg, #10b981, #059669); padding: 8px 16px; font-size: 0.85rem;">
           <span id="interview-prep-btn-text">🎯 Prepare</span>
           <span class="loading" id="interview-prep-loading" style="display:none"></span>
         </button>
       </div>
+
+      <!-- Column 4: Referrals -->
+      ${companyName ? `
+      <div class="card" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(219, 39, 119, 0.05)); border-color: rgba(236, 72, 153, 0.3); padding: 12px;">
+        <h4 style="color: #ec4899; margin-bottom: 4px; font-size: 0.85rem;">👥 Referrals</h4>
+        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">Find connections</p>
+        <button class="btn btn-primary btn-full" onclick="findReferrals('${companyName.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #ec4899, #db2777); padding: 8px 16px; font-size: 0.85rem;">
+          <span>👥 Find</span>
+        </button>
+      </div>
+      ` : ''}
     </div>
 
     <div class="card">
@@ -2807,35 +2822,22 @@ function displayJobs(list, filter = 'all') {
       const indeedUrl = `https://www.indeed.com/jobs?q=${searchQuery}`;
       
       return `
-        <div class="job-card ${cardClass}">
+        <div class="job-card ${cardClass}" style="padding: 16px;">
           <div class="job-header">
             <div>
-              <div class="job-title">${job.title}</div>
-              <div class="job-company">${job.company}${job.isSuggestion ? ' <span style="font-size:0.75rem; color:#64748b;">(suggested)</span>' : ''}</div>
-              ${job.location ? `<div class="job-meta">
-                <span>📍 ${job.location}</span>
-                ${job.salary ? `<span>💰 ${job.salary}</span>` : ''}
-                ${job.postedDate ? `<span>🕐 ${job.postedDate}</span>` : ''}
-                ${job.isRemote ? '<span>🏠 Remote</span>' : ''}
-              </div>` : ''}
+              <div class="job-title" style="font-size: 1rem; margin-bottom: 4px;">${job.title}</div>
+              <div class="job-company" style="font-size: 0.9rem;">${job.company} • ${job.location || 'Remote'}</div>
             </div>
             <div style="text-align:right;">
               <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
-              <div style="font-size:0.7rem; color:#64748b;">MATCH</div>
             </div>
           </div>
-          <div class="flex gap-2 items-center mt-4">
-            <span class="recommendation ${recClass}">${(job.recommendation || 'WORTH_APPLYING').replace(/_/g, ' ')}</span>
-            ${(job.matchingSkills || []).slice(0, 3).map(s => `<span class="tag tag-success" style="font-size:0.75rem;">${s}</span>`).join('')}
-          </div>
-          <p style="color:#94a3b8; font-size:0.9rem; margin-top:12px;">${job.quickTake || job.description || ''}</p>
-          <div class="flex gap-2 flex-wrap mt-4">
-            <button class="btn btn-primary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
-            <button class="btn btn-secondary btn-sm" onclick="saveJob('${job.id}')">💾 Save</button>
-            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">
-              ${job.applyUrl ? '🔗 Apply Now' : '🔗 Find on LinkedIn'}
-            </a>
-            ${!job.applyUrl ? `<a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">🔗 Indeed</a>` : ''}
+          <div class="flex gap-2 justify-between items-center mt-3">
+            <div class="flex gap-2">
+              <button class="btn btn-primary btn-sm" onclick="saveJob('${job.id}')" style="padding: 6px 12px;">💾 Save</button>
+              <button class="btn btn-secondary btn-sm" onclick="findReferrals('${job.company}')" style="padding: 6px 12px;">👥 Referrals</button>
+            </div>
+            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; padding: 6px 12px;">🔗 Apply</a>
           </div>
         </div>
       `;
@@ -2849,6 +2851,64 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     displayJobs(jobs, btn.dataset.filter);
   });
 });
+
+// ========== REFERRALS ==========
+async function findReferrals(companyName) {
+  if (!sessionId) {
+    showToast('Please upload LinkedIn connections first', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/ica/referrals/${sessionId}?company=${encodeURIComponent(companyName)}`);
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error);
+
+    if (data.contacts.length === 0) {
+      showToast(`No contacts found at ${companyName}`, 'info');
+      return;
+    }
+
+    // Show referral modal
+    showReferralModal(companyName, data.contacts);
+  } catch (error) {
+    showToast('Upload your LinkedIn connections in Networking tab', 'info');
+  }
+}
+
+function showReferralModal(company, contacts) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal" style="max-width: 600px;">
+      <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+      <div class="modal-header">
+        <h2>👥 Referral Contacts at ${company}</h2>
+        <p>${contacts.length} connection${contacts.length > 1 ? 's' : ''} found</p>
+      </div>
+      <div style="padding: 20px; max-height: 400px; overflow-y: auto;">
+        ${contacts.map(c => `
+          <div style="padding: 12px; margin-bottom: 12px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <div style="font-weight: 600; color: #e2e8f0;">${c.first_name} ${c.last_name}</div>
+                <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 2px;">${c.position || 'Position not listed'}</div>
+                ${c.email_address ? `<div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">✉️ ${c.email_address}</div>` : ''}
+              </div>
+              <a href="${c.linkedin_profile_url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; font-size: 0.75rem;">LinkedIn</a>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); text-align: right;">
+        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
 
 // ========== COVER LETTER ==========
 async function generateCoverLetter(jobId) {
