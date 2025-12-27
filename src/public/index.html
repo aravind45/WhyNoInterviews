@@ -963,7 +963,33 @@
         </div>
       </div>
 
-      <!-- Hot Leads Card -->
+      <!-- Companies Hiring Now -->
+      <div class="card" id="companies-hiring-card" style="display: none; margin-top: 20px;">
+        <div class="card-header">
+          <h3 class="card-title">🏢 Companies Hiring Now</h3>
+          <p class="card-subtitle">Companies where you have connections + they're currently hiring</p>
+        </div>
+        <div id="companies-hiring-content">
+          <div style="padding: 20px; text-align: center; color: #64748b;">
+            Save jobs in Tracker to see which companies are hiring!
+          </div>
+        </div>
+      </div>
+
+      <!-- Contacts Who Can Help -->
+      <div class="card" id="helpful-contacts-card" style="display: none; margin-top: 20px;">
+        <div class="card-header">
+          <h3 class="card-title">👥 Contacts Who Can Help You</h3>
+          <p class="card-subtitle">People at companies you're targeting - reach out for referrals!</p>
+        </div>
+        <div id="helpful-contacts-content">
+          <div style="padding: 20px; text-align: center; color: #64748b;">
+            Save jobs in Tracker to see your connections at those companies!
+          </div>
+        </div>
+      </div>
+
+      <!-- Hot Leads Card (Legacy - keeping for now) -->
       <div class="card" id="ica-hot-leads-card" style="display: none; margin-top: 20px;">
         <div class="card-header">
           <h3 class="card-title">🔥 Active Hiring Intelligence</h3>
@@ -3582,6 +3608,245 @@ function startOutreach(contactId, contactName, type) {
   showToast(`Starting outreach campaign with ${contactName}...`, 'info');
   // TODO: Implement outreach campaign manager (Option 3)
   alert(`Outreach Campaign Manager coming soon!\n\nFor now, connect with ${contactName} on LinkedIn and send a personalized message.`);
+}
+
+// ============================================
+// Companies Hiring Now & Helpful Contacts
+// ============================================
+
+async function loadCompaniesHiring() {
+  if (!sessionId) return;
+
+  try {
+    // Get saved jobs to find target companies
+    const jobsRes = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
+    const jobsData = await jobsRes.json();
+    const savedJobs = jobsData.data?.savedJobs || [];
+
+    if (savedJobs.length === 0) {
+      document.getElementById('companies-hiring-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          Save jobs in Tracker to see which companies are hiring!
+        </div>
+      `;
+      document.getElementById('companies-hiring-card').style.display = 'block';
+      return;
+    }
+
+    // Get all contacts
+    const contactsRes = await fetch(`/api/ica/contacts/${sessionId}?category=all`);
+    const contactsData = await contactsRes.json();
+
+    if (!contactsData.success || contactsData.contacts.length === 0) {
+      document.getElementById('companies-hiring-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          Upload LinkedIn connections to see who you know at hiring companies!
+        </div>
+      `;
+      document.getElementById('companies-hiring-card').style.display = 'block';
+      return;
+    }
+
+    const allContacts = contactsData.contacts;
+
+    // Group companies by number of contacts + jobs
+    const companyMap = {};
+
+    savedJobs.forEach(job => {
+      const company = job.company;
+      if (!companyMap[company]) {
+        companyMap[company] = {
+          name: company,
+          jobs: [],
+          contacts: []
+        };
+      }
+      companyMap[company].jobs.push(job);
+    });
+
+    // Match contacts to companies
+    allContacts.forEach(contact => {
+      const contactCompany = contact.company || '';
+      Object.keys(companyMap).forEach(targetCompany => {
+        if (contactCompany.toLowerCase().includes(targetCompany.toLowerCase()) ||
+            targetCompany.toLowerCase().includes(contactCompany.toLowerCase())) {
+          companyMap[targetCompany].contacts.push(contact);
+        }
+      });
+    });
+
+    // Filter companies that have both jobs AND contacts
+    const companiesHiring = Object.values(companyMap)
+      .filter(c => c.contacts.length > 0)
+      .sort((a, b) => b.contacts.length - a.contacts.length);
+
+    if (companiesHiring.length === 0) {
+      document.getElementById('companies-hiring-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          No connections found at companies where you saved jobs<br>
+          <span style="font-size: 0.85rem;">Try expanding your LinkedIn network!</span>
+        </div>
+      `;
+    } else {
+      const html = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+          ${companiesHiring.map(company => `
+            <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 16px;">
+              <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 12px;">
+                <div style="flex: 1;">
+                  <h4 style="color: #22c55e; font-size: 1.1rem; margin-bottom: 4px;">${company.name}</h4>
+                  <div style="font-size: 0.85rem; color: #94a3b8;">
+                    ${company.jobs.length} job${company.jobs.length > 1 ? 's' : ''} saved • ${company.contacts.length} connection${company.contacts.length > 1 ? 's' : ''}
+                  </div>
+                </div>
+                <div style="background: #22c55e; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">HIRING</div>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 6px;">Your connections:</div>
+                ${company.contacts.slice(0, 3).map(c => `
+                  <div style="font-size: 0.85rem; color: #e2e8f0; margin-bottom: 4px;">
+                    • ${c.first_name} ${c.last_name} - ${c.position || 'No title'}
+                  </div>
+                `).join('')}
+                ${company.contacts.length > 3 ? `<div style="font-size: 0.85rem; color: #64748b;">+${company.contacts.length - 3} more</div>` : ''}
+              </div>
+
+              <button class="btn btn-primary btn-sm btn-full" onclick="showCompanyContacts('${company.name}')" style="background: #22c55e; font-size: 0.85rem;">
+                👥 View All Connections
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      document.getElementById('companies-hiring-content').innerHTML = html;
+    }
+
+    document.getElementById('companies-hiring-card').style.display = 'block';
+
+  } catch (error) {
+    console.error('Failed to load companies hiring:', error);
+  }
+}
+
+async function loadHelpfulContacts() {
+  if (!sessionId) return;
+
+  try {
+    // Get saved jobs
+    const jobsRes = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
+    const jobsData = await jobsRes.json();
+    const savedJobs = jobsData.data?.savedJobs || [];
+
+    if (savedJobs.length === 0) {
+      document.getElementById('helpful-contacts-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          Save jobs in Tracker to see your connections at those companies!
+        </div>
+      `;
+      document.getElementById('helpful-contacts-card').style.display = 'block';
+      return;
+    }
+
+    // Get target companies from saved jobs
+    const targetCompanies = [...new Set(savedJobs.map(j => j.company))];
+
+    // Get all contacts
+    const contactsRes = await fetch(`/api/ica/contacts/${sessionId}?category=all`);
+    const contactsData = await contactsRes.json();
+
+    if (!contactsData.success || contactsData.contacts.length === 0) {
+      document.getElementById('helpful-contacts-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          Upload LinkedIn connections to see who can help!
+        </div>
+      `;
+      document.getElementById('helpful-contacts-card').style.display = 'block';
+      return;
+    }
+
+    // Find contacts at target companies
+    const helpfulContacts = contactsData.contacts.filter(contact => {
+      const contactCompany = (contact.company || '').toLowerCase();
+      return targetCompanies.some(target =>
+        contactCompany.includes(target.toLowerCase()) ||
+        target.toLowerCase().includes(contactCompany)
+      );
+    });
+
+    if (helpfulContacts.length === 0) {
+      document.getElementById('helpful-contacts-content').innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #64748b;">
+          No connections found at companies where you saved jobs
+        </div>
+      `;
+    } else {
+      const html = `
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          ${helpfulContacts.slice(0, 10).map(contact => {
+            // Find which saved jobs are at this company
+            const matchingJobs = savedJobs.filter(job =>
+              (contact.company || '').toLowerCase().includes(job.company.toLowerCase()) ||
+              job.company.toLowerCase().includes((contact.company || '').toLowerCase())
+            );
+
+            return `
+              <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <h4 style="color: #e2e8f0; font-size: 1rem; margin: 0;">${contact.first_name} ${contact.last_name}</h4>
+                    ${contact.ica_category === 'high_potential' ? '<span style="background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">HIGH POTENTIAL</span>' : ''}
+                  </div>
+                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px;">
+                    ${contact.position || 'No title'} at ${contact.company}
+                  </div>
+                  <div style="font-size: 0.8rem; color: #6366f1;">
+                    💼 You saved ${matchingJobs.length} job${matchingJobs.length > 1 ? 's' : ''} at this company
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <a href="${contact.linkedin_profile_url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; padding: 8px 16px; font-size: 0.85rem; white-space: nowrap;">LinkedIn</a>
+                  <button class="btn btn-primary btn-sm" onclick="requestReferral('${contact.id}', '${contact.first_name}', '${contact.company}')" style="padding: 8px 16px; font-size: 0.85rem; white-space: nowrap;">🤝 Ask for Referral</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+      document.getElementById('helpful-contacts-content').innerHTML = html;
+    }
+
+    document.getElementById('helpful-contacts-card').style.display = 'block';
+
+  } catch (error) {
+    console.error('Failed to load helpful contacts:', error);
+  }
+}
+
+function showCompanyContacts(companyName) {
+  // Use the existing findReferrals modal
+  findReferrals(companyName);
+}
+
+function requestReferral(contactId, contactName, company) {
+  const message = `Hi ${contactName},\n\nI hope you're doing well! I noticed you work at ${company} and I'm currently exploring opportunities there.\n\nI recently applied for [JOB TITLE] and would greatly appreciate if you could refer me or provide any insights about the role/team.\n\nMy background includes [YOUR KEY SKILLS/EXPERIENCE]. I've attached my resume for your reference.\n\nWould you be open to a quick chat about this opportunity?\n\nThank you!\nBest regards`;
+
+  navigator.clipboard.writeText(message).then(() => {
+    showToast('Referral request template copied! Customize and send via LinkedIn.', 'success');
+  });
+}
+
+// Call these when contacts load
+if (sessionId) {
+  loadIcaStats().then(() => {
+    loadIcaContacts().then(() => {
+      icaStatsCard.style.display = 'block';
+      icaContactsCard.style.display = 'block';
+      loadHotLeads();
+      loadCompaniesHiring();
+      loadHelpfulContacts();
+    });
+  });
 }
 </script>
 </body>
