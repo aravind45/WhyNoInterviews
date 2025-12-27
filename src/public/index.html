@@ -1428,14 +1428,39 @@ function loadSavedUserData() {
 
   // Auto-load profile into Find Jobs tab
   profile = currentUser.savedProfile;
-  sessionId = localStorage.getItem('jobmatch_session') || 'sess_temp_' + Math.random().toString(36).substring(7);
-  localStorage.setItem('jobmatch_session', sessionId);
 
-  // Show "Load Saved Resume" button if user has a saved resume
+  // Session already handled by initAuth
+  if (!sessionId) {
+    sessionId = createStableSessionId(currentUser.email);
+    localStorage.setItem('jobmatch_session', sessionId);
+  }
+
+  // Display profile in Find Jobs tab
+  displayProfile();
+  document.getElementById('search-upload-card').style.display = 'none';
+  document.getElementById('profile-card').style.display = 'block';
+
+  // Show "Load Saved Resume" button if user has a saved resume file
   if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName) {
     const loadBtn = document.getElementById('load-saved-resume-btn');
-    if (loadBtn) loadBtn.style.display = 'block';
+    if (loadBtn) {
+      loadBtn.style.display = 'block';
+      loadBtn.onclick = () => {
+        searchFile = base64ToFile(currentUser.lastResumeBase64, currentUser.lastResumeFileName);
+        document.getElementById('search-file-name').textContent = '✓ ' + currentUser.lastResumeFileName + ' (saved)';
+        document.getElementById('search-upload-zone').classList.add('has-file');
+        showToast('Saved resume loaded!', 'success');
+      };
+    }
   }
+
+  // Also make resume available in Analyze tab
+  if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName) {
+    const analyzeLoadBtn = document.getElementById('load-saved-resume-btn');
+    if (analyzeLoadBtn) analyzeLoadBtn.style.display = 'block';
+  }
+
+  console.log('✅ Saved resume auto-loaded:', currentUser.lastResumeFileName || 'profile only');
 }
 
 function loadSavedResume() {
