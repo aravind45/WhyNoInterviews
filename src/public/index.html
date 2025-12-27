@@ -1908,13 +1908,17 @@ let currentJob = null;
 let analyzeFile = null;
 let searchFile = null;
 
-// Tab Navigation
+// Tab Navigation Helper
+function switchTab(tabName) {
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(`tab-${tabName}`).classList.add('active');
+}
+
 document.querySelectorAll('.main-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+    switchTab(tab.dataset.tab);
   });
 });
 
@@ -2610,21 +2614,14 @@ const searchZone = document.getElementById('search-upload-zone');
 const searchInput = document.getElementById('search-resume-input');
 const extractBtn = document.getElementById('extract-btn');
 
-searchZone.addEventListener('click', () => searchInput.click());
-searchZone.addEventListener('dragover', e => { e.preventDefault(); searchZone.style.borderColor = '#6366f1'; });
-searchZone.addEventListener('dragleave', () => { searchZone.style.borderColor = searchFile ? '#10b981' : '#2e2e3e'; });
-searchZone.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleSearchFile(e.dataTransfer.files[0]); });
-searchInput.addEventListener('change', e => { if (e.target.files[0]) handleSearchFile(e.target.files[0]); });
+if (searchZone && searchInput && extractBtn) {
+  searchZone.addEventListener('click', () => searchInput.click());
+  searchZone.addEventListener('dragover', e => { e.preventDefault(); searchZone.style.borderColor = '#6366f1'; });
+  searchZone.addEventListener('dragleave', () => { searchZone.style.borderColor = searchFile ? '#10b981' : '#2e2e3e'; });
+  searchZone.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleSearchFile(e.dataTransfer.files[0]); });
+  searchInput.addEventListener('change', e => { if (e.target.files[0]) handleSearchFile(e.target.files[0]); });
 
-function handleSearchFile(file) {
-  if (!file.name.match(/\.(pdf|doc|docx)$/i)) { showToast('Please upload PDF or Word', 'error'); return; }
-  searchFile = file;
-  document.getElementById('search-file-name').textContent = '✓ ' + file.name;
-  searchZone.classList.add('has-file');
-  extractBtn.disabled = false;
-}
-
-extractBtn.addEventListener('click', async () => {
+  extractBtn.addEventListener('click', async () => {
   if (!searchFile) return;
   setLoading('extract', true, 'Extracting profile...');
   
@@ -2662,7 +2659,17 @@ extractBtn.addEventListener('click', async () => {
   } finally {
     setLoading('extract', false, 'Extract My Profile & Find Jobs');
   }
-});
+  });
+}
+
+function handleSearchFile(file) {
+  if (!file.name.match(/\.(pdf|doc|docx)$/i)) { showToast('Please upload PDF or Word', 'error'); return; }
+  searchFile = file;
+  const fileNameEl = document.getElementById('search-file-name');
+  if (fileNameEl) fileNameEl.textContent = '✓ ' + file.name;
+  if (searchZone) searchZone.classList.add('has-file');
+  if (extractBtn) extractBtn.disabled = false;
+}
 
 function displayProfile() {
   document.getElementById('search-upload-card').style.display = 'none';
