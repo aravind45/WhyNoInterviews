@@ -514,76 +514,26 @@
     
     <!-- TAB 2: FIND JOBS -->
     <section class="section" id="tab-search">
-      <!-- Main: Paste Job URL -->
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">🔗 Analyze Any Job Posting</h2>
-          <p class="card-subtitle">Paste a job URL from LinkedIn, Indeed, or any company career page</p>
-        </div>
-
-        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-          <input type="url" class="input" id="job-url-input" placeholder="https://www.linkedin.com/jobs/view/..." style="flex: 1;">
-          <button class="btn btn-primary" id="analyze-job-url-btn" style="padding: 0 24px;">
-            <span id="analyze-url-text">🔍 Analyze</span>
-            <span class="loading" id="analyze-url-loading" style="display:none"></span>
-          </button>
-        </div>
-
-        <p style="font-size: 0.85rem; color: #64748b;">
-          ✨ We'll extract job details, show your match score, find referrals, and help you apply
-        </p>
-
-        <!-- Button to show old resume upload -->
-        <button class="btn btn-secondary btn-sm mt-3" onclick="document.getElementById('legacy-upload-card').style.display='block'; this.style.display='none';" style="font-size: 0.8rem;">
-          📄 Or upload resume to search
-        </button>
-      </div>
-
-      <!-- Company Watchlist -->
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">🎯 Company Watchlist</h2>
-          <p class="card-subtitle">Track your target companies and see your connections</p>
-        </div>
-
-        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-          <input type="text" class="input" id="company-name-input" placeholder="e.g., Google, Microsoft, Amazon..." style="flex: 1;">
-          <button class="btn btn-primary" id="add-company-btn" style="padding: 0 24px;">
-            <span>+ Add</span>
-          </button>
-        </div>
-
-        <div id="watchlist-companies" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
-          <!-- Companies will be added here -->
-        </div>
-
-        <div id="watchlist-empty" style="text-align: center; padding: 40px 20px; color: #64748b;">
-          <div style="font-size: 2rem; margin-bottom: 8px;">🎯</div>
-          <div>Add companies you want to work for</div>
-          <div style="font-size: 0.85rem; margin-top: 4px;">We'll show your referrals at each company</div>
-        </div>
-      </div>
-
-      <!-- Legacy Upload Card (Hidden by default) -->
-      <div class="card" id="legacy-upload-card" style="display:none">
+      <!-- Upload Profile First -->
+      <div class="card" id="search-upload-card">
         <div class="card-header">
           <h2 class="card-title">💼 Upload Resume to Find Matching Jobs</h2>
           <p class="card-subtitle">We'll analyze your profile and find jobs ranked by how well YOU match</p>
         </div>
-
+        
         <div class="upload-zone" id="search-upload-zone">
           <input type="file" id="search-resume-input" accept=".pdf,.doc,.docx">
           <div class="upload-icon">📄</div>
           <div style="color: #94a3b8;">Drop resume or click to browse</div>
           <div class="file-name" id="search-file-name"></div>
         </div>
-
+        
         <button class="btn btn-primary btn-full mt-4" id="extract-btn" disabled>
           <span id="extract-btn-text">Extract My Profile & Find Jobs</span>
           <span class="loading" id="extract-loading" style="display:none"></span>
         </button>
       </div>
-
+      
       <!-- Profile Display -->
       <div class="card" id="profile-card" style="display:none">
         <div class="flex justify-between items-center mb-4">
@@ -596,18 +546,18 @@
             <span class="loading" id="search-loading" style="display:none"></span>
           </button>
         </div>
-
+        
         <div class="flex gap-2 flex-wrap mb-4">
           <span class="tag tag-info" id="profile-exp">- years</span>
           <span class="tag tag-info" id="profile-level">-</span>
           <span class="tag tag-info" id="profile-location">-</span>
         </div>
-
+        
         <div class="flex gap-4 mb-4">
           <input type="text" class="input" id="search-query" placeholder="Job title or keywords..." style="flex:1">
           <input type="text" class="input" id="search-location" placeholder="Location" style="width:150px">
         </div>
-
+        
         <div>
           <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px; display: block;">Your Skills:</label>
           <div id="profile-skills" class="flex gap-2 flex-wrap"></div>
@@ -1908,17 +1858,13 @@ let currentJob = null;
 let analyzeFile = null;
 let searchFile = null;
 
-// Tab Navigation Helper
-function switchTab(tabName) {
-  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById(`tab-${tabName}`).classList.add('active');
-}
-
+// Tab Navigation
 document.querySelectorAll('.main-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    switchTab(tab.dataset.tab);
+    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
   });
 });
 
@@ -2500,128 +2446,25 @@ function saveCurrentCoverLetter() {
 }
 
 // ========== SEARCH TAB ==========
-// Company Watchlist Management
-let watchlist = JSON.parse(localStorage.getItem('company_watchlist') || '[]');
-
-function renderWatchlist() {
-  const container = document.getElementById('watchlist-companies');
-  const empty = document.getElementById('watchlist-empty');
-
-  if (watchlist.length === 0) {
-    container.style.display = 'none';
-    empty.style.display = 'block';
-  } else {
-    container.style.display = 'grid';
-    empty.style.display = 'none';
-    container.innerHTML = watchlist.map((company, idx) => `
-      <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 12px; position: relative;">
-        <button onclick="removeFromWatchlist(${idx})" style="position: absolute; top: 8px; right: 8px; background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem;">&times;</button>
-        <div style="font-weight: 600; color: #e2e8f0; margin-bottom: 8px;">${company}</div>
-        <button class="btn btn-secondary btn-sm btn-full" onclick="findReferrals('${company.replace(/'/g, "\\'")}')" style="font-size: 0.75rem; padding: 6px;">
-          👥 View Connections
-        </button>
-      </div>
-    `).join('');
-  }
-}
-
-function addToWatchlist() {
-  const input = document.getElementById('company-name-input');
-  const company = input.value.trim();
-
-  if (!company) {
-    showToast('Enter a company name', 'error');
-    return;
-  }
-
-  if (watchlist.includes(company)) {
-    showToast(`${company} is already in your watchlist`, 'info');
-    return;
-  }
-
-  watchlist.push(company);
-  localStorage.setItem('company_watchlist', JSON.stringify(watchlist));
-  input.value = '';
-  renderWatchlist();
-  showToast(`✓ Added ${company} to watchlist`, 'success');
-}
-
-function removeFromWatchlist(idx) {
-  const company = watchlist[idx];
-  watchlist.splice(idx, 1);
-  localStorage.setItem('company_watchlist', JSON.stringify(watchlist));
-  renderWatchlist();
-  showToast(`Removed ${company}`, 'info');
-}
-
-document.getElementById('add-company-btn').addEventListener('click', addToWatchlist);
-document.getElementById('company-name-input').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') addToWatchlist();
-});
-
-// Job URL Analyzer
-document.getElementById('analyze-job-url-btn').addEventListener('click', async function() {
-  const urlInput = document.getElementById('job-url-input');
-  const url = urlInput.value.trim();
-
-  if (!url || !url.match(/^https?:\/\//)) {
-    showToast('Please enter a valid job URL', 'error');
-    return;
-  }
-
-  if (!currentUser || !currentUser.savedProfile) {
-    showToast('Please upload your resume in Analyze tab first', 'error');
-    return;
-  }
-
-  const btn = this;
-  const btnText = document.getElementById('analyze-url-text');
-  const loading = document.getElementById('analyze-url-loading');
-
-  btnText.style.display = 'none';
-  loading.style.display = 'inline-block';
-  btn.disabled = true;
-
-  try {
-    // For now, redirect to Analyze tab with URL pre-filled
-    // In future, we can add a dedicated job extraction endpoint
-    showToast('Opening job in Analyze tab...', 'info');
-
-    // Switch to Analyze tab
-    switchTab('analyze');
-
-    // Pre-fill the URL in job description (user can paste full job posting there)
-    setTimeout(() => {
-      document.getElementById('job-description').value = `Job URL: ${url}\n\nPlease paste the full job description here...`;
-      document.getElementById('job-description').focus();
-      showToast('Paste the job description and click Analyze', 'info');
-    }, 300);
-
-  } catch (error) {
-    showToast('Error: ' + error.message, 'error');
-  } finally {
-    btnText.style.display = 'inline';
-    loading.style.display = 'none';
-    btn.disabled = false;
-  }
-});
-
-// Initialize watchlist on load
-renderWatchlist();
-
-// Legacy upload functionality
 const searchZone = document.getElementById('search-upload-zone');
 const searchInput = document.getElementById('search-resume-input');
 const extractBtn = document.getElementById('extract-btn');
 
-if (searchZone && searchInput && extractBtn) {
-  searchZone.addEventListener('click', () => searchInput.click());
-  searchZone.addEventListener('dragover', e => { e.preventDefault(); searchZone.style.borderColor = '#6366f1'; });
-  searchZone.addEventListener('dragleave', () => { searchZone.style.borderColor = searchFile ? '#10b981' : '#2e2e3e'; });
-  searchZone.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleSearchFile(e.dataTransfer.files[0]); });
-  searchInput.addEventListener('change', e => { if (e.target.files[0]) handleSearchFile(e.target.files[0]); });
+searchZone.addEventListener('click', () => searchInput.click());
+searchZone.addEventListener('dragover', e => { e.preventDefault(); searchZone.style.borderColor = '#6366f1'; });
+searchZone.addEventListener('dragleave', () => { searchZone.style.borderColor = searchFile ? '#10b981' : '#2e2e3e'; });
+searchZone.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleSearchFile(e.dataTransfer.files[0]); });
+searchInput.addEventListener('change', e => { if (e.target.files[0]) handleSearchFile(e.target.files[0]); });
 
-  extractBtn.addEventListener('click', async () => {
+function handleSearchFile(file) {
+  if (!file.name.match(/\.(pdf|doc|docx)$/i)) { showToast('Please upload PDF or Word', 'error'); return; }
+  searchFile = file;
+  document.getElementById('search-file-name').textContent = '✓ ' + file.name;
+  searchZone.classList.add('has-file');
+  extractBtn.disabled = false;
+}
+
+extractBtn.addEventListener('click', async () => {
   if (!searchFile) return;
   setLoading('extract', true, 'Extracting profile...');
   
@@ -2659,17 +2502,7 @@ if (searchZone && searchInput && extractBtn) {
   } finally {
     setLoading('extract', false, 'Extract My Profile & Find Jobs');
   }
-  });
-}
-
-function handleSearchFile(file) {
-  if (!file.name.match(/\.(pdf|doc|docx)$/i)) { showToast('Please upload PDF or Word', 'error'); return; }
-  searchFile = file;
-  const fileNameEl = document.getElementById('search-file-name');
-  if (fileNameEl) fileNameEl.textContent = '✓ ' + file.name;
-  if (searchZone) searchZone.classList.add('has-file');
-  if (extractBtn) extractBtn.disabled = false;
-}
+});
 
 function displayProfile() {
   document.getElementById('search-upload-card').style.display = 'none';
