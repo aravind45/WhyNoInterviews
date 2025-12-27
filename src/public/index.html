@@ -1052,11 +1052,15 @@ function saveCoverLetter(coverLetter, jobTitle, companyName) {
 
 function loadSavedUserData() {
   if (!currentUser || !currentUser.savedProfile) return;
-  
+
   // Auto-load profile into Find Jobs tab
   profile = currentUser.savedProfile;
-  sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
-  localStorage.setItem('jobmatch_session', sessionId);
+
+  // Ensure stable sessionId based on email
+  if (!sessionId && currentUser.email) {
+    sessionId = 'sess_' + btoa(currentUser.email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
+    localStorage.setItem('jobmatch_session', sessionId);
+  }
 }
 
 function showMyData() {
@@ -1214,13 +1218,17 @@ async function useSavedResume(index, mode) {
     if (savedResume.profile) {
       // Use saved profile directly
       profile = savedResume.profile;
-      sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
-      localStorage.setItem('jobmatch_session', sessionId);
-      
+
+      // Ensure stable sessionId based on email
+      if (!sessionId && currentUser && currentUser.email) {
+        sessionId = 'sess_' + btoa(currentUser.email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
+        localStorage.setItem('jobmatch_session', sessionId);
+      }
+
       displayProfile();
       document.getElementById('search-upload-card').style.display = 'none';
       document.getElementById('profile-card').style.display = 'block';
-      
+
       showToast('Profile loaded! Click "Search Jobs" to find matches.', 'success');
     } else if (savedResume.fileBase64) {
       // Re-extract profile from saved file
@@ -2374,7 +2382,12 @@ function renderIcaContacts() {
 
   icaContactsTbody.innerHTML = icaContacts.map(contact => `
     <tr style="border-bottom: 1px solid #2e2e3e;">
-      <td style="padding: 12px;">${contact.first_name || ''} ${contact.last_name || ''}</td>
+      <td style="padding: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>${contact.first_name || ''} ${contact.last_name || ''}</span>
+          ${contact.linkedin_profile_url ? `<a href="${contact.linkedin_profile_url}" target="_blank" style="color: #0a66c2; text-decoration: none; font-size: 1.1rem;" title="View LinkedIn Profile">in</a>` : ''}
+        </div>
+      </td>
       <td style="padding: 12px;">${contact.company || '-'}</td>
       <td style="padding: 12px;">${contact.position || '-'}</td>
       <td style="padding: 12px;">

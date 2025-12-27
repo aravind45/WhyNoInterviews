@@ -247,7 +247,7 @@ router.get('/contacts/:sessionId', async (req: Request, res: Response) => {
     let query = `
       SELECT
         id, first_name, last_name, email_address, company, position,
-        connected_on, ica_category, notes, last_contacted,
+        connected_on, linkedin_profile_url, ica_category, notes, last_contacted,
         contact_frequency, relationship_strength, created_at, updated_at
       FROM linkedin_contacts
       WHERE session_id = $1
