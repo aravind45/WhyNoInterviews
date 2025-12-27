@@ -77,6 +77,12 @@ export function parseLinkedInCSV(csvContent: string | Buffer): ParseResult {
 
     result.totalRows = records.length;
 
+    // Debug: Log first record to see column names
+    if (records.length > 0) {
+      console.log('CSV columns found:', Object.keys(records[0]));
+      console.log('First record sample:', records[0]);
+    }
+
     records.forEach((record: any, index: number) => {
       try {
         // Map LinkedIn export column names to our schema
@@ -90,8 +96,8 @@ export function parseLinkedInCSV(csvContent: string | Buffer): ParseResult {
           linkedinUrl: record['URL'] || record['url'] || record['LinkedIn URL'] || '',
         };
 
-        // Skip completely empty rows
-        if (!mappedRecord.firstName && !mappedRecord.lastName && !mappedRecord.emailAddress) {
+        // Skip completely empty rows (must have at least first or last name)
+        if (!mappedRecord.firstName && !mappedRecord.lastName) {
           return;
         }
 
