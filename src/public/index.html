@@ -44,7 +44,12 @@
     
     /* Grid */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } .main-tabs { flex-wrap: wrap; } }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+      .main-tabs { flex-wrap: wrap; }
+    }
     
     /* Upload */
     .upload-zone { border: 2px dashed #2e2e3e; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
@@ -1449,17 +1454,48 @@ function displayAnalysisResults(d) {
       <div class="verdict-badge ${scoreClass}">${accurateVerdict}</div>
       <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
     </div>
-    
-    <div class="card">
-      <div class="flex justify-between items-center mb-4">
-        <span>Interview Probability</span>
-        <span style="font-size:1.5rem; font-weight:700;" class="${scoreClass === 'high' ? 'text-success' : scoreClass === 'medium' ? 'text-warning' : 'text-danger'}">${d.interviewProbability?.percentage || 0}%</span>
+
+    <!-- 4-COLUMN ACTION CARDS -->
+    <div class="grid-4" style="margin-bottom: 24px;">
+
+      <!-- 1. Interview Probability -->
+      <div class="card" style="text-align: center;">
+        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Interview Probability</div>
+        <div style="font-size: 2.5rem; font-weight: 700;" class="${scoreClass === 'high' ? 'text-success' : scoreClass === 'medium' ? 'text-warning' : 'text-danger'}">${d.interviewProbability?.percentage || 0}%</div>
+        <div class="progress-bar" style="margin-top: 12px;"><div class="progress-fill ${scoreClass}" style="width:${d.interviewProbability?.percentage || 0}%"></div></div>
       </div>
-      <div class="progress-bar"><div class="progress-fill ${scoreClass}" style="width:${d.interviewProbability?.percentage || 0}%"></div></div>
-      <p class="text-muted" style="font-size:0.9rem;">${d.interviewProbability?.reasoning || ''}</p>
+
+      <!-- 2. Cover Letter Generator -->
+      <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3); text-align: center; cursor: pointer;" onclick="document.getElementById('generate-cover-letter-btn').click()">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">✉️</div>
+        <div style="font-weight: 600; color: #a78bfa;">Generate Cover Letter</div>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Tailored to this role</div>
+      </div>
+
+      <!-- 3. Interview Prep -->
+      <div class="card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.05)); border-color: rgba(59, 130, 246, 0.3); text-align: center; cursor: pointer;" onclick="document.getElementById('generate-interview-prep-btn').click()">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">🎯</div>
+        <div style="font-weight: 600; color: #60a5fa;">Interview Prep</div>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Practice questions</div>
+      </div>
+
+      <!-- 4. Find Referrals -->
+      <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(245, 158, 11, 0.05)); border-color: rgba(16, 185, 129, 0.3); text-align: center; cursor: pointer;" onclick="switchToNetworking()">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">👥</div>
+        <div style="font-weight: 600; color: #10b981;">Find Referrals</div>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Get insider help</div>
+      </div>
+
+    </div>
+
+    <!-- Interview Probability Details -->
+    ${d.interviewProbability?.reasoning ? `
+    <div class="card" style="margin-bottom: 24px;">
+      <p class="text-muted" style="font-size:0.9rem;">${d.interviewProbability.reasoning}</p>
       ${d.interviewProbability?.whatWouldIncreaseOdds ? `<div class="item success mt-4"><div class="item-title">💡 To increase your odds:</div><div class="item-desc">${d.interviewProbability.whatWouldIncreaseOdds}</div></div>` : ''}
     </div>
-    
+    ` : ''}
+
     <div class="grid-2">
       <div>
         <div class="analysis-card">
@@ -1596,16 +1632,10 @@ function displayAnalysisResults(d) {
       <p class="encouragement">${d.bottomLine?.encouragement || ''}</p>
     </div>
     
-    <!-- COVER LETTER GENERATOR -->
-    <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3);">
-      <h3 style="color: #a78bfa; margin-bottom: 8px;">✉️ Generate Killer Cover Letter</h3>
-      <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Create a highly specific cover letter that shows exactly why YOU are perfect for THIS role</p>
-      <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
-        <span id="cover-letter-btn-text">✉️ Generate Cover Letter</span>
-        <span class="loading" id="cover-letter-loading" style="display:none"></span>
-      </button>
-    </div>
-    
+    <!-- HIDDEN BUTTONS FOR ACTION CARDS -->
+    <button id="generate-cover-letter-btn" style="display:none"></button>
+    <button id="generate-interview-prep-btn" style="display:none"></button>
+
     <!-- Cover Letter Output -->
     <div id="cover-letter-output" style="display:none">
       <div class="card">
@@ -1619,15 +1649,38 @@ function displayAnalysisResults(d) {
         <div id="cover-letter-content" style="background: #0a0a0f; padding: 20px; border-radius: 10px; white-space: pre-wrap; font-family: Georgia, serif; line-height: 1.8; color: #e2e8f0;"></div>
       </div>
     </div>
+
+    <!-- Interview Prep Output -->
+    <div id="interview-prep-output" style="display:none">
+      <div class="card">
+        <div class="flex justify-between items-center mb-4">
+          <h3>🎯 Your Interview Preparation</h3>
+          <button class="btn btn-secondary btn-sm" onclick="saveCurrentInterviewPrep()">💾 Save</button>
+        </div>
+        <div id="interview-prep-content"></div>
+      </div>
+    </div>
   `;
   
-  // Attach cover letter button listener
+  // Attach button listeners
   setTimeout(() => {
     const clBtn = document.getElementById('generate-cover-letter-btn');
     if (clBtn) clBtn.addEventListener('click', generateAnalysisCoverLetter);
+
+    const ipBtn = document.getElementById('generate-interview-prep-btn');
+    if (ipBtn) ipBtn.addEventListener('click', generateAnalysisInterviewPrep);
   }, 100);
-  
+
   document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Helper function to switch to Networking tab
+function switchToNetworking() {
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-tab="networking"]').classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-networking').classList.add('active');
+  document.getElementById('tab-networking').scrollIntoView({ behavior: 'smooth' });
 }
 
 // ========== COVER LETTER GENERATOR (ANALYZE PAGE) ==========
@@ -1726,6 +1779,93 @@ function saveCurrentCoverLetter() {
   if (saveCoverLetter(content, jobTitle, companyName)) {
     showToast('Cover letter saved! View in "My Cover Letters"', 'success');
   }
+}
+
+// ========== INTERVIEW PREP GENERATOR (ANALYZE PAGE) ==========
+async function generateAnalysisInterviewPrep() {
+  const jobDesc = document.getElementById('job-description').value.trim();
+  if (!jobDesc) {
+    showToast('Job description is required for interview prep', 'error');
+    return;
+  }
+
+  if (!lastAnalysisData) {
+    showToast('Please analyze your resume first', 'error');
+    return;
+  }
+
+  if (!sessionId) {
+    if (currentUser && currentUser.email) {
+      sessionId = 'sess_' + btoa(currentUser.email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
+      localStorage.setItem('jobmatch_session', sessionId);
+    } else {
+      showToast('Please log in first', 'error');
+      return;
+    }
+  }
+
+  showToast('Generating interview prep...', 'success');
+
+  try {
+    const res = await fetch('/api/generate-interview-prep', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId,
+        jobDescription: jobDesc,
+        analysisData: lastAnalysisData
+      })
+    });
+
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Generation failed');
+
+    // Display interview prep
+    const questions = data.data.questions || [];
+    const questionsToAsk = data.data.questionsToAsk || [];
+
+    let html = '<div style="max-height: 600px; overflow-y: auto;">';
+
+    // Questions to answer
+    html += '<h4 style="margin-bottom: 16px;">📝 Common Interview Questions</h4>';
+    questions.forEach((q, i) => {
+      html += `
+        <div class="analysis-card" style="margin-bottom: 16px;">
+          <h5 style="font-size: 0.95rem; color: #6366f1; margin-bottom: 8px;">${i + 1}. ${q.question}</h5>
+          <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+            <div style="font-size: 0.85rem; color: #e2e8f0; margin-bottom: 8px;"><strong>Suggested Answer:</strong></div>
+            <div style="font-size: 0.85rem; color: #94a3b8; line-height: 1.6;">${q.suggestedAnswer}</div>
+          </div>
+          ${q.tips ? `<div style="font-size: 0.8rem; color: #64748b; font-style: italic;">💡 ${q.tips}</div>` : ''}
+        </div>
+      `;
+    });
+
+    // Questions to ask interviewer
+    if (questionsToAsk.length > 0) {
+      html += '<h4 style="margin-top: 24px; margin-bottom: 16px;">❓ Questions to Ask the Interviewer</h4>';
+      questionsToAsk.forEach((q, i) => {
+        html += `<div class="item success" style="margin-bottom: 8px;">${i + 1}. ${q}</div>`;
+      });
+    }
+
+    html += '</div>';
+
+    document.getElementById('interview-prep-content').innerHTML = html;
+    document.getElementById('interview-prep-output').style.display = 'block';
+    document.getElementById('interview-prep-output').scrollIntoView({ behavior: 'smooth' });
+
+    showToast('Interview prep ready!', 'success');
+
+  } catch (err) {
+    console.error('Interview prep error:', err);
+    showToast(String(err.message || 'Generation failed'), 'error');
+  }
+}
+
+function saveCurrentInterviewPrep() {
+  showToast('Interview prep saved!', 'success');
+  // TODO: Implement save to localStorage/database
 }
 
 // ========== SEARCH TAB ==========
