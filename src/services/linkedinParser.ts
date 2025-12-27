@@ -172,13 +172,12 @@ export function validateLinkedInCSV(csvContent: string | Buffer): boolean {
   // Check for CSV header presence
   const firstLine = content.split('\n')[0].toLowerCase();
   const hasLinkedInHeaders =
-    (firstLine.includes('first name') || firstLine.includes('first_name')) ||
-    (firstLine.includes('last name') || firstLine.includes('last_name')) ||
-    (firstLine.includes('email') || firstLine.includes('company'));
+    (firstLine.includes('first name') || firstLine.includes('first_name')) &&
+    (firstLine.includes('last name') || firstLine.includes('last_name'));
 
   if (!hasLinkedInHeaders) {
     throw new Error(
-      'CSV does not appear to be a LinkedIn Connections export. Expected columns: First Name, Last Name, Email Address, Company, Position, Connected On'
+      'CSV does not appear to be a LinkedIn Connections export. Expected columns: First Name, Last Name, URL, Email Address, Company, Position, Connected On'
     );
   }
 
