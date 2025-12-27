@@ -1423,9 +1423,15 @@ function displayAnalysisResults(d) {
     <div class="score-hero ${heroClass}">
       <div class="score-ring ${scoreClass}">
         <div class="score-number">${score}%</div>
-        <div class="score-label">Match</div>
+        <div class="score-label">Skill Match</div>
       </div>
       <div class="verdict-badge ${scoreClass}">${accurateVerdict}</div>
+      ${d.aiOriginalScore && d.aiOriginalScore !== score ? `
+        <p style="color:#64748b; font-size:0.85rem; margin-top:8px;">
+          AI Assessment: ${d.aiOriginalScore}%
+          <span style="color:#94a3b8;">| Skill-Based: ${score}%</span>
+        </p>
+      ` : ''}
       <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
     </div>
 

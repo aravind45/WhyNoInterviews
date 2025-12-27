@@ -279,6 +279,9 @@ Return ONLY this JSON:
     const profileExtract = await extractProfileFromResume(resumeText);
     const profileSkills = profileExtract?.hardSkills || [];
 
+    // Store AI's original score before we override it
+    const aiOriginalScore = analysis.overallScore || 0;
+
     // Calculate REALISTIC match score based on skills (not AI's inflated score)
     const jobText = jobDescription.toLowerCase();
     let matchedSkills = 0;
@@ -301,13 +304,14 @@ Return ONLY this JSON:
     const realisticScore = profileSkills.length > 0 && matchedSkills > 0
       ? Math.min(95, Math.round((matchedSkills / profileSkills.length) * 100))
       : profileSkills.length > 0 && matchedSkills === 0
-        ? Math.min(40, analysis.overallScore || 20) // Use AI's score but cap at 40%
+        ? Math.min(40, aiOriginalScore || 20) // Use AI's score but cap at 40%
         : 30;
 
     // Override AI's inflated overallScore with realistic skill-based score
     analysis.overallScore = realisticScore;
     analysis.matchingSkills = matchingSkills;
     analysis.skillMatchPercentage = realisticScore;
+    analysis.aiOriginalScore = aiOriginalScore; // Keep AI's original for comparison
 
     // Also override interview probability to match realistic score
     if (analysis.interviewProbability) {
