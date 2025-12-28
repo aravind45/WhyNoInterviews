@@ -165,13 +165,15 @@ Create a `.env` file:
 # Database (Required)
 DATABASE_URL=postgresql://user:password@host:5432/database
 
-# AI APIs (At least one required - choose Groq OR Claude, or configure both)
+# AI APIs (At least one required - configure one or more providers)
 GROQ_API_KEY=your_groq_api_key_here         # Groq (Llama) - Fast & Free
 ANTHROPIC_API_KEY=your_anthropic_key_here   # Claude - Higher quality analysis
+OPENAI_API_KEY=your_openai_key_here         # OpenAI GPT - Industry standard
 
 # Optional: Choose which model to use for each provider
 GROQ_MODEL=llama-3.1-8b-instant             # Default Groq model
 CLAUDE_MODEL=claude-sonnet-4-5-20250929     # Default Claude model
+OPENAI_MODEL=gpt-4o-mini                    # Default OpenAI model (gpt-4o-mini or gpt-4o)
 
 # Optional APIs
 TAVILY_API_KEY=your_tavily_key_here    # For company research in cover letters

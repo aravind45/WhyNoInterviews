@@ -262,7 +262,7 @@ export const UploadRequestSchema = z.object({
     .min(0)
     .max(10000)
     .optional(),
-  llmProvider: z.enum(['groq', 'claude'])
+  llmProvider: z.enum(['groq', 'claude', 'openai'])
     .optional(),
 });
 
@@ -279,7 +279,7 @@ export const AnalyzeRequestSchema = z.object({
     .min(0)
     .max(10000)
     .optional(),
-  llmProvider: z.enum(['groq', 'claude'])
+  llmProvider: z.enum(['groq', 'claude', 'openai'])
     .optional(),
 });
 
