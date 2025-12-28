@@ -1183,114 +1183,75 @@ app.post('/api/optimize-resume', upload.single('resume'), async (req, res) => {
     // Build comprehensive audit and optimization prompt
     const prompt = `You are a professional resume writer and ATS optimization expert.
 
+CRITICAL INSTRUCTIONS:
+- Read the ACTUAL resume text below carefully
+- Extract the REAL content from the resume (actual summary, actual job titles, actual skills)
+- Do NOT make up or fabricate content
+- Do NOT use example data
+- Base ALL analysis on the actual resume provided
+
 RESUME:
 ${resumeText}
 
 JOB DESCRIPTION:
 ${jobDescription}
 
-TASK: Audit this resume using the 10-point checklist below, then provide an optimized version.
+TASK: Audit this resume using the 10-point checklist below, then provide an optimized version using ONLY the actual content from the resume above.
 
 AUDIT CHECKLIST:
 1. Target Role Alignment (3 checks)
-   - Job title matches target role
-   - Keywords aligned with job description
-   - Industry-specific language used
-
 2. Summary Section (4 checks if present)
-   - No buzzwords (results-driven, dynamic, etc.)
-   - Clearly states who, what, business impact
-   - Tailored to specific role
-   - 2-3 lines maximum
-
 3. Experience Section (4 checks)
-   - Each role supports target job
-   - Irrelevant/junior roles removed or condensed
-   - Most recent 5-10 years emphasized
-   - No task-only bullets
-
 4. Bullet Quality (6 checks per bullet)
-   - Starts with strong action verb
-   - Describes problem, action, outcome
-   - Includes metrics (%, $, time, scale)
-   - Shows ownership/decision-making
-   - Avoids internal jargon
-   - No task-only descriptions
-
 5. Skills Section (4 checks)
-   - Only modern, relevant skills
-   - Tools match job description
-   - No outdated or obvious skills
-   - Grouped logically
-
 6. Formatting & Readability (4 checks)
-   - One page (mid) or two (senior+)
-   - No long paragraphs; bullets ≤2 lines
-   - Consistent formatting
-   - Easy to scan in 10 seconds
-
 7. ATS Optimization (4 checks)
-   - Standard section headers
-   - No tables/text boxes/graphics
-   - No headers/footers with critical info
-   - PDF or DOCX format
-
 8. Results & Impact Test (3 checks)
-   - Clear what changed because of candidate
-   - Outcomes tied to revenue/efficiency/risk/scale/users
-   - Recruiter wants to interview after 30 seconds
-
 9. Customization Check (4 checks)
-   - Customized for THIS job
-   - Skills reordered to match job priority
-   - Bullets adjusted for role expectations
-   - Keywords mirrored from JD
-
 10. Final Sanity (4 checks)
-    - No spelling/grammar issues
-    - No unexplained acronyms
-    - LinkedIn matches resume
-    - Clear career story, not task list
 
 OUTPUT FORMAT (JSON):
 {
   "auditScore": {
     "total": "6/10",
     "sections": [
-      {
-        "name": "Target Role Alignment",
-        "passed": 2,
-        "total": 3,
-        "issues": ["Missing keywords: X, Y", "Title doesn't match"]
-      },
-      ... (all 10 sections)
+      {"name": "Target Role Alignment", "passed": 2, "total": 3, "issues": ["actual issue 1", "actual issue 2"]},
+      {"name": "Summary Section", "passed": 3, "total": 4, "issues": ["actual issue"]},
+      {"name": "Experience Section", "passed": 3, "total": 4, "issues": ["actual issue"]},
+      {"name": "Bullet Quality", "passed": 4, "total": 6, "issues": ["actual issue 1", "actual issue 2"]},
+      {"name": "Skills Section", "passed": 3, "total": 4, "issues": ["actual issue"]},
+      {"name": "Formatting & Readability", "passed": 3, "total": 4, "issues": ["actual issue"]},
+      {"name": "ATS Optimization", "passed": 3, "total": 4, "issues": ["actual issue"]},
+      {"name": "Results & Impact Test", "passed": 2, "total": 3, "issues": ["actual issue"]},
+      {"name": "Customization Check", "passed": 3, "total": 4, "issues": ["actual issue"]},
+      {"name": "Final Sanity", "passed": 3, "total": 4, "issues": ["actual issue"]}
     ]
   },
   "sections": [
     {
       "title": "Summary",
-      "before": "original text",
-      "after": "optimized text",
-      "changes": ["Removed buzzword 'results-driven'", "Added specific value: Director of AI"]
+      "before": "ACTUAL summary text from resume",
+      "after": "Optimized version of ACTUAL summary",
+      "changes": ["What you changed and why"]
     },
     {
-      "title": "Experience - Senior Data Engineer",
+      "title": "Experience - ACTUAL JOB TITLE FROM RESUME",
       "bullets": [
         {
-          "before": "Responsible for data pipelines",
-          "after": "Built and optimized data pipelines supporting 50M+ records, reducing processing time by 32%",
-          "changes": ["Added metrics", "Converted task to outcome"]
+          "before": "ACTUAL bullet text from resume",
+          "after": "Optimized version of ACTUAL bullet",
+          "changes": ["What you changed"]
         }
       ]
     },
     {
       "title": "Skills",
-      "before": ["MS Office", "SDLC", "Python", "React"],
-      "after": ["Python", "React", "TensorFlow", "AWS"],
-      "changes": ["Removed: MS Office (outdated)", "Removed: SDLC (generic)", "Added: TensorFlow (matches JD)"]
+      "before": ["ACTUAL", "skills", "from", "resume"],
+      "after": ["Optimized", "skill", "list", "based", "on", "job"],
+      "changes": ["What you changed"]
     }
   ],
-  "changesSummary": "Removed 3 generic buzzwords, rewrote 5 bullets with metrics, removed 2 outdated skills, added 4 JD keywords"
+  "changesSummary": "Summary of what was changed"
 }`;
 
     // Call Groq API
