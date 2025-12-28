@@ -264,30 +264,60 @@ Return ONLY this JSON:
 }`;
 
     // Get LLM provider from request or use default
-    const { getProvider, getDefaultProvider } = require('./services/llmProvider');
-    const selectedProvider = req.body.llmProvider || getDefaultProvider();
-    const llmService = getProvider(selectedProvider);
-
+    let selectedProvider = 'groq'; // Default fallback
+    let modelUsed = 'llama-3.1-8b-instant';
     let responseText = '';
-    let modelUsed = '';
 
-    if (selectedProvider === 'claude') {
-      // Use Claude
-      const Anthropic = require('@anthropic-ai/sdk').default;
-      const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-      const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
+    try {
+      const { getProvider, getDefaultProvider } = require('./services/llmProvider');
+      selectedProvider = req.body.llmProvider || getDefaultProvider();
 
-      const response = await claude.messages.create({
-        model: claudeModel,
-        max_tokens: 4000,
-        temperature: 0.3,
-        messages: [{ role: 'user', content: prompt }]
-      });
+      console.log(`📊 Using LLM provider: ${selectedProvider}`);
 
-      responseText = response.content[0].type === 'text' ? response.content[0].text : '';
-      modelUsed = claudeModel;
-    } else {
-      // Use Groq (default)
+      if (selectedProvider === 'claude') {
+        // Use Claude
+        console.log('🤖 Calling Claude API...');
+        const Anthropic = require('@anthropic-ai/sdk').default;
+
+        if (!process.env.ANTHROPIC_API_KEY) {
+          console.warn('⚠️  ANTHROPIC_API_KEY not set, falling back to Groq');
+          selectedProvider = 'groq';
+        } else {
+          const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+          const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
+
+          const response = await claude.messages.create({
+            model: claudeModel,
+            max_tokens: 4000,
+            temperature: 0.3,
+            messages: [{ role: 'user', content: prompt }]
+          });
+
+          responseText = response.content[0].type === 'text' ? response.content[0].text : '';
+          modelUsed = claudeModel;
+          console.log('✅ Claude response received');
+        }
+      }
+
+      if (selectedProvider !== 'claude') {
+        // Use Groq (default or fallback)
+        console.log('🤖 Calling Groq API...');
+        const completion = await groq.chat.completions.create({
+          model: 'llama-3.1-8b-instant',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.3,
+          max_tokens: 3000
+        });
+
+        responseText = completion.choices[0]?.message?.content || '';
+        modelUsed = 'llama-3.1-8b-instant';
+        selectedProvider = 'groq';
+        console.log('✅ Groq response received');
+      }
+    } catch (llmError: any) {
+      console.error('❌ LLM Error:', llmError.message);
+      // Fallback to Groq if there's any error with provider selection
+      console.log('⚠️  Falling back to Groq due to error');
       const completion = await groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
@@ -297,6 +327,7 @@ Return ONLY this JSON:
 
       responseText = completion.choices[0]?.message?.content || '';
       modelUsed = 'llama-3.1-8b-instant';
+      selectedProvider = 'groq';
     }
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
