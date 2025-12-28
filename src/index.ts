@@ -286,8 +286,11 @@ Return ONLY this JSON:
             // Import Anthropic SDK (CommonJS syntax)
             const Anthropic = require('@anthropic-ai/sdk');
 
+            const apiKey = process.env.ANTHROPIC_API_KEY;
             console.log('✓ Anthropic SDK loaded');
-            const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+            console.log(`✓ API Key format check: starts with 'sk-ant-' = ${apiKey.startsWith('sk-ant-')}, length = ${apiKey.length}`);
+
+            const claude = new Anthropic({ apiKey });
             const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
 
             console.log(`✓ Calling Claude with model: ${claudeModel}`);
