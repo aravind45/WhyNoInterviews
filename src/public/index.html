@@ -2765,7 +2765,7 @@ function displayOptimizationResults(data) {
               <span class="${section.passed === section.total ? 'text-success' : 'text-warning'}">${section.passed}/${section.total}</span>
             </div>
             ${section.issues && section.issues.length > 0 ? `
-              <div style="font-size: 0.8rem; color: #ef4444;">
+              <div style="font-size: 0.8rem; color: #94a3b8;">
                 ${section.issues.map(issue => `• ${issue}`).join('<br>')}
               </div>
             ` : '<div style="font-size: 0.8rem; color: #10b981;">✓ All checks passed</div>'}
