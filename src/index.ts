@@ -10,6 +10,7 @@ import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import { connectDatabase, getPool } from './database/connection';
 import icaRoutes from './routes/ica';
+import { initializeProviders } from './services/llmProvider';
 
 const app = express();
 
@@ -17,6 +18,9 @@ const app = express();
 connectDatabase().catch(err => {
   console.error('Failed to connect to database:', err);
 });
+
+// Initialize LLM providers (Groq and Claude)
+initializeProviders();
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -259,14 +263,41 @@ Return ONLY this JSON:
   }
 }`;
 
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 3000
-    });
+    // Get LLM provider from request or use default
+    const { getProvider, getDefaultProvider } = require('./services/llmProvider');
+    const selectedProvider = req.body.llmProvider || getDefaultProvider();
+    const llmService = getProvider(selectedProvider);
 
-    const responseText = completion.choices[0]?.message?.content || '';
+    let responseText = '';
+    let modelUsed = '';
+
+    if (selectedProvider === 'claude') {
+      // Use Claude
+      const Anthropic = require('@anthropic-ai/sdk').default;
+      const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
+
+      const response = await claude.messages.create({
+        model: claudeModel,
+        max_tokens: 4000,
+        temperature: 0.3,
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      responseText = response.content[0].type === 'text' ? response.content[0].text : '';
+      modelUsed = claudeModel;
+    } else {
+      // Use Groq (default)
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 3000
+      });
+
+      responseText = completion.choices[0]?.message?.content || '';
+      modelUsed = 'llama-3.1-8b-instant';
+    }
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
     if (!jsonMatch) {
@@ -292,7 +323,7 @@ Return ONLY this JSON:
       // Match if skill appears in job description OR if skill is partial match
       if (jobText.includes(skillLower) ||
           jobText.includes(skillLower.replace(/\.js$/, '')) || // Match "React.js" to "React"
-          jobText.split(/\W+/).some(word => word === skillLower)) { // Match whole words
+          jobText.split(/\W+/).some((word: string) => word === skillLower)) { // Match whole words
         matchedSkills++;
         matchingSkills.push(skill);
       }
@@ -323,8 +354,8 @@ Return ONLY this JSON:
     const resumeAnalysis = await pool.query(
       `INSERT INTO resume_analyses
        (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
-        target_job_title, job_description, status, expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'completed', NOW() + INTERVAL '30 days')
+        target_job_title, job_description, llm_provider, status, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completed', NOW() + INTERVAL '30 days')
        RETURNING id`,
       [
         sessionUuid,
@@ -334,7 +365,8 @@ Return ONLY this JSON:
         path.extname(req.file.originalname).substring(1),
         req.file.size,
         'General Position', // Could extract from JD
-        jobDescription
+        jobDescription,
+        selectedProvider
       ]
     );
 
@@ -344,21 +376,26 @@ Return ONLY this JSON:
     await pool.query(
       `INSERT INTO diagnosis_results
        (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
-        model_used, resume_processing_time, analysis_time)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        model_used, llm_provider, resume_processing_time, analysis_time)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         analysisId,
         realisticScore,
         JSON.stringify(analysis),
         realisticScore >= 70,
         100,
-        'llama-3.1-8b-instant',
+        modelUsed,
+        selectedProvider,
         0,
         0
       ]
     );
 
     console.log(`✅ Saved analysis to database with realistic score: ${realisticScore}%`);
+
+    // Add provider info to response
+    analysis.llmProvider = selectedProvider;
+    analysis.modelUsed = modelUsed;
 
     res.json({ success: true, data: analysis, sessionId: sessionToken });
 
@@ -1161,6 +1198,24 @@ Return ONLY the JSON array, no additional text.`;
 
 // ICA Routes
 app.use('/api/ica', require('./routes/ica').default);
+
+// LLM Providers endpoint
+app.get('/api/llm-providers', (req, res) => {
+  const { getAvailableProviders, getDefaultProvider } = require('./services/llmProvider');
+  const providers = getAvailableProviders();
+
+  res.json({
+    success: true,
+    data: {
+      providers: providers.map((p: any) => ({
+        name: p.name,
+        displayName: p.displayName,
+        available: p.isAvailable()
+      })),
+      default: getDefaultProvider()
+    }
+  });
+});
 
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));

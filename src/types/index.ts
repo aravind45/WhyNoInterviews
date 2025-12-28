@@ -262,6 +262,8 @@ export const UploadRequestSchema = z.object({
     .min(0)
     .max(10000)
     .optional(),
+  llmProvider: z.enum(['groq', 'claude'])
+    .optional(),
 });
 
 export const AnalyzeRequestSchema = z.object({
@@ -276,6 +278,8 @@ export const AnalyzeRequestSchema = z.object({
     .int()
     .min(0)
     .max(10000)
+    .optional(),
+  llmProvider: z.enum(['groq', 'claude'])
     .optional(),
 });
 

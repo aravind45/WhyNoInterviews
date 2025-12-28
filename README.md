@@ -80,6 +80,13 @@ Most tools give you inflated match scores that don't reflect reality. They'll sa
 
 This transparency helps you understand your true chances and focus on winnable opportunities.
 
+### Dual-LLM Analysis
+Choose between two AI models for resume analysis:
+- **Groq (Llama 3.1)**: Lightning-fast analysis, free tier available, great for quick iterations
+- **Claude (Sonnet 4.5)**: Superior analysis quality, better at catching subtle issues, more nuanced recommendations
+
+Users can select their preferred LLM from a dropdown on the analysis page, allowing direct comparison of results.
+
 ### Match Score Calculation
 
 ```typescript
@@ -108,10 +115,12 @@ else:
 - **Runtime**: Node.js 18+ with TypeScript
 - **Framework**: Express.js
 - **Database**: PostgreSQL (Neon serverless)
-- **AI Model**: Groq (llama-3.1-8b-instant) - Fast & Free
+- **AI Models**: Dual-LLM Support (User Selectable)
+  - **Groq** (llama-3.1-8b-instant) - Fast & Free
+  - **Claude** (claude-sonnet-4-5) - Higher quality analysis
 - **File Parsing**: pdf-parse, mammoth (PDF/DOC/DOCX support)
 - **APIs**:
-  - Groq (AI analysis - **required**)
+  - Groq OR Claude (At least one required for AI analysis)
   - Tavily (web research - optional)
   - JSearch (job listings - optional)
 
@@ -156,8 +165,13 @@ Create a `.env` file:
 # Database (Required)
 DATABASE_URL=postgresql://user:password@host:5432/database
 
-# AI API (Required)
-GROQ_API_KEY=your_groq_api_key_here
+# AI APIs (At least one required - choose Groq OR Claude, or configure both)
+GROQ_API_KEY=your_groq_api_key_here         # Groq (Llama) - Fast & Free
+ANTHROPIC_API_KEY=your_anthropic_key_here   # Claude - Higher quality analysis
+
+# Optional: Choose which model to use for each provider
+GROQ_MODEL=llama-3.1-8b-instant             # Default Groq model
+CLAUDE_MODEL=claude-sonnet-4-5-20250929     # Default Claude model
 
 # Optional APIs
 TAVILY_API_KEY=your_tavily_key_here    # For company research in cover letters

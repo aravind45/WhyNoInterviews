@@ -4,7 +4,7 @@ import { uploadMiddleware, validateUploadedFile, cleanupTempFile, calculateFileH
 import { createError, asyncHandler } from '../middleware/errorHandler';
 import { parseResume, extractKeyInfo } from '../components/ResumeParser';
 import { normalizeJobTitle, getRoleTemplate, getCanonicalJobInfo } from '../components/JobTitleNormalizer';
-import { analyzeResume, isGroqAvailable } from '../services/groq';
+import { initializeProviders, getProvider, getAvailableProviders, isValidProvider, getDefaultProvider, type LLMProvider } from '../services/llmProvider';
 import { encrypt, generateSessionToken, hash } from '../services/encryption';
 import { query, transaction } from '../database/connection';
 import { cacheSet, cacheGet, cacheDelete } from '../cache/redis';
@@ -64,17 +64,28 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
       const bodyValidation = UploadRequestSchema.safeParse({
         targetJobTitle: req.body.targetJobTitle || req.body.targetJob,
         jobDescription: req.body.jobDescription,
-        applicationCount: req.body.applicationCount ? parseInt(req.body.applicationCount) : undefined
+        applicationCount: req.body.applicationCount ? parseInt(req.body.applicationCount) : undefined,
+        llmProvider: req.body.llmProvider
       });
-      
+
       if (!bodyValidation.success) {
         await cleanupTempFile(tempFilePath);
         return next(new ValidationError('Invalid request data', {
           errors: bodyValidation.error.errors
         }));
       }
-      
-      const { targetJobTitle, jobDescription, applicationCount } = bodyValidation.data;
+
+      const { targetJobTitle, jobDescription, applicationCount, llmProvider } = bodyValidation.data;
+
+      // Get LLM provider (use provided or default)
+      const selectedProvider = llmProvider || getDefaultProvider();
+      const llmService = getProvider(selectedProvider);
+
+      // Check if provider is available
+      if (!llmService.isAvailable()) {
+        await cleanupTempFile(tempFilePath);
+        return next(new ProcessingError(`${llmService.displayName} is not configured. Please check your API keys.`));
+      }
       
       // Normalize job title (Requirement 2)
       const normalizedJob = await normalizeJobTitle(targetJobTitle);
@@ -129,8 +140,8 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
           `INSERT INTO resume_analyses (
             session_id, file_hash, encrypted_content, original_filename,
             file_type, file_size, page_count, target_job_title, canonical_job_id,
-            job_description, application_count, status, expires_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending', $12)
+            job_description, application_count, llm_provider, status, expires_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending', $13)
           RETURNING id`,
           [
             sessionId,
@@ -144,6 +155,7 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
             canonicalJobId,
             jobDescription || null,
             applicationCount || null,
+            selectedProvider,
             expiresAt
           ]
         );
@@ -226,13 +238,8 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
     throw new ValidationError('Invalid request', { errors: validation.error.errors });
   }
   
-  const { sessionId, targetJobTitle, jobDescription, applicationCount } = validation.data;
-  
-  // Check Groq availability
-  if (!isGroqAvailable()) {
-    throw new ProcessingError('AI analysis service is not available');
-  }
-  
+  const { sessionId, targetJobTitle, jobDescription, applicationCount, llmProvider } = validation.data;
+
   // Get analysis record
   const analysisResult = await query(
     `SELECT ra.*, us.session_token
@@ -243,12 +250,21 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
      LIMIT 1`,
     [sessionId]
   );
-  
+
   if (analysisResult.rows.length === 0) {
     throw new ValidationError('Session not found or expired');
   }
-  
+
   const analysis = analysisResult.rows[0];
+
+  // Get LLM provider (use provided, or from analysis record, or default)
+  const selectedProvider = llmProvider || analysis.llm_provider || getDefaultProvider();
+  const llmService = getProvider(selectedProvider);
+
+  // Check if provider is available
+  if (!llmService.isAvailable()) {
+    throw new ProcessingError(`${llmService.displayName} is not configured. Please check your API keys.`);
+  }
   
   // Check if already analyzed
   if (analysis.status === 'completed') {
@@ -309,7 +325,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
     );
     
     // Run AI analysis (Requirement 3)
-    const aiResult = await analyzeResume(
+    const aiResult = await llmService.analyzeResume(
       resumeData,
       {
         title: canonicalTitle,
@@ -323,13 +339,18 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
     
     // Store results in database
     await transaction(async (client) => {
+      // Get model name based on provider
+      const modelUsed = selectedProvider === 'claude'
+        ? (process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929')
+        : (process.env.GROQ_MODEL || 'llama-3.1-8b-instant');
+
       // Create diagnosis result
       const diagnosisResult = await client.query(
         `INSERT INTO diagnosis_results (
           analysis_id, overall_confidence, confidence_explanation,
-          is_competitive, data_completeness, model_used,
+          is_competitive, data_completeness, model_used, llm_provider,
           resume_processing_time, analysis_time
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING id`,
         [
           analysis.id,
@@ -337,7 +358,8 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
           aiResult.confidenceExplanation,
           aiResult.isCompetitive,
           aiResult.dataCompleteness,
-          process.env.GROQ_MODEL || 'llama3-8b-8192',
+          modelUsed,
+          selectedProvider,
           analysis.processing_time || 0,
           Date.now() - startTime
         ]
@@ -672,5 +694,25 @@ async function buildDiagnosisResult(analysisId: string, sessionId: string): Prom
     expiresAt: analysis.expires_at
   };
 }
+
+/**
+ * GET /api/llm-providers
+ * Get list of available LLM providers
+ */
+router.get('/llm-providers', asyncHandler(async (req: Request, res: Response) => {
+  const providers = getAvailableProviders();
+
+  res.json({
+    success: true,
+    data: {
+      providers: providers.map(p => ({
+        name: p.name,
+        displayName: p.displayName,
+        available: p.isAvailable()
+      })),
+      default: getDefaultProvider()
+    }
+  });
+}));
 
 export default router;

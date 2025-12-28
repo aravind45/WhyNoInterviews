@@ -442,7 +442,17 @@
             <textarea id="job-description" placeholder="Paste the complete job description here..."></textarea>
           </div>
         </div>
-        
+
+        <div style="margin-top: 16px;">
+          <label style="font-size: 0.85rem; color: #94a3b8; display: block; margin-bottom: 8px;">
+            🤖 AI Model
+            <span style="color: #64748b; font-size: 0.8rem;">(Choose which LLM to analyze your resume)</span>
+          </label>
+          <select id="llm-provider-select" style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 0.95rem;">
+            <option value="">Loading providers...</option>
+          </select>
+        </div>
+
         <button class="btn btn-primary btn-full mt-4" id="analyze-btn" disabled>
           <span id="analyze-btn-text">🎯 Analyze My Match</span>
           <span class="loading" id="analyze-loading" style="display:none"></span>
@@ -1365,6 +1375,37 @@ function deleteCoverLetter(index) {
 // Initialize auth on page load
 document.addEventListener('DOMContentLoaded', initAuth);
 
+// ========== LLM PROVIDER SELECTION ==========
+let availableLLMProviders = [];
+
+// Load available LLM providers on page load
+async function loadLLMProviders() {
+  try {
+    const res = await fetch('/api/llm-providers');
+    const data = await res.json();
+
+    if (data.success) {
+      availableLLMProviders = data.data.providers;
+      const select = document.getElementById('llm-provider-select');
+
+      select.innerHTML = availableLLMProviders
+        .filter(p => p.available)
+        .map(p => `<option value="${p.name}" ${p.name === data.data.default ? 'selected' : ''}>${p.displayName}</option>`)
+        .join('');
+
+      if (availableLLMProviders.filter(p => p.available).length === 0) {
+        select.innerHTML = '<option value="">No AI providers configured</option>';
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load LLM providers:', error);
+    document.getElementById('llm-provider-select').innerHTML = '<option value="">Error loading providers</option>';
+  }
+}
+
+// Load providers when page loads
+document.addEventListener('DOMContentLoaded', loadLLMProviders);
+
 // ========== EXISTING STATE ==========
 // State
 let sessionId = localStorage.getItem('jobmatch_session');
@@ -1412,12 +1453,17 @@ function checkAnalyzeReady() {
 
 analyzeBtn.addEventListener('click', async () => {
   setLoading('analyze', true, 'Analyzing (15-20 sec)...');
-  
+
   try {
+    const selectedProvider = document.getElementById('llm-provider-select').value;
+
     const formData = new FormData();
     formData.append('resume', analyzeFile);
     formData.append('jobDescription', jobDescInput.value.trim());
-    
+    if (selectedProvider) {
+      formData.append('llmProvider', selectedProvider);
+    }
+
     const res = await fetch('/api/analyze-match', { method: 'POST', body: formData });
     const data = await res.json();
     
@@ -1484,6 +1530,13 @@ function displayAnalysisResults(d) {
         </div>
       ` : ''}
       <p style="color:#94a3b8; max-width:600px; margin:0 auto; margin-top:12px;">${d.summary || ''}</p>
+      ${d.llmProvider || d.modelUsed ? `
+        <div style="margin-top:16px; padding:8px 16px; background:rgba(100,116,139,0.1); border-radius:8px; display:inline-block;">
+          <span style="font-size:0.75rem; color:#94a3b8;">🤖 Analyzed by:</span>
+          <span style="font-size:0.85rem; color:#cbd5e1; margin-left:8px; font-weight:500;">${d.llmProvider === 'claude' ? 'Claude (Anthropic)' : 'Groq (Llama)'}</span>
+          ${d.modelUsed ? `<span style="font-size:0.7rem; color:#64748b; margin-left:6px;">(${d.modelUsed})</span>` : ''}
+        </div>
+      ` : ''}
     </div>
 
     <!-- 4-COLUMN ACTION CARDS -->
