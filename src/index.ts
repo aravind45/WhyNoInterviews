@@ -22,6 +22,10 @@ connectDatabase().catch(err => {
 // Initialize LLM providers (Groq and Claude)
 initializeProviders();
 
+// Get Groq model from environment or use default
+const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+console.log(`🔧 Groq model configured: ${GROQ_MODEL}`);
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -78,7 +82,7 @@ ${resumeText.substring(0, 6000)}
 }`;
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       max_tokens: 1500
@@ -265,7 +269,7 @@ Return ONLY this JSON:
 
     // Get LLM provider from request or use default
     let selectedProvider = 'groq'; // Default fallback
-    let modelUsed = 'llama-3.1-8b-instant';
+    let modelUsed = GROQ_MODEL;
     let responseText = '';
 
     try {
@@ -365,18 +369,17 @@ Return ONLY this JSON:
       if (selectedProvider === 'groq') {
         // Use Groq (default or fallback)
         console.log('🤖 Calling Groq API...');
-        const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
-        console.log(`✓ Using Groq model: ${groqModel}`);
+        console.log(`✓ Using Groq model: ${GROQ_MODEL}`);
 
         const completion = await groq.chat.completions.create({
-          model: groqModel,
+          model: GROQ_MODEL,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3,
           max_tokens: 3000
         });
 
         responseText = completion.choices[0]?.message?.content || '';
-        modelUsed = groqModel;
+        modelUsed = GROQ_MODEL;
         selectedProvider = 'groq';
         console.log('✅ Groq response received');
       }
@@ -384,16 +387,15 @@ Return ONLY this JSON:
       console.error('❌ LLM Error:', llmError.message);
       // Fallback to Groq if there's any error with provider selection
       console.log('⚠️  Falling back to Groq due to error');
-      const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
       const completion = await groq.chat.completions.create({
-        model: groqModel,
+        model: GROQ_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
         max_tokens: 3000
       });
 
       responseText = completion.choices[0]?.message?.content || '';
-      modelUsed = groqModel;
+      modelUsed = GROQ_MODEL;
       selectedProvider = 'groq';
     }
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -595,7 +597,7 @@ ${resumeText.substring(0, 6000)}
 }`;
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       max_tokens: 1500
@@ -803,7 +805,7 @@ Return ONLY JSON array:
 [{"title":"<specific job title>","company":"<real company name>","matchScore":<70-95>,"reason":"<why good match>"}]`;
 
         const completion = await groq.chat.completions.create({
-          model: 'llama-3.1-8b-instant',
+          model: GROQ_MODEL,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
           max_tokens: 800
@@ -923,7 +925,7 @@ Write a cover letter that:
 Return ONLY the cover letter text.`;
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 800
@@ -1050,7 +1052,7 @@ async function researchCompany(companyName: string): Promise<string> {
 Keep it brief (3-4 sentences). ONLY include verified, publicly known facts. If you don't have reliable information, say "Limited public information available about this company."`;
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.1,
       max_tokens: 300
@@ -1173,7 +1175,7 @@ CRITICAL RULES - ABSOLUTE REQUIREMENTS:
 Return ONLY the cover letter text, no additional commentary.`;
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 1500
@@ -1317,7 +1319,7 @@ CRITICAL RULES:
 Return ONLY the JSON array, no additional text.`;
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.5,
       max_tokens: 4000
@@ -1478,7 +1480,7 @@ OUTPUT FORMAT (JSON):
         role: 'user',
         content: prompt
       }],
-      model: 'llama-3.1-8b-instant',
+      model: GROQ_MODEL,
       temperature: 0.3,
       max_tokens: 4000
     });
