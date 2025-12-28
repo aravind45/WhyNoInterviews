@@ -3136,9 +3136,10 @@ async function loadTargetCompanies() {
   if (!sessionId) {
     document.getElementById('companies-container').innerHTML = `
       <div style="text-align: center; padding: 40px; color: #64748b;">
-        <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
-        <h3 style="margin-bottom: 8px;">Session Required</h3>
-        <p>Please upload a resume first to start tracking companies</p>
+        <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
+        <h3 style="margin-bottom: 16px;">Get Started with Target Companies</h3>
+        <p style="margin-bottom: 16px;">Upload a resume to start tracking companies and their job openings</p>
+        <p style="font-size: 0.875rem; color: #94a3b8;">In the meantime, you can browse our suggestions to see what companies you might want to target!</p>
       </div>
     `;
     return;
