@@ -1,238 +1,408 @@
-# Resume Diagnosis Engine
+# JobMatch AI - Intelligent Resume Analysis & Job Search Platform
 
-AI-powered resume analysis that identifies why you're not getting interviews. Get specific problems, evidence-based root causes, and actionable recommendations.
+> AI-powered platform that helps job seekers optimize their resumes, find relevant jobs, and connect with potential referrals.
 
-## Features
+![JobMatch AI](https://img.shields.io/badge/Status-Production-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue)
+![Node.js](https://img.shields.io/badge/Node.js-18+-green)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
 
-- **Resume Upload**: PDF and Word document support (up to 10MB, 10 pages)
-- **Job Title Normalization**: Smart matching to canonical job titles
-- **AI Diagnosis**: Identifies root causes preventing interview success
-- **Evidence-Based**: Every finding backed by specific resume citations
-- **Actionable Recommendations**: Prioritized, implementable fixes
-- **Confidence Scoring**: Transparent reliability indicators
-- **Privacy-First**: Data encrypted, auto-deleted within 24 hours
+## 🚀 Features
 
-## Tech Stack
+### 1. Resume Analysis & Match Scoring
+- **Dual Scoring System**: Compare AI assessment vs. realistic skill-based matching
+- **Comprehensive Analysis**:
+  - 6-second recruiter scan simulation
+  - ATS compatibility check with keyword analysis
+  - Experience gap assessment (over/under qualified)
+  - Dealbreakers identification
+  - Strengths highlighting
+  - Hidden red flags detection
+  - Competitor analysis
+  - Application strategy recommendations
+  - Prioritized action plan
+- **Auto-save Resume**: Automatically loads your last uploaded resume on login
+- **7-day Result Caching**: Analysis results cached in database for quick retrieval
 
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: PostgreSQL (Neon)
-- **Cache**: Redis
-- **AI**: Groq (Llama 3)
-- **Deployment**: Vercel
+### 2. Resume Optimizer (10-Point Audit)
+- **Professional Resume Audit** covering:
+  - ✅ Target Role Alignment
+  - ✅ Summary Section Quality
+  - ✅ Experience Section Effectiveness
+  - ✅ Bullet Point Quality (Problem-Action-Result format)
+  - ✅ Skills Section Optimization
+  - ✅ Formatting & Readability
+  - ✅ ATS Optimization
+  - ✅ Results & Impact Test
+  - ✅ Job-Specific Customization
+  - ✅ Final Sanity Checks
+- **Side-by-Side Comparison**: View original vs. optimized resume sections
+- **Detailed Change Explanations**: Understand why each change improves your resume
+- **Download & Copy**: Export optimized resume as text
 
-## Requirements Compliance
+### 3. AI-Powered Cover Letter Generator
+- Company research via Tavily API (optional)
+- Tailored to specific job descriptions
+- Uses only factual information from your resume
+- Includes metrics and achievements
+- Save and manage multiple cover letters
+- No fabricated content - fact-based only
 
-| Requirement | Status |
-|------------|--------|
-| 1. Resume Input Processing | ✅ PDF, DOC, DOCX support with 30s timeout |
-| 2. Job Target Configuration | ✅ Title normalization, generic detection |
-| 3. AI Diagnosis Generation | ✅ Groq-powered analysis with 60s timeout |
-| 4. Root Cause Analysis | ✅ Max 5 issues, prioritized, with evidence |
-| 5. Actionable Recommendations | ✅ Max 3 fixes with implementation steps |
-| 6. Confidence Scoring | ✅ 0-100 score with explanation |
-| 7. Clear Output Presentation | ✅ Structured, prioritized display |
-| 8. Scoring Framework | ✅ Severity/Impact scores with evidence |
-| 9. Privacy & Security | ✅ Encryption, 24h TTL, deletion API |
-| 10. Processing Limits | ✅ 10 pages max, 120s timeout |
+### 4. Interview Preparation
+- 20 personalized interview questions with suggested answers
+- Questions to ask the interviewer
+- Tips for each answer based on your experience
+- Answers use actual achievements from your resume
+- Save interview prep for multiple roles
 
-## Quick Start
+### 5. Job Search & Tracking
+- **Smart Search Links**: Quick access to LinkedIn, Indeed, Glassdoor, Google Jobs, ZipRecruiter, Dice, Wellfound
+- **Real Job API Integration** (optional): Fetch and score real jobs via JSearch API
+- **Profile Extraction**: Auto-extract skills, experience, and target titles from resume
+- **Match Scoring**: Each job scored against your profile
+- **Job Tracking**: Track application status (SAVED → APPLIED → INTERVIEW → OFFER → REJECTED)
+
+### 6. Networking & Referrals (ICA - Intelligent Contact Analyzer)
+- Find relevant contacts at target companies
+- LinkedIn Sales Navigator search integration
+- Contact management with relevance scoring
+- Export contacts as CSV
+- Track why each contact is relevant to your search
+
+## 🎯 Why JobMatch AI?
+
+### The Problem with Traditional Resume Reviews
+Most tools give you inflated match scores that don't reflect reality. They'll say you're a "95% match" when recruiters disagree.
+
+### Our Solution: Dual Scoring System
+- **AI Assessment**: The optimistic view (what you hope for)
+- **Skill-Based Score**: The realistic view (what actually matters)
+
+This transparency helps you understand your true chances and focus on winnable opportunities.
+
+### Match Score Calculation
+
+```typescript
+// Realistic skill-based scoring
+matchedSkills = skills found in job description
+totalSkills = all skills from resume
+
+if (matchedSkills > 0):
+  score = min(95, (matchedSkills / totalSkills) * 100)
+else if (no skills match):
+  score = min(40, AI_score || 20)  // Fallback capped at 40%
+else:
+  score = 30  // Default
+```
+
+### Verdict Thresholds
+- **80%+** = STRONG MATCH ✅
+- **60-79%** = MODERATE MATCH ⚠️
+- **40-59%** = WEAK MATCH ⚠️
+- **20-39%** = LONG SHOT ❌
+- **<20%** = NOT A FIT ❌
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Runtime**: Node.js 18+ with TypeScript
+- **Framework**: Express.js
+- **Database**: PostgreSQL (Neon serverless)
+- **AI Model**: Groq (llama-3.1-8b-instant) - Fast & Free
+- **File Parsing**: pdf-parse, mammoth (PDF/DOC/DOCX support)
+- **APIs**:
+  - Groq (AI analysis - **required**)
+  - Tavily (web research - optional)
+  - JSearch (job listings - optional)
+
+### Frontend
+- **Pure Vanilla JavaScript** (no framework dependencies)
+- **Dark Theme UI** with gradient accents
+- **Responsive Design** (mobile-friendly)
+- **Single HTML File** architecture for simplicity
+
+### Deployment
+- **Platform**: Vercel (serverless)
+- **CI/CD**: Auto-deploy from `main` branch
+- **Database**: Neon PostgreSQL (auto-scaling)
+
+## 📦 Installation
 
 ### Prerequisites
-
-- Node.js 18+
-- PostgreSQL database (Neon recommended)
-- Redis instance
-- Groq API key
-
-### Installation
-
 ```bash
-# Clone and install
-git clone <repository>
-cd resume-diagnosis-engine
+Node.js 18+
+PostgreSQL database
+Groq API key (free at https://console.groq.com)
+```
+
+### Quick Start
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/aravind45/WhyNoInterviews.git
+cd WhyNoInterviews
+```
+
+2. **Install dependencies**
+```bash
 npm install
+```
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your credentials
+3. **Configure environment variables**
 
-# Run migrations
-npm run db:migrate
+Create a `.env` file:
 
-# Seed job titles
-npm run db:seed
+```env
+# Database (Required)
+DATABASE_URL=postgresql://user:password@host:5432/database
 
-# Start development server
+# AI API (Required)
+GROQ_API_KEY=your_groq_api_key_here
+
+# Optional APIs
+TAVILY_API_KEY=your_tavily_key_here    # For company research in cover letters
+JSEARCH_API_KEY=your_jsearch_key_here  # For real job search results
+
+# Server
+PORT=3000
+```
+
+4. **Database setup**
+
+The app auto-creates tables on first run:
+- `user_sessions` - User authentication
+- `resume_analyses` - Uploaded resumes
+- `diagnosis_results` - Analysis cache (7-day TTL)
+- `ica_contacts` - Networking contacts
+- `ica_sessions` - Contact search sessions
+
+5. **Run development server**
+```bash
 npm run dev
 ```
 
-### Environment Variables
+Visit `http://localhost:3000`
 
-Required variables in `.env`:
-
+6. **Build for production**
 ```bash
-DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
-GROQ_API_KEY=your-groq-api-key
-ADMIN_KEY=your-admin-key
-ENCRYPTION_KEY=32-character-key
-TAVILY_API_KEY=your-tavily-api-key  # Optional: For company research in cover letters
-JSEARCH_API_KEY=your-jsearch-api-key  # Optional: For real job search API
+npm run build
+npm start
 ```
 
-**Note on Cover Letter Company Research:**
-- If `TAVILY_API_KEY` is provided, the app will research real company information (products, services, news) when generating cover letters
-- Without it, the app falls back to using Groq's knowledge base for basic company information
-- This ensures cover letters include factual, researched details instead of fabricated information
+## 🎮 Usage Guide
 
-## API Endpoints
+### Analyze Resume
+1. Go to **Analyze Resume** tab
+2. Upload resume (PDF, DOC, or DOCX - max 10MB)
+3. Paste job description (min 50 chars)
+4. Click **🎯 Analyze My Match**
+5. View results:
+   - Match score with AI vs Skill-based comparison
+   - Interview probability
+   - 4 action cards (Cover Letter, Interview Prep, Find Referrals)
+   - Detailed analysis sections
 
-### Public Endpoints
+### Optimize Resume
+1. Go to **Resume Optimizer** tab
+2. Upload resume
+3. Paste target job description
+4. Click **🚀 Optimize My Resume**
+5. Review 10-point audit results
+6. View before/after comparisons
+7. Download optimized version
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/upload` | Upload resume and create session |
-| POST | `/api/analyze` | Run AI diagnosis |
-| GET | `/api/session/:id` | Get session status |
-| GET | `/api/results/:id` | Get diagnosis results |
-| DELETE | `/api/session/:id` | Delete session and data |
+### Generate Cover Letter
+1. After analyzing resume, click **Generate Cover Letter** card
+2. AI researches company (if Tavily API configured)
+3. Generates tailored letter using your actual achievements
+4. Copy to clipboard or save for later
 
-### Admin Endpoints (requires `Authorization: Bearer {ADMIN_KEY}`)
+### Prepare for Interviews
+1. After analyzing resume, click **Interview Prep** card
+2. AI generates 20 personalized questions
+3. Suggested answers based on your experience
+4. Questions to ask the interviewer
+5. Save prep for multiple roles
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/health` | Comprehensive health check |
-| POST | `/api/admin/migrate` | Run database migrations |
-| POST | `/api/admin/seed` | Seed job titles |
-| POST | `/api/admin/cleanup` | Manual data cleanup |
-| GET | `/api/admin/stats` | System statistics |
+### Find Jobs
+1. Go to **Find Jobs** tab
+2. Upload resume (profile auto-extracted)
+3. Enter search query and location
+4. Click **Search Jobs**
+5. View smart search links (always available)
+6. If JSearch API configured: view scored real jobs
 
-## Usage Example
+### Network & Get Referrals
+1. Go to **Networking** tab
+2. Upload resume for profile analysis
+3. Click **Find Contacts**
+4. Review relevant contacts at target companies
+5. Export contact list as CSV
 
-### 1. Upload Resume
+## 📊 Scoring Transparency
 
-```bash
-curl -X POST http://localhost:3000/api/upload \
-  -F "resume=@resume.pdf" \
-  -F "targetJobTitle=Senior Software Engineer" \
-  -F "jobDescription=Looking for a senior engineer..."
+### Why Show Both Scores?
+
+**AI Assessment (Purple Box)**
+The LLM's optimistic evaluation considering:
+- Overall qualifications
+- Transferable experience
+- Potential fit
+
+**Skill-Based (Green Box)**
+Realistic keyword matching:
+- Exact skill matches only
+- Industry-specific terms
+- Technical requirements
+
+### Example
+```
+AI Assessment: 85%    "Strong overall fit with relevant experience"
+Skill-Based: 40%      "Only 6 of 15 required skills match"
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "sessionId": "uuid",
-    "sessionToken": "...",
-    "fileInfo": {
-      "originalName": "resume.pdf",
-      "pageCount": 2
-    },
-    "targetJob": {
-      "canonical": "Senior Software Engineer",
-      "confidence": 100
-    }
-  }
-}
+**Verdict: WEAK MATCH** - The skill-based score determines final verdict.
+
+## 🗂️ Project Structure
+
+```
+WhyNoInterviews/
+├── src/
+│   ├── index.ts                 # Main Express server + API routes
+│   ├── database/
+│   │   └── connection.ts        # PostgreSQL connection pool
+│   ├── routes/
+│   │   └── ica.ts              # Networking/Contacts endpoints
+│   └── public/
+│       └── index.html          # Complete frontend (single file)
+├── package.json
+├── tsconfig.json
+├── vercel.json                 # Vercel deployment config
+├── REQUIREMENTS.md             # Detailed feature specs
+└── README.md                   # This file
 ```
 
-### 2. Run Analysis
+## 🔐 Security & Privacy
 
-```bash
-curl -X POST http://localhost:3000/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"sessionId": "uuid", "targetJobTitle": "Senior Software Engineer"}'
+- **Resume Storage**: Stored in database (consider encryption for production)
+- **Session Management**: Email/password + Google OAuth support
+- **File Validation**: PDF, DOC, DOCX only - max 10MB
+- **API Keys**: Environment variables only (never in code)
+- **Input Sanitization**: All user inputs validated
+- **Cache Expiry**: Analysis results auto-delete after 7 days
+
+## 📝 API Endpoints
+
+### Core Analysis
+```
+POST /api/analyze-match              - Analyze resume vs job description
+POST /api/generate-specific-cover-letter  - Generate tailored cover letter
+POST /api/generate-interview-prep    - Generate interview questions
+POST /api/optimize-resume            - Run 10-point resume audit
 ```
 
-Response includes:
-- `rootCauses`: Top 5 issues with severity, impact, and evidence
-- `recommendations`: Top 3 actionable fixes with steps
-- `overallConfidence`: 0-100 score with explanation
-- `isCompetitive`: Boolean assessment
-
-### 3. Delete Data
-
-```bash
-curl -X DELETE http://localhost:3000/api/session/{sessionId}
+### Profile & Jobs
+```
+POST /api/extract-profile            - Extract profile from resume
+POST /api/search-jobs                - Search and score jobs
+POST /api/save-job                   - Save job to tracker
+GET  /api/saved-jobs                 - Get tracked jobs
+POST /api/update-job-status          - Update application status
 ```
 
-## Deployment
+### Networking (ICA)
+```
+POST   /api/ica/upload-resume        - Upload for contact analysis
+POST   /api/ica/find-contacts        - Find relevant contacts
+GET    /api/ica/contacts             - Get saved contacts
+GET    /api/ica/statistics           - Get contact stats
+DELETE /api/ica/contacts/:id         - Delete single contact
+DELETE /api/ica/contacts             - Clear all contacts
+```
 
-### Vercel
+### Health
+```
+GET /health                          - Health check
+```
 
+## 🚀 Deployment to Vercel
+
+1. **Install Vercel CLI**
 ```bash
-# Install Vercel CLI
 npm i -g vercel
+```
 
-# Deploy
+2. **Deploy**
+```bash
 vercel
+```
 
-# Set environment variables in Vercel dashboard
-# Then deploy to production
+3. **Configure environment variables** in Vercel dashboard:
+   - `DATABASE_URL`
+   - `GROQ_API_KEY`
+   - `TAVILY_API_KEY` (optional)
+   - `JSEARCH_API_KEY` (optional)
+
+4. **Deploy to production**
+```bash
 vercel --prod
 ```
 
-### Post-Deployment Setup
+Database tables will auto-create on first request.
 
-1. Run migrations:
-```bash
-curl -X POST https://your-app.vercel.app/api/admin/migrate \
-  -H "Authorization: Bearer YOUR_ADMIN_KEY"
-```
+## 🐛 Known Issues & Roadmap
 
-2. Seed database:
-```bash
-curl -X POST https://your-app.vercel.app/api/admin/seed \
-  -H "Authorization: Bearer YOUR_ADMIN_KEY"
-```
+### Current Limitations
+- PDF download for optimized resume (downloads as .txt - convertible to PDF via Google Docs)
+- Interview Coaching tab needs reimplementation (was in previous version)
+- Google OAuth needs authorized domains configured
 
-3. Verify health:
-```bash
-curl https://your-app.vercel.app/health
-```
+### Planned Features
+- [ ] Export analysis as PDF
+- [ ] Email reports
+- [ ] Application deadline tracking
+- [ ] Interview reminder notifications
+- [ ] Resume version comparison
+- [ ] A/B test different resumes
+- [ ] Salary negotiation tips
+- [ ] Offer comparison tool
+- [ ] Native PDF generation for optimized resumes
 
-## Project Structure
+## 🤝 Contributing
 
-```
-src/
-├── index.ts              # Application entry point
-├── components/           # Business logic
-│   ├── ResumeParser.ts   # PDF/DOC parsing
-│   └── JobTitleNormalizer.ts
-├── database/
-│   ├── connection.ts     # PostgreSQL connection
-│   ├── schema.sql        # Database schema
-│   ├── migrate.ts        # Migration runner
-│   └── seed.ts           # Seed data
-├── cache/
-│   └── redis.ts          # Redis cache
-├── services/
-│   ├── groq.ts           # AI analysis
-│   └── encryption.ts     # Data encryption
-├── routes/
-│   ├── api.ts            # Public API routes
-│   └── admin.ts          # Admin routes
-├── middleware/
-│   ├── errorHandler.ts   # Error handling
-│   └── fileUpload.ts     # Multer config
-├── types/
-│   └── index.ts          # TypeScript types
-├── utils/
-│   └── logger.ts         # Winston logger
-└── public/
-    └── index.html        # Frontend
-```
+Contributions welcome! Please:
 
-## Security Features
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-- **Encryption**: AES-256-GCM for resume content
-- **PII Anonymization**: Removed before AI processing
-- **24-Hour TTL**: Automatic data deletion
-- **Audit Logging**: All data operations logged
-- **Session Tokens**: Secure random generation
-- **Admin Auth**: Bearer token for admin endpoints
+## 📄 License
 
-## License
+MIT License - see LICENSE file for details.
 
-MIT
+## 👨‍💻 Author
+
+**Aravind Thiyagarajan**
+
+- GitHub: [@aravind45](https://github.com/aravind45)
+- LinkedIn: [Aravind Thiyagarajan](https://linkedin.com/in/aravindthiyagarajan)
+
+## 🙏 Acknowledgments
+
+- **Groq** - Fast, free LLM inference
+- **Tavily** - Web research API for company insights
+- **Neon** - Serverless PostgreSQL hosting
+- **Vercel** - Seamless deployment platform
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/aravind45/WhyNoInterviews/issues)
+- **Documentation**: See [REQUIREMENTS.md](./REQUIREMENTS.md) for detailed specs
+
+---
+
+**Built with ❤️ to help job seekers land their dream jobs**
+
+*Stop getting generic advice. Start getting interviews.*
