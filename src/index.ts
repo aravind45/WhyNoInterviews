@@ -1178,7 +1178,7 @@ app.post('/api/optimize-resume', upload.single('resume'), async (req, res) => {
     }
 
     // Extract resume text
-    const resumeText = await extractResumeText(req.file);
+    const resumeText = await parseResume(req.file.path, req.file.mimetype);
 
     // Build comprehensive audit and optimization prompt
     const prompt = `You are a professional resume writer and ATS optimization expert.
