@@ -292,6 +292,12 @@
 </head>
 <body>
   <script>
+    // Feature Flag System
+    const flags = {
+      newUI: new URLSearchParams(window.location.search).get('newui') === 'true' || 
+             localStorage.getItem('NEXT_PUBLIC_NEW_UI') === 'true'
+    };
+
     // Global auth modal functions (need to be available immediately)
     function showAuthModal(mode) {
       var modal = document.getElementById('auth-modal');
@@ -323,7 +329,72 @@
         document.getElementById('signup-form').style.display = 'none';
       }
     }
+
+    // Initialize UI based on feature flag
+    document.addEventListener('DOMContentLoaded', function() {
+      if (flags.newUI) {
+        initNewUI();
+      } else {
+        initOldUI();
+      }
+    });
+
+    function initNewUI() {
+      // Hide old header
+      document.querySelector('header').style.display = 'none';
+      
+      // Show new UI
+      document.getElementById('new-ui-container').style.display = 'block';
+      document.getElementById('old-ui-container').style.display = 'none';
+      
+      // Load new UI components
+      loadNewUIComponents();
+    }
+
+    function initOldUI() {
+      // Show old header
+      document.querySelector('header').style.display = 'block';
+      
+      // Hide new UI
+      document.getElementById('new-ui-container').style.display = 'none';
+      document.getElementById('old-ui-container').style.display = 'block';
+    }
+
+    function loadNewUIComponents() {
+      // This will be populated by the component scripts
+      setupNewHeader();
+      setupLandingPage();
+    }
   </script>
+  
+  <!-- Load New UI CSS when flag is enabled -->
+  <script>
+    if (flags.newUI) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/styles/newUI.css';
+      document.head.appendChild(link);
+    }
+  </script>
+  
+  <!-- NEW UI CONTAINER (Hidden by default) -->
+  <div id="new-ui-container" style="display: none;">
+    <!-- New Header will be inserted here -->
+    <div id="new-header-container"></div>
+    
+    <!-- New Landing Page will be inserted here -->
+    <div id="new-landing-container"></div>
+    
+    <!-- App Content (reused from old UI) -->
+    <div id="new-app-content" style="display: none;">
+      <div class="container">
+        <!-- All existing sections will be moved here when switching tabs -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- OLD UI CONTAINER -->
+  <div id="old-ui-container">
   <header>
     <div class="header-content">
       <div class="logo">🎯 <span>JobMatch AI</span></div>
@@ -3698,5 +3769,109 @@ function closeModalById(modalId) {
 }
 
 </script>
+
+<!-- Close Old UI Container -->
+</div>
+
+<!-- Load New UI Components -->
+<script src="/components/AppHeader.js"></script>
+<script src="/components/LandingPage.js"></script>
+
+<script>
+// New UI Setup Functions
+function setupNewHeader() {
+  const headerContainer = document.getElementById('new-header-container');
+  if (headerContainer) {
+    headerContainer.innerHTML = createNewHeader();
+    setupNewHeaderEvents();
+  }
+}
+
+function setupLandingPage() {
+  const landingContainer = document.getElementById('new-landing-container');
+  if (landingContainer) {
+    landingContainer.innerHTML = createLandingPage();
+    // Show landing page by default in new UI
+    showLandingPage();
+  }
+}
+
+// Enhanced tab switching for new UI
+function switchToTab(tabName) {
+  if (flags.newUI) {
+    // Hide landing page
+    const landingPage = document.getElementById('landing-page');
+    if (landingPage) {
+      landingPage.style.display = 'none';
+    }
+    
+    // Show app content
+    const appContent = document.getElementById('new-app-content');
+    if (appContent) {
+      appContent.style.display = 'block';
+      
+      // Move the target section to new app content if not already there
+      const targetSection = document.getElementById(`tab-${tabName}`);
+      if (targetSection && !appContent.contains(targetSection)) {
+        appContent.querySelector('.container').appendChild(targetSection);
+      }
+    }
+  }
+  
+  // Standard tab switching logic (works for both UIs)
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
+  
+  document.querySelectorAll('.section').forEach(section => {
+    section.classList.remove('active');
+  });
+  
+  const targetSection = document.getElementById(`tab-${tabName}`);
+  if (targetSection) {
+    targetSection.classList.add('active');
+  }
+}
+
+function showLandingPage() {
+  if (flags.newUI) {
+    const landingPage = document.getElementById('landing-page');
+    const appContent = document.getElementById('new-app-content');
+    
+    if (landingPage) {
+      landingPage.style.display = 'block';
+    }
+    if (appContent) {
+      appContent.style.display = 'none';
+    }
+    
+    // Remove active from all tabs
+    document.querySelectorAll('.main-tab, .new-nav-item').forEach(tab => {
+      tab.classList.remove('active');
+    });
+  }
+}
+
+// Debug function to toggle new UI
+function toggleNewUI() {
+  const current = localStorage.getItem('NEXT_PUBLIC_NEW_UI') === 'true';
+  localStorage.setItem('NEXT_PUBLIC_NEW_UI', (!current).toString());
+  window.location.reload();
+}
+
+// Add debug info to console
+console.log('Feature Flags:', {
+  newUI: flags.newUI,
+  url: window.location.search,
+  localStorage: localStorage.getItem('NEXT_PUBLIC_NEW_UI')
+});
+console.log('To toggle new UI, run: toggleNewUI()');
+</script>
+
 </body>
 </html>
