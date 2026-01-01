@@ -6,6 +6,18 @@
   <title>JobMatch AI - Resume Analyzer + Job Search</title>
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- Load New UI CSS when flag is enabled -->
+  <script>
+    const isNewUIEnabled = new URLSearchParams(window.location.search).get('ui') === '1' || 
+                          localStorage.getItem('NEW_UI') === 'true';
+    if (isNewUIEnabled) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/new-ui.css';
+      document.head.appendChild(link);
+    }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; min-height: 100vh; }
@@ -292,11 +304,9 @@
 </head>
 <body>
   <script>
-    // Feature Flag System
-    const flags = {
-      newUI: new URLSearchParams(window.location.search).get('newui') === 'true' || 
-             localStorage.getItem('NEXT_PUBLIC_NEW_UI') === 'true'
-    };
+    // Simple Feature Flag System
+    const isNewUI = new URLSearchParams(window.location.search).get('ui') === '1' || 
+                    localStorage.getItem('NEW_UI') === 'true';
 
     // Global auth modal functions (need to be available immediately)
     function showAuthModal(mode) {
@@ -332,78 +342,22 @@
 
     // Initialize UI based on feature flag
     document.addEventListener('DOMContentLoaded', function() {
-      if (flags.newUI) {
-        initNewUI();
-      } else {
-        initOldUI();
+      if (isNewUI) {
+        document.body.classList.add('new-ui');
+        switchTab('home');
       }
     });
-
-    function initNewUI() {
-      // Hide old header
-      document.querySelector('header').style.display = 'none';
-      
-      // Show new UI
-      document.getElementById('new-ui-container').style.display = 'block';
-      document.getElementById('old-ui-container').style.display = 'none';
-      
-      // Load new UI components
-      loadNewUIComponents();
-    }
-
-    function initOldUI() {
-      // Show old header
-      document.querySelector('header').style.display = 'block';
-      
-      // Hide new UI
-      document.getElementById('new-ui-container').style.display = 'none';
-      document.getElementById('old-ui-container').style.display = 'block';
-    }
-
-    function loadNewUIComponents() {
-      // This will be populated by the component scripts
-      setupNewHeader();
-      setupLandingPage();
-    }
   </script>
   
-  <!-- Load New UI CSS when flag is enabled -->
-  <script>
-    if (flags.newUI) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = '/styles/newUI.css';
-      document.head.appendChild(link);
-    }
-  </script>
-  
-  <!-- NEW UI CONTAINER (Hidden by default) -->
-  <div id="new-ui-container" style="display: none;">
-    <!-- New Header will be inserted here -->
-    <div id="new-header-container"></div>
-    
-    <!-- New Landing Page will be inserted here -->
-    <div id="new-landing-container"></div>
-    
-    <!-- App Content (reused from old UI) -->
-    <div id="new-app-content" style="display: none;">
-      <div class="container">
-        <!-- All existing sections will be moved here when switching tabs -->
-      </div>
-    </div>
-  </div>
-  
-  <!-- OLD UI CONTAINER -->
-  <div id="old-ui-container">
   <header>
     <div class="header-content">
-      <div class="logo">🎯 <span>JobMatch AI</span></div>
+      <div class="logo" onclick="switchTab('home')" style="cursor: pointer;">🎯 <span>JobMatch AI</span></div>
       <nav class="main-tabs">
-        <div class="main-tab active" data-tab="analyze">🔍 Analyze Resume</div>
-        <div class="main-tab" data-tab="optimizer">📝 Resume Optimizer</div>
-        <div class="main-tab" data-tab="search">💼 Find Jobs</div>
-        <div class="main-tab" data-tab="target-companies">🏢 Target Companies</div>
-        <div class="main-tab" data-tab="networking">👥 Networking</div>
+        <div class="main-tab" data-tab="analyze">Resume Analysis</div>
+        <div class="main-tab" data-tab="search">Job Matching</div>
+        <div class="main-tab" data-tab="optimizer">Resume Optimizer</div>
+        <div class="main-tab" data-tab="target-companies">Target Companies</div>
+        <div class="main-tab" data-tab="networking">Networking</div>
       </nav>
       
       <!-- Auth Section -->
@@ -583,6 +537,134 @@
   </div>
   
   <div class="container">
+    <!-- NEW HOME SECTION -->
+    <section class="section" id="tab-home">
+      <div class="home-hero">
+        <div class="home-hero-content">
+          <div class="home-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+            Stand out from the competition
+          </div>
+          
+          <h1 class="home-title">
+            Land Your Dream Job with
+            <span class="home-highlight">Confidence</span>
+          </h1>
+          
+          <p class="home-description">
+            Transform your resume into interview-winning applications. Our AI analyzes job descriptions and creates personalized materials that get you noticed.
+          </p>
+          
+          <div class="home-cta-buttons">
+            <button class="home-cta-primary" onclick="switchTab('analyze')">
+              Analyze Your Resume Now
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14m-7-7l7 7-7 7"/>
+              </svg>
+            </button>
+            <button class="home-cta-secondary" onclick="switchTab('analyze')">
+              Get Your Match Score
+            </button>
+          </div>
+          
+          <!-- Stats -->
+          <div class="home-stats">
+            <div class="home-stat">
+              <div class="home-stat-number">94%</div>
+              <div class="home-stat-label">Success Rate</div>
+            </div>
+            <div class="home-stat">
+              <div class="home-stat-number">2.5x</div>
+              <div class="home-stat-label">More Interviews</div>
+            </div>
+            <div class="home-stat">
+              <div class="home-stat-number">50k+</div>
+              <div class="home-stat-label">Jobs Matched</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Preview Card -->
+        <div class="home-preview">
+          <div class="home-preview-card">
+            <h3 class="home-preview-title">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+              </svg>
+              Resume vs Job Description
+            </h3>
+            
+            <div class="home-upload-preview" onclick="switchTab('analyze')">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+              <p>Upload Your Resume</p>
+              <span>PDF, DOC, or DOCX</span>
+            </div>
+            
+            <button class="home-preview-cta" onclick="switchTab('analyze')">
+              Get Your Match Score
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Features Section -->
+      <div class="home-features">
+        <h2 class="home-features-title">Everything You Need to Stand Out</h2>
+        <p class="home-features-subtitle">One analysis, four powerful tools to accelerate your job search</p>
+        
+        <div class="home-features-grid">
+          <div class="home-feature-card" onclick="switchTab('analyze')">
+            <div class="home-feature-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+            <h3>Match Score</h3>
+            <p>Get an instant compatibility score between your resume and job description</p>
+          </div>
+          
+          <div class="home-feature-card" onclick="switchTab('analyze')">
+            <div class="home-feature-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+              </svg>
+            </div>
+            <h3>Cover Letter</h3>
+            <p>Generate tailored cover letters that highlight your relevant experience</p>
+          </div>
+          
+          <div class="home-feature-card" onclick="switchTab('networking')">
+            <div class="home-feature-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+            </div>
+            <h3>Referral Messages</h3>
+            <p>Craft compelling messages to request referrals from your network</p>
+          </div>
+          
+          <div class="home-feature-card" onclick="switchTab('analyze')">
+            <div class="home-feature-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              </svg>
+            </div>
+            <h3>Elevator Pitch</h3>
+            <p>Create a powerful 30-second pitch customized for each opportunity</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- TAB 1: ANALYZE RESUME -->
     <section class="section active" id="tab-analyze">
       <div class="card">
@@ -3769,109 +3851,5 @@ function closeModalById(modalId) {
 }
 
 </script>
-
-<!-- Close Old UI Container -->
-</div>
-
-<!-- Load New UI Components -->
-<script src="/components/AppHeader.js"></script>
-<script src="/components/LandingPage.js"></script>
-
-<script>
-// New UI Setup Functions
-function setupNewHeader() {
-  const headerContainer = document.getElementById('new-header-container');
-  if (headerContainer) {
-    headerContainer.innerHTML = createNewHeader();
-    setupNewHeaderEvents();
-  }
-}
-
-function setupLandingPage() {
-  const landingContainer = document.getElementById('new-landing-container');
-  if (landingContainer) {
-    landingContainer.innerHTML = createLandingPage();
-    // Show landing page by default in new UI
-    showLandingPage();
-  }
-}
-
-// Enhanced tab switching for new UI
-function switchToTab(tabName) {
-  if (flags.newUI) {
-    // Hide landing page
-    const landingPage = document.getElementById('landing-page');
-    if (landingPage) {
-      landingPage.style.display = 'none';
-    }
-    
-    // Show app content
-    const appContent = document.getElementById('new-app-content');
-    if (appContent) {
-      appContent.style.display = 'block';
-      
-      // Move the target section to new app content if not already there
-      const targetSection = document.getElementById(`tab-${tabName}`);
-      if (targetSection && !appContent.contains(targetSection)) {
-        appContent.querySelector('.container').appendChild(targetSection);
-      }
-    }
-  }
-  
-  // Standard tab switching logic (works for both UIs)
-  document.querySelectorAll('.main-tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
-  if (targetTab) {
-    targetTab.classList.add('active');
-  }
-  
-  document.querySelectorAll('.section').forEach(section => {
-    section.classList.remove('active');
-  });
-  
-  const targetSection = document.getElementById(`tab-${tabName}`);
-  if (targetSection) {
-    targetSection.classList.add('active');
-  }
-}
-
-function showLandingPage() {
-  if (flags.newUI) {
-    const landingPage = document.getElementById('landing-page');
-    const appContent = document.getElementById('new-app-content');
-    
-    if (landingPage) {
-      landingPage.style.display = 'block';
-    }
-    if (appContent) {
-      appContent.style.display = 'none';
-    }
-    
-    // Remove active from all tabs
-    document.querySelectorAll('.main-tab, .new-nav-item').forEach(tab => {
-      tab.classList.remove('active');
-    });
-  }
-}
-
-// Debug function to toggle new UI
-function toggleNewUI() {
-  const current = localStorage.getItem('NEXT_PUBLIC_NEW_UI') === 'true';
-  localStorage.setItem('NEXT_PUBLIC_NEW_UI', (!current).toString());
-  window.location.reload();
-}
-
-// Add debug info to console
-console.log('Feature Flags:', {
-  newUI: flags.newUI,
-  url: window.location.search,
-  localStorage: localStorage.getItem('NEXT_PUBLIC_NEW_UI')
-});
-console.log('To toggle new UI, run: toggleNewUI()');
-</script>
-
 </body>
 </html>
