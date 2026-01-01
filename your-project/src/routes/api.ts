@@ -110,7 +110,7 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
       const result = await transaction(async (client) => {
         // Create user session
         const sessionResult = await client.query(
-          `INSERT INTO user_sessions (session_token, ip_address, user_agent, expires_at)
+          `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at)
            VALUES ($1, $2, $3, $4)
            RETURNING id`,
           [sessionToken, req.ip, req.get('User-Agent'), expiresAt]
@@ -235,7 +235,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
   
   // Get analysis record
   const analysisResult = await query(
-    `SELECT ra.*, us.session_token
+    `SELECT ra.*, us.session_id
      FROM resume_analyses ra
      JOIN user_sessions us ON ra.session_id = us.id
      WHERE ra.session_id = $1 AND ra.status != 'deleted' AND ra.expires_at > NOW()

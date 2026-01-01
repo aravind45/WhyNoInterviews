@@ -133,14 +133,14 @@ app.post('/api/analyze-match', upload.single('resume'), async (req, res) => {
 
     // Get or create session UUID
     let sessionResult = await pool.query(
-      'SELECT id FROM user_sessions WHERE session_token = $1',
+      'SELECT id FROM user_sessions WHERE session_id = $1',
       [sessionToken]
     );
 
     let sessionUuid;
     if (sessionResult.rows.length === 0) {
       const newSession = await pool.query(
-        `INSERT INTO user_sessions (session_token, ip_address, user_agent, expires_at, is_active)
+        `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at, is_active)
          VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', true)
          RETURNING id`,
         [sessionToken, req.ip || '127.0.0.1', req.get('user-agent') || 'Unknown']
