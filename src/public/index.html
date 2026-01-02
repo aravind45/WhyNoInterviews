@@ -304,10 +304,6 @@
 </head>
 <body>
   <script>
-    // Simple Feature Flag System
-    const isNewUI = new URLSearchParams(window.location.search).get('ui') === '1' || 
-                    localStorage.getItem('NEW_UI') === 'true';
-
     // Global auth modal functions (need to be available immediately)
     function showAuthModal(mode) {
       var modal = document.getElementById('auth-modal');
@@ -339,21 +335,12 @@
         document.getElementById('signup-form').style.display = 'none';
       }
     }
-
-    // Initialize UI based on feature flag
-    document.addEventListener('DOMContentLoaded', function() {
-      if (isNewUI) {
-        document.body.classList.add('new-ui');
-        switchTab('home');
-      }
-    });
   </script>
-  
   <header>
     <div class="header-content">
-      <div class="logo" onclick="switchTab('home')" style="cursor: pointer;">🎯 <span>JobMatch AI</span></div>
+      <div class="logo" onclick="isNewUI && switchTab('home')" style="cursor: pointer;">🎯 <span>JobMatch AI</span></div>
       <nav class="main-tabs">
-        <div class="main-tab" data-tab="analyze">Resume Analysis</div>
+        <div class="main-tab active" data-tab="analyze">Resume Analysis</div>
         <div class="main-tab" data-tab="search">Job Matching</div>
         <div class="main-tab" data-tab="optimizer">Resume Optimizer</div>
         <div class="main-tab" data-tab="target-companies">Target Companies</div>
@@ -1263,6 +1250,18 @@ function switchAuthMode(mode) {
     document.getElementById('signup-form').style.display = 'block';
   }
 }
+
+// New UI Feature Flag
+const isNewUI = new URLSearchParams(window.location.search).get('ui') === '1' || 
+                localStorage.getItem('NEW_UI') === 'true';
+
+// Initialize UI based on feature flag
+document.addEventListener('DOMContentLoaded', function() {
+  if (isNewUI) {
+    document.body.classList.add('new-ui');
+    switchTab('home');
+  }
+});
 
 function handleSignup(e) {
   e.preventDefault();
