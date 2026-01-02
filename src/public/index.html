@@ -9,9 +9,11 @@
   
   <!-- Load New UI CSS when flag is enabled -->
   <script>
-    const isNewUIEnabled = new URLSearchParams(window.location.search).get('ui') === '1' || 
-                          localStorage.getItem('NEW_UI') === 'true';
-    if (isNewUIEnabled) {
+    // Set global flag for New UI
+    window.isNewUIEnabled = new URLSearchParams(window.location.search).get('ui') === '1' || 
+                           localStorage.getItem('NEW_UI') === 'true';
+    
+    if (window.isNewUIEnabled) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = '/new-ui.css';
@@ -338,7 +340,7 @@
   </script>
   <header>
     <div class="header-content">
-      <div class="logo" onclick="isNewUI && switchTab('home')" style="cursor: pointer;">🎯 <span>JobMatch AI</span></div>
+      <div class="logo">🎯 <span>JobMatch AI</span></div>
       <nav class="main-tabs">
         <div class="main-tab active" data-tab="analyze">Resume Analysis</div>
         <div class="main-tab" data-tab="search">Job Matching</div>
@@ -1252,8 +1254,32 @@ function switchAuthMode(mode) {
 }
 
 // New UI Feature Flag
-const isNewUI = new URLSearchParams(window.location.search).get('ui') === '1' || 
-                localStorage.getItem('NEW_UI') === 'true';
+const isNewUI = window.isNewUIEnabled;
+
+// Tab switching function for new UI
+function switchTab(tabName) {
+  // Remove active from all tabs
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // Add active to target tab
+  const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
+  
+  // Hide all sections
+  document.querySelectorAll('.section').forEach(section => {
+    section.classList.remove('active');
+  });
+  
+  // Show target section
+  const targetSection = document.getElementById(`tab-${tabName}`);
+  if (targetSection) {
+    targetSection.classList.add('active');
+  }
+}
 
 // Initialize UI based on feature flag
 document.addEventListener('DOMContentLoaded', function() {
@@ -1261,6 +1287,29 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.classList.add('new-ui');
     switchTab('home');
   }
+  
+  // Attach logo click handler safely
+  const logo = document.querySelector('.logo');
+  if (logo) {
+    logo.addEventListener('click', function() {
+      if (window.isNewUIEnabled) {
+        switchTab('home');
+      }
+    });
+    
+    // Add cursor pointer style for new UI
+    if (window.isNewUIEnabled) {
+      logo.style.cursor = 'pointer';
+    }
+  }
+  
+  // Attach tab click handlers
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      const tabName = this.getAttribute('data-tab');
+      switchTab(tabName);
+    });
+  });
 });
 
 function handleSignup(e) {
