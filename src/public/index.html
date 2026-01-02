@@ -2133,7 +2133,15 @@ function displayAnalysisResults(d) {
         <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Practice questions</div>
       </div>
 
-      <!-- 4. Find Referrals -->
+      <!-- 4. Elevator Pitch -->
+      <div class="card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.05)); border-color: rgba(245, 158, 11, 0.3); text-align: center; cursor: pointer;" onclick="generateElevatorPitch()">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">🚀</div>
+        <div style="font-weight: 600; color: #f59e0b;">Elevator Pitch</div>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">30-second pitch</div>
+      </div>
+      </div>
+
+      <!-- 5. Find Referrals -->
       <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(245, 158, 11, 0.05)); border-color: rgba(16, 185, 129, 0.3); text-align: center; cursor: pointer;" onclick="switchToNetworking()">
         <div style="font-size: 2.5rem; margin-bottom: 8px;">👥</div>
         <div style="font-weight: 600; color: #10b981;">Find Referrals</div>
@@ -2304,6 +2312,20 @@ function displayAnalysisResults(d) {
       </div>
     </div>
 
+    <!-- Elevator Pitch Output -->
+    <div id="elevator-pitch-output" style="display:none">
+      <div class="card">
+        <div class="flex justify-between items-center mb-4">
+          <h3>🚀 Your Elevator Pitch</h3>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="copyElevatorPitch()">📋 Copy</button>
+            <button class="btn btn-primary btn-sm" onclick="saveCurrentElevatorPitch()">💾 Save</button>
+          </div>
+        </div>
+        <div id="elevator-pitch-content" style="background: #0a0a0f; padding: 20px; border-radius: 10px; white-space: pre-wrap; font-family: Georgia, serif; line-height: 1.8; color: #e2e8f0;"></div>
+      </div>
+    </div>
+
     <!-- Interview Prep Output -->
     <div id="interview-prep-output" style="display:none">
       <div class="card">
@@ -2312,6 +2334,17 @@ function displayAnalysisResults(d) {
           <button class="btn btn-secondary btn-sm" onclick="saveCurrentInterviewPrep()">💾 Save</button>
         </div>
         <div id="interview-prep-content"></div>
+      </div>
+    </div>
+
+    <!-- Elevator Pitch Output -->
+    <div id="elevator-pitch-output" style="display:none">
+      <div class="card">
+        <div class="flex justify-between items-center mb-4">
+          <h3>🚀 Your Elevator Pitch</h3>
+          <button class="btn btn-secondary btn-sm" onclick="saveCurrentElevatorPitch()">💾 Save</button>
+        </div>
+        <div id="elevator-pitch-content"></div>
       </div>
     </div>
   `;
@@ -2427,6 +2460,113 @@ function saveCurrentCoverLetter() {
   if (saveCoverLetter(content, jobTitle, companyName)) {
     showToast('Cover letter saved! View in "My Cover Letters"', 'success');
   }
+}
+
+// ========== ELEVATOR PITCH GENERATOR (ANALYZE PAGE) ==========
+async function generateElevatorPitch() {
+  const jobDesc = document.getElementById('job-description').value.trim();
+  if (!jobDesc) {
+    showToast('Job description is required for elevator pitch', 'error');
+    return;
+  }
+
+  if (!lastAnalysisData) {
+    showToast('Please analyze your resume first', 'error');
+    return;
+  }
+
+  // Ensure sessionId exists before generating elevator pitch (stable, based on email only)
+  if (!sessionId) {
+    if (currentUser && currentUser.email) {
+      sessionId = 'sess_' + btoa(currentUser.email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
+      localStorage.setItem('jobmatch_session', sessionId);
+    } else {
+      showToast('Please log in first', 'error');
+      return;
+    }
+  }
+
+  // Show loading toast
+  showToast('Generating elevator pitch...', 'success');
+
+  try {
+    const res = await fetch('/api/generate-elevator-pitch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        jobDescription: jobDesc,
+        analysisData: lastAnalysisData
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (!data.success) throw new Error(data.error || 'Generation failed');
+    
+    // Display the elevator pitch
+    document.getElementById('elevator-pitch-content').textContent = data.data.pitchText;
+    document.getElementById('elevator-pitch-output').style.display = 'block';
+    document.getElementById('elevator-pitch-output').scrollIntoView({ behavior: 'smooth' });
+    
+    showToast('Elevator pitch generated!', 'success');
+    
+  } catch (err) {
+    console.error('Elevator pitch error:', err);
+    showToast(String(err.message || 'Generation failed'), 'error');
+  }
+}
+
+function copyElevatorPitch() {
+  const content = document.getElementById('elevator-pitch-content').textContent;
+  navigator.clipboard.writeText(content).then(() => {
+    showToast('Elevator pitch copied!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy', 'error');
+  });
+}
+
+function saveCurrentElevatorPitch() {
+  const content = document.getElementById('elevator-pitch-content').textContent;
+  if (!content) {
+    showToast('No elevator pitch to save', 'error');
+    return;
+  }
+  
+  // Extract job info from the job description
+  const jobDesc = document.getElementById('job-description').value || '';
+  
+  // Try to extract company name
+  const companyMatch = jobDesc.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i) ||
+                       jobDesc.match(/([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+is\s+(?:seeking|hiring|looking)/i);
+  const companyName = companyMatch ? companyMatch[1].trim() : 'Company';
+  
+  // Try to extract job title
+  const titleMatch = jobDesc.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
+                     jobDesc.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i) ||
+                     jobDesc.match(/^([A-Z][a-zA-Z\s]+(?:Engineer|Manager|Director|Developer|Architect|Lead|Analyst))/m);
+  const jobTitle = titleMatch ? titleMatch[1].trim().substring(0, 50) : 'Job Role';
+  
+  // Save to localStorage (similar to cover letters)
+  const savedPitches = JSON.parse(localStorage.getItem('saved_elevator_pitches') || '[]');
+  const pitchData = {
+    id: Date.now(),
+    content: content,
+    jobTitle: jobTitle,
+    companyName: companyName,
+    createdAt: new Date().toISOString(),
+    jobDescription: jobDesc.substring(0, 500) + (jobDesc.length > 500 ? '...' : '')
+  };
+  
+  savedPitches.unshift(pitchData);
+  
+  // Keep only last 50 pitches
+  if (savedPitches.length > 50) {
+    savedPitches.splice(50);
+  }
+  
+  localStorage.setItem('saved_elevator_pitches', JSON.stringify(savedPitches));
+  showToast('Elevator pitch saved!', 'success');
 }
 
 // ========== INTERVIEW PREP GENERATOR (ANALYZE PAGE) ==========

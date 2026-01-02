@@ -1203,6 +1203,107 @@ Return ONLY the cover letter text, no additional commentary.`;
 });
 
 // ============================================================
+// ELEVATOR PITCH GENERATOR
+// ============================================================
+app.post('/api/generate-elevator-pitch', async (req, res) => {
+  try {
+    const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
+    const session = sessions[sessionId] || {};
+
+    if (!jobDescription) {
+      return res.status(400).json({ success: false, error: 'Job description required' });
+    }
+
+    // Extract company name and role from job description
+    const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
+    const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
+                       jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
+
+    const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
+
+    // Research company information
+    const companyResearch = await researchCompany(companyName);
+
+    const resumeText = session.resumeText || '';
+    // Use profile from session, or extract from analysisData, or use empty object
+    const profile = session.profile || analysisData?.profile || {};
+    
+    // Extract specific achievements from resume
+    const achievementPatterns = [
+      /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
+      /\d+%[^.]+\./gi,
+      /\$[\d,]+[^.]+\./gi
+    ];
+    
+    let achievements: string[] = [];
+    achievementPatterns.forEach(pattern => {
+      const matches = resumeText.match(pattern);
+      if (matches) achievements.push(...matches);
+    });
+    achievements = [...new Set(achievements)].slice(0, 3);
+
+    const prompt = `You are an elevator pitch expert. Create a compelling 75-120 word elevator pitch using ONLY information provided below.
+
+CANDIDATE PROFILE:
+Name: ${profile.name || 'Candidate'}
+Current Role: ${profile.currentTitle || 'Professional'}
+Experience: ${profile.yearsExperience || 'Several'}+ years
+Key Skills: ${(profile.hardSkills || []).join(', ') || 'various technical skills'}
+Key Achievements from Resume:
+${achievements.length > 0 ? achievements.map((a, i) => `${i+1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
+
+COMPANY INFORMATION (${companyName}):
+${companyResearch}
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 2000)}
+
+ANALYSIS INSIGHTS:
+- Match Score: ${analysisData?.overallScore || 'N/A'}%
+- Strengths: ${(analysisData?.strengths || []).map((s: any) => s.skill).join(', ') || 'Multiple relevant skills'}
+
+CREATE A 75-120 WORD ELEVATOR PITCH WITH THESE 4 COMPONENTS:
+
+1. WHAT I DO (15-20 words): Your current role and core expertise
+2. PROBLEM I SOLVE (20-25 words): The business challenge you address
+3. WHAT MAKES ME DIFFERENT (20-25 words): Your unique value or differentiator
+4. HOW I HELP THIS COMPANY (15-20 words): Specific value for this role/company
+
+CRITICAL RULES:
+- Total pitch must be 75-120 words
+- Use ONLY facts from the resume achievements provided
+- Reference the specific company and role when possible
+- Be conversational and confident
+- Focus on measurable impact where available
+- DO NOT invent achievements or metrics not in the provided data
+
+Return ONLY the elevator pitch text as one flowing paragraph, no section headers.`;
+
+    const completion = await groq.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 800
+    });
+
+    const pitchText = completion.choices[0]?.message?.content || '';
+
+    res.json({
+      success: true,
+      data: {
+        pitchText: pitchText.trim(),
+        companyResearch: companyResearch,
+        companyName: companyName
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Elevator pitch error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Generation failed' });
+  }
+});
+
+// ============================================================
 // INTERVIEW PREPARATION GENERATOR
 // ============================================================
 app.post('/api/generate-interview-prep', async (req, res) => {
