@@ -1,7 +1,3 @@
-/* Hide Home tab by default */
-.main-tab[data-tab="home"] {
-  display: none;
-}
 
 /* Show Home tab only in new UI mode */
 .new-ui .main-tab[data-tab="home"] {
@@ -109,7 +105,7 @@
 }
 
 /* Home Hero Section */
-.home-hero {
+.new-ui .home-hero {
   padding: 80px 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -119,7 +115,7 @@
   margin: 0 auto;
 }
 
-.home-badge {
+.new-ui .home-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -132,7 +128,7 @@
   margin-bottom: 24px;
 }
 
-.home-title {
+.new-ui .home-title {
   font-size: 3.5rem;
   font-weight: 800;
   line-height: 1.1;
@@ -140,27 +136,27 @@
   margin-bottom: 24px;
 }
 
-.home-highlight {
+.new-ui .home-highlight {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.home-description {
+.new-ui .home-description {
   font-size: 1.25rem;
   color: #475569;
   line-height: 1.6;
   margin-bottom: 32px;
 }
 
-.home-cta-buttons {
+.new-ui .home-cta-buttons {
   display: flex;
   gap: 16px;
   margin-bottom: 48px;
 }
 
-.home-cta-primary {
+.new-ui .home-cta-primary {
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -176,12 +172,12 @@
   box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
 }
 
-.home-cta-primary:hover {
+.new-ui .home-cta-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 32px rgba(245, 158, 11, 0.4);
 }
 
-.home-cta-secondary {
+.new-ui .home-cta-secondary {
   background: white;
   color: #f59e0b;
   padding: 16px 32px;
@@ -193,38 +189,38 @@
   transition: all 0.3s;
 }
 
-.home-cta-secondary:hover {
+.new-ui .home-cta-secondary:hover {
   background: #f59e0b;
   color: white;
 }
 
-.home-stats {
+.new-ui .home-stats {
   display: flex;
   gap: 32px;
 }
 
-.home-stat {
+.new-ui .home-stat {
   text-align: center;
 }
 
-.home-stat-number {
+.new-ui .home-stat-number {
   font-size: 2rem;
   font-weight: 800;
   color: #f59e0b;
   margin-bottom: 4px;
 }
 
-.home-stat-label {
+.new-ui .home-stat-label {
   font-size: 0.9rem;
   color: #64748b;
 }
 
 /* Preview Card */
-.home-preview {
+.new-ui .home-preview {
   position: relative;
 }
 
-.home-preview-card {
+.new-ui .home-preview-card {
   background: white;
   border-radius: 20px;
   padding: 32px;
@@ -232,7 +228,7 @@
   border: 2px solid #fef3c7;
 }
 
-.home-preview-title {
+.new-ui .home-preview-title {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -242,11 +238,11 @@
   margin-bottom: 24px;
 }
 
-.home-preview-title svg {
+.new-ui .home-preview-title svg {
   color: #f59e0b;
 }
 
-.home-upload-preview {
+.new-ui .home-upload-preview {
   border: 2px dashed #fde68a;
   border-radius: 12px;
   padding: 24px;
@@ -257,29 +253,29 @@
   margin-bottom: 24px;
 }
 
-.home-upload-preview:hover {
+.new-ui .home-upload-preview:hover {
   border-color: #f59e0b;
   background: #fef3c7;
   transform: translateY(-2px);
 }
 
-.home-upload-preview svg {
+.new-ui .home-upload-preview svg {
   color: #f59e0b;
   margin-bottom: 12px;
 }
 
-.home-upload-preview p {
+.new-ui .home-upload-preview p {
   font-weight: 600;
   color: #0f172a;
   margin-bottom: 4px;
 }
 
-.home-upload-preview span {
+.new-ui .home-upload-preview span {
   font-size: 0.9rem;
   color: #64748b;
 }
 
-.home-preview-cta {
+.new-ui .home-preview-cta {
   width: 100%;
   background: linear-gradient(135deg, #f59e0b, #eab308);
   color: white;
@@ -291,20 +287,20 @@
   transition: all 0.2s;
 }
 
-.home-preview-cta:hover {
+.new-ui .home-preview-cta:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 /* Features Section */
-.home-features {
+.new-ui .home-features {
   padding: 80px 0;
   background: white;
   margin-top: 40px;
   border-radius: 24px 24px 0 0;
 }
 
-.home-features-title {
+.new-ui .home-features-title {
   font-size: 2.5rem;
   font-weight: 800;
   color: #0f172a;
@@ -312,14 +308,14 @@
   margin-bottom: 16px;
 }
 
-.home-features-subtitle {
+.new-ui .home-features-subtitle {
   font-size: 1.25rem;
   color: #64748b;
   text-align: center;
   margin-bottom: 60px;
 }
 
-.home-features-grid {
+.new-ui .home-features-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
@@ -327,7 +323,7 @@
   margin: 0 auto;
 }
 
-.home-feature-card {
+.new-ui .home-feature-card {
   background: white;
   border: 2px solid #fef3c7;
   border-radius: 16px;
@@ -337,13 +333,13 @@
   transition: all 0.3s;
 }
 
-.home-feature-card:hover {
+.new-ui .home-feature-card:hover {
   border-color: #f59e0b;
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(245, 158, 11, 0.2);
 }
 
-.home-feature-icon {
+.new-ui .home-feature-icon {
   width: 56px;
   height: 56px;
   background: linear-gradient(135deg, #f59e0b, #eab308);
@@ -356,32 +352,32 @@
   box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
 }
 
-.home-feature-card h3 {
+.new-ui .home-feature-card h3 {
   font-size: 1.25rem;
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 12px;
 }
 
-.home-feature-card p {
+.new-ui .home-feature-card p {
   color: #64748b;
   line-height: 1.6;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .home-hero {
+  .new-ui .home-hero {
     grid-template-columns: 1fr;
     gap: 40px;
     text-align: center;
     padding: 60px 24px;
   }
   
-  .home-title {
+  .new-ui .home-title {
     font-size: 3rem;
   }
   
-  .home-features-grid {
+  .new-ui .home-features-grid {
     grid-template-columns: repeat(2, 1fr);
     padding: 0 24px;
   }
@@ -398,23 +394,23 @@
     padding: 8px 12px;
   }
   
-  .home-title {
+  .new-ui .home-title {
     font-size: 2.5rem;
   }
   
-  .home-cta-buttons {
+  .new-ui .home-cta-buttons {
     flex-direction: column;
   }
   
-  .home-stats {
+  .new-ui .home-stats {
     justify-content: center;
   }
   
-  .home-features-grid {
+  .new-ui .home-features-grid {
     grid-template-columns: 1fr;
   }
   
-  .home-features {
+  .new-ui .home-features {
     padding: 60px 24px;
   }
 }
@@ -434,15 +430,15 @@
     order: 1;
   }
   
-  .home-hero {
+  .new-ui .home-hero {
     padding: 40px 16px;
   }
   
-  .home-title {
+  .new-ui .home-title {
     font-size: 2rem;
   }
   
-  .home-description {
+  .new-ui .home-description {
     font-size: 1.1rem;
   }
 }

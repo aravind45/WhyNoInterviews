@@ -37,6 +37,9 @@
     .main-tab.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1)); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.3); }
     .main-tab .badge { background: #6366f1; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 8px; margin-left: 6px; }
     
+    /* Hide Home tab by default (shown only in new UI mode) */
+    .main-tab[data-tab="home"] { display: none; }
+    
     /* Container */
     .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
     
