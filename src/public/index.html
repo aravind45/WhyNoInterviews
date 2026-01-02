@@ -9,9 +9,9 @@
   
   <!-- Load New UI CSS when flag is enabled -->
   <script>
-    // Set global flag for New UI
-    window.isNewUIEnabled = new URLSearchParams(window.location.search).get('ui') === '1' || 
-                           localStorage.getItem('NEW_UI') === 'true';
+    // New UI is default, old UI requires ?ui=2
+    const uiParam = new URLSearchParams(window.location.search).get('ui');
+    window.isNewUIEnabled = uiParam !== '2'; // Show new UI unless explicitly requesting old UI
     
     if (window.isNewUIEnabled) {
       const link = document.createElement('link');
