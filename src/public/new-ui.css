@@ -1,8 +1,31 @@
-
 /* Show Home tab only in new UI mode */
 .new-ui .main-tab[data-tab="home"] {
   display: block;
 }
+
+/* Section visibility - hide all by default, show only active */
+.new-ui .section {
+  display: none;
+}
+
+.new-ui .section.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Smooth fade-in animation when switching tabs */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* New UI Styles - Scoped under .new-ui class */
 
 /* Only apply new styles when new UI is enabled */
@@ -97,12 +120,9 @@
   display: none;
 }
 
-/* Home Section Styles */
-.new-ui #tab-home {
-  display: block;
-  padding: 0;
-  background: none;
-}
+/* Home Section Styles - Removed conflicting display:block rule */
+/* The home section visibility is now controlled by .section and .section.active rules */
+
 
 /* Home Hero Section */
 .new-ui .home-hero {
@@ -372,11 +392,11 @@
     text-align: center;
     padding: 60px 24px;
   }
-  
+
   .new-ui .home-title {
     font-size: 3rem;
   }
-  
+
   .new-ui .home-features-grid {
     grid-template-columns: repeat(2, 1fr);
     padding: 0 24px;
@@ -388,28 +408,28 @@
     flex-wrap: wrap;
     gap: 4px;
   }
-  
+
   .new-ui .main-tab {
     font-size: 0.8rem;
     padding: 8px 12px;
   }
-  
+
   .new-ui .home-title {
     font-size: 2.5rem;
   }
-  
+
   .new-ui .home-cta-buttons {
     flex-direction: column;
   }
-  
+
   .new-ui .home-stats {
     justify-content: center;
   }
-  
+
   .new-ui .home-features-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .new-ui .home-features {
     padding: 60px 24px;
   }
@@ -421,23 +441,23 @@
     gap: 16px;
     padding: 16px 24px;
   }
-  
+
   .new-ui .main-tabs {
     order: 2;
   }
-  
+
   .new-ui #auth-section {
     order: 1;
   }
-  
+
   .new-ui .home-hero {
     padding: 40px 16px;
   }
-  
+
   .new-ui .home-title {
     font-size: 2rem;
   }
-  
+
   .new-ui .home-description {
     font-size: 1.1rem;
   }
