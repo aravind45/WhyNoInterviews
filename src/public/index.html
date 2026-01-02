@@ -1314,6 +1314,15 @@ document.addEventListener('DOMContentLoaded', function() {
       switchTab(tabName);
     });
   });
+  
+  // Add event-delegated click listener for tab navigation
+  document.addEventListener("click", (e) => {
+    const tabEl = e.target.closest(".main-tab");
+    if (!tabEl) return;
+    const tabName = tabEl.getAttribute("data-tab");
+    if (!tabName) return;
+    if (typeof switchTab === "function") switchTab(tabName);
+  });
 });
 
 function handleSignup(e) {
