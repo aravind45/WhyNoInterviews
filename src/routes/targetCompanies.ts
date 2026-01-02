@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { query, transaction } from '../database/connection';
+import { query } from '../database/connection';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 
@@ -13,7 +13,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   // Get companies with statistics
@@ -83,7 +83,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   } = req.body;
 
   if (!sessionId || !companyName) {
-    throw createError(400, 'sessionId and companyName are required');
+    throw createError('sessionId and companyName are required', 400);
   }
 
   // Verify session exists
@@ -93,7 +93,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   );
 
   if (sessionCheck.rows.length === 0) {
-    throw createError(404, 'Session not found or expired');
+    throw createError('Session not found or expired', 404);
   }
 
   // Insert new company
@@ -140,7 +140,7 @@ router.post('/bulk', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId, companyNames } = req.body;
 
   if (!sessionId || !Array.isArray(companyNames) || companyNames.length === 0) {
-    throw createError(400, 'sessionId and companyNames array are required');
+    throw createError('sessionId and companyNames array are required', 400);
   }
 
   // Verify session exists
@@ -150,7 +150,7 @@ router.post('/bulk', asyncHandler(async (req: Request, res: Response) => {
   );
 
   if (sessionCheck.rows.length === 0) {
-    throw createError(404, 'Session not found or expired');
+    throw createError('Session not found or expired', 404);
   }
 
   // Get company details from suggestions
@@ -229,7 +229,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   } = req.body;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   // Build update query dynamically
@@ -279,7 +279,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   }
 
   if (updates.length === 0) {
-    throw createError(400, 'No fields to update');
+    throw createError('No fields to update', 400);
   }
 
   const result = await query(`
@@ -290,7 +290,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   `, values);
 
   if (result.rows.length === 0) {
-    throw createError(404, 'Company not found or access denied');
+    throw createError('Company not found or access denied', 404);
   }
 
   logger.info('Target company updated', {
@@ -317,7 +317,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   const result = await query(`
@@ -327,7 +327,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   `, [id, sessionId]);
 
   if (result.rows.length === 0) {
-    throw createError(404, 'Company not found or access denied');
+    throw createError('Company not found or access denied', 404);
   }
 
   logger.info('Target company deleted', {
@@ -351,7 +351,7 @@ router.get('/:id/jobs', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId, includeApplied = 'true' } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   let jobsQuery = `
@@ -387,10 +387,10 @@ router.get('/:id/jobs', asyncHandler(async (req: Request, res: Response) => {
  */
 router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { sessionId, searchQuery, roles } = req.body;
+  const { sessionId } = req.body;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   // Get company details
@@ -400,7 +400,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
   `, [id, sessionId]);
 
   if (companyResult.rows.length === 0) {
-    throw createError(404, 'Company not found');
+    throw createError('Company not found', 404);
   }
 
   const company = companyResult.rows[0];
@@ -408,7 +408,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
   // Generate search URLs for different platforms
   const searchPlatforms = generateSearchUrls(
     company.company_name,
-    searchQuery || roles?.join(' OR ') || '',
+    req.body.searchQuery || req.body.roles?.join(' OR ') || '',
     company.location_preference
   );
 
@@ -425,7 +425,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
     `, [
       id,
       sessionId,
-      searchQuery || roles?.join(', ') || 'all roles',
+      req.body.searchQuery || req.body.roles?.join(', ') || 'all roles',
       platform.name,
       platform.url
     ]);
@@ -448,7 +448,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
     success: true,
     data: {
       company: company.company_name,
-      searchQuery: searchQuery || roles?.join(', ') || 'all roles',
+      searchQuery: req.body.searchQuery || req.body.roles?.join(', ') || 'all roles',
       searchUrls: searchResults
     },
     message: `Search initiated for ${company.company_name}`
@@ -495,7 +495,7 @@ router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   const stats = await query(`
