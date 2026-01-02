@@ -1,3 +1,12 @@
+/* Hide Home tab by default */
+.main-tab[data-tab="home"] {
+  display: none;
+}
+
+/* Show Home tab only in new UI mode */
+.new-ui .main-tab[data-tab="home"] {
+  display: block;
+}
 /* New UI Styles - Scoped under .new-ui class */
 
 /* Only apply new styles when new UI is enabled */
