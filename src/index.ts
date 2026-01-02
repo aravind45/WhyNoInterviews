@@ -1242,7 +1242,7 @@ app.post('/api/generate-elevator-pitch', async (req, res) => {
     });
     achievements = [...new Set(achievements)].slice(0, 3);
 
-    const prompt = `You are an elevator pitch expert. Create a compelling 75-120 word elevator pitch using ONLY information provided below.
+    const prompt = `You are an elevator pitch expert. Create a compelling 30-45 second elevator pitch (75-120 words) using ONLY information provided below.
 
 CANDIDATE PROFILE:
 Name: ${profile.name || 'Candidate'}
@@ -1262,25 +1262,24 @@ ANALYSIS INSIGHTS:
 - Match Score: ${analysisData?.overallScore || 'N/A'}%
 - Strengths: ${(analysisData?.strengths || []).map((s: any) => s.skill).join(', ') || 'Multiple relevant skills'}
 
-CREATE A COMPELLING 75-120 WORD ELEVATOR PITCH THAT ANSWERS THESE 4 KEY QUESTIONS:
+CREATE A PROFESSIONAL ELEVATOR PITCH THAT FLOWS NATURALLY WHILE ADDRESSING THESE 4 QUESTIONS IN ORDER:
 
-1. WHAT DO YOU DO? (15-20 words): Your current role, expertise, and core competencies
-2. WHAT PROBLEM DO YOU SOLVE? (20-25 words): The specific business challenges you address and value you create
-3. HOW ARE YOU DIFFERENT? (20-25 words): Your unique strengths, approach, or differentiators that set you apart
-4. HOW CAN YOU HELP THIS COMPANY/HIRING MANAGER? (15-20 words): Specific value you'll bring to this role and organization
+1. WHAT DO I DO? - Your current role, expertise, and core competencies
+2. WHAT PROBLEM DO I SOLVE? - The specific business challenges you address and value you create  
+3. HOW AM I DIFFERENT? - Your unique strengths, approach, or differentiators that set you apart
+4. HOW CAN I HELP THE COMPANY? - Specific value you'll bring to this role and organization
 
-STRUCTURE: Flow these 4 answers naturally into one compelling paragraph that tells your professional story.
-
-CRITICAL RULES:
-- Total pitch must be 75-120 words
-- Use ONLY facts from the resume achievements provided
-- Reference the specific company (${companyName}) and role when possible
-- Be conversational, confident, and authentic
+REQUIREMENTS:
+- 75-120 words total (30-45 second speaking time)
+- Professional, confident, conversational tone
+- Tailored to BOTH the resume achievements AND the specific job/company
+- Use ONLY facts from the provided resume data
+- Reference ${companyName} and the specific role when possible
+- Flow as one cohesive paragraph, not 4 separate answers
 - Focus on measurable impact where available
-- DO NOT invent achievements or metrics not in the provided data
-- Make it sound natural, not like 4 separate answers
+- DO NOT invent achievements or metrics not provided
 
-Return ONLY the elevator pitch text as one flowing paragraph, no section headers or bullet points.`;
+Return ONLY the elevator pitch text as one flowing paragraph.`;
 
     const completion = await groq.chat.completions.create({
       model: GROQ_MODEL,
