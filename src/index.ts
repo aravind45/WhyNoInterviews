@@ -1262,22 +1262,25 @@ ANALYSIS INSIGHTS:
 - Match Score: ${analysisData?.overallScore || 'N/A'}%
 - Strengths: ${(analysisData?.strengths || []).map((s: any) => s.skill).join(', ') || 'Multiple relevant skills'}
 
-CREATE A 75-120 WORD ELEVATOR PITCH WITH THESE 4 COMPONENTS:
+CREATE A COMPELLING 75-120 WORD ELEVATOR PITCH THAT ANSWERS THESE 4 KEY QUESTIONS:
 
-1. WHAT I DO (15-20 words): Your current role and core expertise
-2. PROBLEM I SOLVE (20-25 words): The business challenge you address
-3. WHAT MAKES ME DIFFERENT (20-25 words): Your unique value or differentiator
-4. HOW I HELP THIS COMPANY (15-20 words): Specific value for this role/company
+1. WHAT DO YOU DO? (15-20 words): Your current role, expertise, and core competencies
+2. WHAT PROBLEM DO YOU SOLVE? (20-25 words): The specific business challenges you address and value you create
+3. HOW ARE YOU DIFFERENT? (20-25 words): Your unique strengths, approach, or differentiators that set you apart
+4. HOW CAN YOU HELP THIS COMPANY/HIRING MANAGER? (15-20 words): Specific value you'll bring to this role and organization
+
+STRUCTURE: Flow these 4 answers naturally into one compelling paragraph that tells your professional story.
 
 CRITICAL RULES:
 - Total pitch must be 75-120 words
 - Use ONLY facts from the resume achievements provided
-- Reference the specific company and role when possible
-- Be conversational and confident
+- Reference the specific company (${companyName}) and role when possible
+- Be conversational, confident, and authentic
 - Focus on measurable impact where available
 - DO NOT invent achievements or metrics not in the provided data
+- Make it sound natural, not like 4 separate answers
 
-Return ONLY the elevator pitch text as one flowing paragraph, no section headers.`;
+Return ONLY the elevator pitch text as one flowing paragraph, no section headers or bullet points.`;
 
     const completion = await groq.chat.completions.create({
       model: GROQ_MODEL,
