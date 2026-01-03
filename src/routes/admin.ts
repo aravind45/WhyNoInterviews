@@ -84,7 +84,7 @@ router.get('/config', async (req: Request, res: Response) => {
     const query = getQuery();
     const result = await query(`SELECT * FROM system_settings`);
     const config: Record<string, any> = {};
-    result.rows.forEach(row => {
+    result.rows.forEach((row: any) => {
       config[row.key] = row.value;
     });
     res.json({ success: true, data: config });
