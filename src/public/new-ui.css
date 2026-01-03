@@ -32,6 +32,19 @@
 .new-ui {
   background: linear-gradient(135deg, #fef7ed, #fef3c7, #fde68a);
   min-height: 100vh;
+  color: #1e293b;
+  /* Dark text for light background */
+}
+
+/* Ensure table cells are visible */
+.new-ui td,
+.new-ui th {
+  color: #1e293b;
+}
+
+/* Ensure list items are visible */
+.new-ui li {
+  color: #1e293b;
 }
 
 /* Header Updates for New UI */
