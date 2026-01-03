@@ -15,6 +15,7 @@ import mammoth from 'mammoth';
 import { connectDatabase, getPool } from './database/connection';
 import icaRoutes from './routes/ica';
 import { initializeProviders } from './services/llmProvider';
+import { paywallMiddleware } from './middleware/paywall';
 
 const app = express();
 
@@ -29,6 +30,12 @@ initializeProviders();
 // Get Groq model from environment or use default
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 console.log(`🔧 Groq model configured: ${GROQ_MODEL}`);
+
+// Debug log to verify if paywall is active at startup
+console.log('--- STARTUP ENVIRONMENT CHECK ---');
+console.log('PAYWALL_ENABLED:', process.env.PAYWALL_ENABLED);
+console.log('PAYWALL_SECRET_KEY set:', !!process.env.PAYWALL_SECRET_KEY);
+console.log('--------------------------------');
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -46,17 +53,17 @@ const sessions: Record<string, any> = {};
  */
 async function parseResume(filePath: string, mimeType: string): Promise<string> {
   const buffer = fs.readFileSync(filePath);
-  
+
   if (mimeType === 'application/pdf' || filePath.endsWith('.pdf')) {
     const data = await pdfParse(buffer);
     return data.text;
   }
-  
+
   if (mimeType.includes('word') || filePath.endsWith('.docx') || filePath.endsWith('.doc')) {
     const result = await mammoth.extractRawText({ buffer });
     return result.value;
   }
-  
+
   throw new Error('Unsupported file format');
 }
 
@@ -108,7 +115,7 @@ ${resumeText.substring(0, 6000)}
 // FEATURE 1: RESUME ANALYSIS (Deep Diagnosis)
 // ============================================================
 
-app.post('/api/analyze-match', upload.single('resume'), async (req, res) => {
+app.post('/api/analyze-match', paywallMiddleware, upload.single('resume'), async (req, res) => {
   let filePath = '';
 
   try {
@@ -426,8 +433,8 @@ Return ONLY this JSON:
       const skillLower = skill.toLowerCase();
       // Match if skill appears in job description OR if skill is partial match
       if (jobText.includes(skillLower) ||
-          jobText.includes(skillLower.replace(/\.js$/, '')) || // Match "React.js" to "React"
-          jobText.split(/\W+/).some((word: string) => word === skillLower)) { // Match whole words
+        jobText.includes(skillLower.replace(/\.js$/, '')) || // Match "React.js" to "React"
+        jobText.split(/\W+/).some((word: string) => word === skillLower)) { // Match whole words
         matchedSkills++;
         matchingSkills.push(skill);
       }
@@ -571,12 +578,12 @@ Return ONLY this JSON:
 
 app.post('/api/extract-profile', upload.single('resume'), async (req, res) => {
   let filePath = '';
-  
+
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'Resume file required' });
     }
-    
+
     filePath = req.file.path;
     const resumeText = await parseResume(filePath, req.file.mimetype);
 
@@ -609,7 +616,7 @@ ${resumeText.substring(0, 6000)}
 
     const responseText = completion.choices[0]?.message?.content || '';
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    
+
     if (!jsonMatch) throw new Error('Failed to parse profile');
 
     const profile = JSON.parse(jsonMatch[0]);
@@ -676,9 +683,9 @@ function generateJobSearchLinks(profile: any, customQuery?: string, customLocati
   const title = customQuery || profile.targetTitles?.[0] || profile.currentTitle || 'software engineer';
   const location = customLocation || profile.location || '';
   const skills = (profile.hardSkills || []).slice(0, 3).join(' ');
-  
+
   const encode = encodeURIComponent;
-  
+
   return {
     primary: [
       {
@@ -738,23 +745,23 @@ app.post('/api/search-jobs', async (req, res) => {
   try {
     const { sessionId, searchQuery, location, useRealApi } = req.body;
     const session = sessions[sessionId];
-    
+
     if (!session) {
       return res.status(400).json({ success: false, error: 'Session not found. Upload resume first.' });
     }
 
     // Generate smart search links (always available)
     const searchLinks = generateJobSearchLinks(session.profile, searchQuery, location);
-    
+
     // If JSearch API key is provided and useRealApi is true, fetch real jobs
     const JSEARCH_API_KEY = process.env.JSEARCH_API_KEY;
     let realJobs: any[] = [];
-    
+
     if (JSEARCH_API_KEY && useRealApi !== false) {
       try {
         const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
         const loc = location || session.profile.location || '';
-        
+
         const response = await fetch(
           `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query + ' in ' + loc)}&num_pages=1`,
           {
@@ -764,9 +771,9 @@ app.post('/api/search-jobs', async (req, res) => {
             }
           }
         );
-        
+
         const data: any = await response.json();
-        
+
         if (data.data && Array.isArray(data.data)) {
           // Score each real job against profile
           realJobs = await Promise.all(data.data.slice(0, 8).map(async (job: any) => {
@@ -776,7 +783,7 @@ app.post('/api/search-jobs', async (req, res) => {
               title: job.job_title,
               company: job.employer_name,
               location: job.job_city ? `${job.job_city}, ${job.job_state}` : job.job_country,
-              salary: job.job_min_salary && job.job_max_salary 
+              salary: job.job_min_salary && job.job_max_salary
                 ? `$${job.job_min_salary.toLocaleString()} - $${job.job_max_salary.toLocaleString()}`
                 : null,
               postedDate: job.job_posted_at_datetime_utc ? getRelativeTime(job.job_posted_at_datetime_utc) : 'Recently',
@@ -788,7 +795,7 @@ app.post('/api/search-jobs', async (req, res) => {
               ...score
             };
           }));
-          
+
           realJobs.sort((a, b) => b.matchScore - a.matchScore);
         }
       } catch (apiErr) {
@@ -796,13 +803,13 @@ app.post('/api/search-jobs', async (req, res) => {
         // Continue without real jobs - links will still work
       }
     }
-    
+
     // If no API or API failed, generate AI suggestions
     if (realJobs.length === 0 && process.env.GROQ_API_KEY) {
       try {
         const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
         const skills = (session.profile.hardSkills || []).slice(0, 5).join(', ');
-        
+
         const prompt = `Suggest 5 specific job titles and companies that would be good matches for someone with these skills: ${skills}, looking for: ${query}
 
 Return ONLY JSON array:
@@ -817,7 +824,7 @@ Return ONLY JSON array:
 
         const responseText = completion.choices[0]?.message?.content || '';
         const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-        
+
         if (jsonMatch) {
           const suggestions = JSON.parse(jsonMatch[0]);
           realJobs = suggestions.map((s: any, i: number) => ({
@@ -834,17 +841,17 @@ Return ONLY JSON array:
         console.error('AI suggestion error:', aiErr);
       }
     }
-    
+
     session.jobs = realJobs;
     session.searchLinks = searchLinks;
 
-    res.json({ 
-      success: true, 
-      data: { 
+    res.json({
+      success: true,
+      data: {
         jobs: realJobs,
         searchLinks,
         hasRealApi: !!process.env.JSEARCH_API_KEY
-      } 
+      }
     });
 
   } catch (error: any) {
@@ -857,10 +864,10 @@ Return ONLY JSON array:
 function quickMatchScore(profile: any, job: any) {
   const jobText = (job.job_title + ' ' + job.job_description + ' ' + (job.job_required_skills || []).join(' ')).toLowerCase();
   const profileSkills = (profile.hardSkills || []).map((s: string) => s.toLowerCase());
-  
+
   let matched = 0;
   let matchingSkills: string[] = [];
-  
+
   profileSkills.forEach((skill: string) => {
     if (jobText.includes(skill.toLowerCase())) {
       matched++;
@@ -884,7 +891,7 @@ function getRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return '1 day ago';
   if (diffDays < 7) return `${diffDays} days ago`;
@@ -896,11 +903,11 @@ function getRelativeTime(dateString: string): string {
 // FEATURE 4: COVER LETTER GENERATION
 // ============================================================
 
-app.post('/api/generate-cover-letter', async (req, res) => {
+app.post('/api/generate-cover-letter', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobId, jobDescription, companyName, jobTitle } = req.body;
     const session = sessions[sessionId];
-    
+
     if (!session) {
       return res.status(400).json({ success: false, error: 'Session not found' });
     }
@@ -951,13 +958,13 @@ app.post('/api/save-job', async (req, res) => {
   try {
     const { sessionId, job, status } = req.body;
     const session = sessions[sessionId];
-    
+
     if (!session) {
       return res.status(400).json({ success: false, error: 'Session not found' });
     }
 
     if (!session.savedJobs) session.savedJobs = [];
-    
+
     const existingIndex = session.savedJobs.findIndex((j: any) => j.id === job.id);
     if (existingIndex >= 0) {
       session.savedJobs[existingIndex] = { ...session.savedJobs[existingIndex], ...job, status, updatedAt: Date.now() };
@@ -981,7 +988,7 @@ app.post('/api/update-job-status', async (req, res) => {
   try {
     const { sessionId, jobId, status } = req.body;
     const session = sessions[sessionId];
-    
+
     if (!session?.savedJobs) {
       return res.status(400).json({ success: false, error: 'No saved jobs' });
     }
@@ -1073,7 +1080,7 @@ Keep it brief (3-4 sentences). ONLY include verified, publicly known facts. If y
 // ============================================================
 // SPECIFIC COVER LETTER GENERATOR (for Analyze Resume page)
 // ============================================================
-app.post('/api/generate-specific-cover-letter', async (req, res) => {
+app.post('/api/generate-specific-cover-letter', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
     const session = sessions[sessionId] || {};
@@ -1085,7 +1092,7 @@ app.post('/api/generate-specific-cover-letter', async (req, res) => {
     // Extract company name and role from job description
     const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
     const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
-                       jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
+      jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
 
     const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
 
@@ -1095,14 +1102,14 @@ app.post('/api/generate-specific-cover-letter', async (req, res) => {
     const resumeText = session.resumeText || '';
     // Use profile from session, or extract from analysisData, or use empty object
     const profile = session.profile || analysisData?.profile || {};
-    
+
     // Extract specific achievements from resume
     const achievementPatterns = [
       /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
       /\d+%[^.]+\./gi,
       /\$[\d,]+[^.]+\./gi
     ];
-    
+
     let achievements: string[] = [];
     achievementPatterns.forEach(pattern => {
       const matches = resumeText.match(pattern);
@@ -1118,7 +1125,7 @@ Current Role: ${profile.currentTitle || 'Professional'}
 Experience: ${profile.yearsExperience || 'Several'}+ years
 Key Skills: ${(profile.hardSkills || []).join(', ') || 'various technical skills'}
 Key Achievements from Resume:
-${achievements.length > 0 ? achievements.map((a, i) => `${i+1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
+${achievements.length > 0 ? achievements.map((a, i) => `${i + 1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
 
 COMPANY INFORMATION (${companyName}):
 ${companyResearch}
@@ -1205,7 +1212,7 @@ Return ONLY the cover letter text, no additional commentary.`;
 // ============================================================
 // ELEVATOR PITCH GENERATOR
 // ============================================================
-app.post('/api/generate-elevator-pitch', async (req, res) => {
+app.post('/api/generate-elevator-pitch', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
     const session = sessions[sessionId] || {};
@@ -1217,7 +1224,7 @@ app.post('/api/generate-elevator-pitch', async (req, res) => {
     // Extract company name and role from job description
     const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
     const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
-                       jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
+      jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
 
     const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
 
@@ -1227,14 +1234,14 @@ app.post('/api/generate-elevator-pitch', async (req, res) => {
     const resumeText = session.resumeText || '';
     // Use profile from session, or extract from analysisData, or use empty object
     const profile = session.profile || analysisData?.profile || {};
-    
+
     // Extract specific achievements from resume
     const achievementPatterns = [
       /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
       /\d+%[^.]+\./gi,
       /\$[\d,]+[^.]+\./gi
     ];
-    
+
     let achievements: string[] = [];
     achievementPatterns.forEach(pattern => {
       const matches = resumeText.match(pattern);
@@ -1250,7 +1257,7 @@ Current Role: ${profile.currentTitle || 'Professional'}
 Experience: ${profile.yearsExperience || 'Several'}+ years
 Key Skills: ${(profile.hardSkills || []).join(', ') || 'various technical skills'}
 Key Achievements from Resume:
-${achievements.length > 0 ? achievements.map((a, i) => `${i+1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
+${achievements.length > 0 ? achievements.map((a, i) => `${i + 1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
 
 COMPANY INFORMATION (${companyName}):
 ${companyResearch}
@@ -1308,7 +1315,7 @@ Return ONLY the elevator pitch text as one flowing paragraph.`;
 // ============================================================
 // INTERVIEW PREPARATION GENERATOR
 // ============================================================
-app.post('/api/generate-interview-prep', async (req, res) => {
+app.post('/api/generate-interview-prep', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
     const session = sessions[sessionId] || {};
@@ -1383,7 +1390,7 @@ Current Role: ${profile.currentTitle || 'Professional'}
 Experience: ${profile.yearsExperience || 'Several'}+ years
 Key Skills: ${(profile.hardSkills || []).join(', ') || 'various technical skills'}
 Key Achievements:
-${achievements.length > 0 ? achievements.map((a, i) => `${i+1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
+${achievements.length > 0 ? achievements.map((a, i) => `${i + 1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
 
 COMPANY INFORMATION (${companyName}):
 ${companyResearch}
@@ -1495,7 +1502,7 @@ app.get('/api/llm-providers', (req, res) => {
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // ========== RESUME OPTIMIZER ENDPOINT ==========
-app.post('/api/optimize-resume', upload.single('resume'), async (req, res) => {
+app.post('/api/optimize-resume', paywallMiddleware, upload.single('resume'), async (req, res) => {
   try {
     const { jobDescription } = req.body;
 

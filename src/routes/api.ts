@@ -9,13 +9,14 @@ import { encrypt, generateSessionToken, hash } from '../services/encryption';
 import { query, transaction } from '../database/connection';
 import { cacheSet, cacheGet, cacheDelete } from '../cache/redis';
 import { logger } from '../utils/logger';
-import { 
-  UploadRequestSchema, 
-  AnalyzeRequestSchema, 
+import {
+  UploadRequestSchema,
+  AnalyzeRequestSchema,
   DiagnosisResult,
   ValidationError,
   ProcessingError
 } from '../types';
+import { paywallMiddleware } from '../middleware/paywall';
 
 const router = Router();
 
@@ -33,21 +34,21 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
   uploadMiddleware.single('resume')(req, res, async (err) => {
     const startTime = Date.now();
     let tempFilePath: string | undefined;
-    
+
     try {
       // Handle multer errors
       if (err) {
         logger.error('Upload error:', err);
         return next(err);
       }
-      
+
       // Validate file presence
       if (!req.file) {
         return next(new ValidationError('No file uploaded. Please select a resume file.'));
       }
-      
+
       tempFilePath = req.file.path;
-      
+
       // Validate file
       const validation = validateUploadedFile(req.file);
       if (!validation.isValid) {
@@ -59,7 +60,7 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
           warnings: validation.warnings
         });
       }
-      
+
       // Validate request body
       const bodyValidation = UploadRequestSchema.safeParse({
         targetJobTitle: req.body.targetJobTitle || req.body.targetJob,
@@ -86,10 +87,10 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
         await cleanupTempFile(tempFilePath);
         return next(new ProcessingError(`${llmService.displayName} is not configured. Please check your API keys.`));
       }
-      
+
       // Normalize job title (Requirement 2)
       const normalizedJob = await normalizeJobTitle(targetJobTitle);
-      
+
       // Check if generic title needs specialization (Requirement 2.2)
       if (normalizedJob.requiresSpecialization && !normalizedJob.canonicalTitle) {
         await cleanupTempFile(tempFilePath);
@@ -100,24 +101,24 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
           code: 'GENERIC_JOB_TITLE'
         });
       }
-      
+
       // Parse resume (Requirement 1)
       const resumeData = await parseResume(
         tempFilePath,
         req.file.originalname,
         req.file.size
       );
-      
+
       // Calculate file hash for deduplication
       const fileHash = calculateFileHash(tempFilePath);
-      
+
       // Encrypt resume content (Requirement 9.1)
       const encryptedContent = encrypt(resumeData.rawText);
-      
+
       // Create session and analysis record in transaction
       const sessionToken = generateSessionToken();
       const expiresAt = new Date(Date.now() + DATA_TTL_MS);
-      
+
       const result = await transaction(async (client) => {
         // Create user session
         const sessionResult = await client.query(
@@ -127,14 +128,14 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
           [sessionToken, req.ip, req.get('User-Agent'), expiresAt]
         );
         const sessionId = sessionResult.rows[0].id;
-        
+
         // Get canonical job ID if available
         let canonicalJobId = null;
         if (normalizedJob.canonicalTitle) {
           const jobInfo = await getCanonicalJobInfo(normalizedJob.canonicalTitle);
           canonicalJobId = jobInfo?.id || null;
         }
-        
+
         // Create analysis record
         const analysisResult = await client.query(
           `INSERT INTO resume_analyses (
@@ -159,33 +160,33 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
             expiresAt
           ]
         );
-        
+
         return {
           sessionId,
           analysisId: analysisResult.rows[0].id
         };
       });
-      
+
       // Cache session data
       await cacheSet(`session:${sessionToken}`, {
         sessionId: result.sessionId,
         analysisId: result.analysisId,
         createdAt: new Date().toISOString()
       }, DATA_TTL_HOURS * 3600);
-      
+
       // Cleanup temp file
       await cleanupTempFile(tempFilePath);
       tempFilePath = undefined;
-      
+
       const processingTime = Date.now() - startTime;
-      
+
       logger.info('Upload successful', {
         sessionId: result.sessionId,
         analysisId: result.analysisId,
         fileName: req.file.originalname,
         processingTime
       });
-      
+
       // Response
       res.json({
         success: true,
@@ -213,7 +214,7 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
         warnings: validation.warnings,
         message: 'Resume uploaded successfully. Ready for analysis.'
       });
-      
+
     } catch (error) {
       // Cleanup on error
       if (tempFilePath) {
@@ -229,15 +230,15 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
  * Run AI diagnosis on uploaded resume
  * Implements Requirements 3, 4, 5, 6
  */
-router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
+router.post('/analyze', paywallMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const startTime = Date.now();
-  
+
   // Validate request
   const validation = AnalyzeRequestSchema.safeParse(req.body);
   if (!validation.success) {
     throw new ValidationError('Invalid request', { errors: validation.error.errors });
   }
-  
+
   const { sessionId, targetJobTitle, jobDescription, applicationCount, llmProvider } = validation.data;
 
   // Get analysis record
@@ -265,14 +266,14 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
   if (!llmService.isAvailable()) {
     throw new ProcessingError(`${llmService.displayName} is not configured. Please check your API keys.`);
   }
-  
+
   // Check if already analyzed
   if (analysis.status === 'completed') {
     const existingResult = await query(
       `SELECT * FROM diagnosis_results WHERE analysis_id = $1`,
       [analysis.id]
     );
-    
+
     if (existingResult.rows.length > 0) {
       // Return cached result
       const diagnosis = await buildDiagnosisResult(analysis.id, sessionId);
@@ -283,18 +284,18 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
       });
     }
   }
-  
+
   // Update status to processing
   await query(
     `UPDATE resume_analyses SET status = 'processing', processing_started_at = NOW() WHERE id = $1`,
     [analysis.id]
   );
-  
+
   try {
     // Decrypt resume content
     const { decryptToString } = require('../services/encryption');
     const resumeText = decryptToString(analysis.encrypted_content);
-    
+
     // Parse resume data for analysis
     const resumeData = {
       rawText: resumeText,
@@ -309,21 +310,21 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
       },
       extractedAt: new Date()
     };
-    
+
     // Normalize job title
     const normalizedJob = await normalizeJobTitle(targetJobTitle);
     const canonicalTitle = normalizedJob.canonicalTitle || targetJobTitle;
-    
+
     // Get role template
     const roleTemplate = await getRoleTemplate(canonicalTitle);
     const jobInfo = await getCanonicalJobInfo(canonicalTitle);
-    
+
     // Update status to analyzing
     await query(
       `UPDATE resume_analyses SET status = 'analyzing' WHERE id = $1`,
       [analysis.id]
     );
-    
+
     // Run AI analysis (Requirement 3)
     const aiResult = await llmService.analyzeResume(
       resumeData,
@@ -336,7 +337,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
       },
       jobDescription || analysis.job_description
     );
-    
+
     // Store results in database
     await transaction(async (client) => {
       // Get model name based on provider
@@ -365,7 +366,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
         ]
       );
       const diagnosisId = diagnosisResult.rows[0].id;
-      
+
       // Store root causes (max 5, Requirement 4)
       for (const rootCause of aiResult.rootCauses) {
         const rcResult = await client.query(
@@ -384,7 +385,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
             rootCause.priority
           ]
         );
-        
+
         // Store evidence
         for (const evidence of rootCause.evidence) {
           await client.query(
@@ -402,7 +403,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
           );
         }
       }
-      
+
       // Store recommendations (max 3, Requirement 5)
       for (const rec of aiResult.recommendations) {
         // Find related root cause ID
@@ -416,7 +417,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
             relatedRcId = rcMatch.rows[0].id;
           }
         }
-        
+
         await client.query(
           `INSERT INTO recommendations (
             diagnosis_id, root_cause_id, title, description,
@@ -435,7 +436,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
           ]
         );
       }
-      
+
       // Update analysis status
       await client.query(
         `UPDATE resume_analyses 
@@ -446,10 +447,10 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
         [aiResult.overallConfidence, analysis.id]
       );
     });
-    
+
     // Build and return diagnosis result
     const diagnosis = await buildDiagnosisResult(analysis.id, sessionId);
-    
+
     const totalTime = Date.now() - startTime;
     logger.info('Analysis completed', {
       sessionId,
@@ -459,12 +460,12 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
       recommendations: aiResult.recommendations.length,
       totalTime
     });
-    
+
     res.json({
       success: true,
       data: diagnosis
     });
-    
+
   } catch (error) {
     // Update status to failed
     await query(
@@ -481,7 +482,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
  */
 router.get('/session/:sessionId', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.params;
-  
+
   const result = await query(
     `SELECT ra.id, ra.status, ra.confidence_score, ra.created_at, ra.expires_at,
             ra.original_filename, ra.target_job_title, ra.page_count,
@@ -493,13 +494,13 @@ router.get('/session/:sessionId', asyncHandler(async (req: Request, res: Respons
      LIMIT 1`,
     [sessionId]
   );
-  
+
   if (result.rows.length === 0) {
     throw new ValidationError('Session not found or expired');
   }
-  
+
   const analysis = result.rows[0];
-  
+
   res.json({
     success: true,
     data: {
@@ -523,7 +524,7 @@ router.get('/session/:sessionId', asyncHandler(async (req: Request, res: Respons
  */
 router.get('/results/:sessionId', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.params;
-  
+
   // Get analysis ID
   const analysisResult = await query(
     `SELECT id, status FROM resume_analyses 
@@ -531,13 +532,13 @@ router.get('/results/:sessionId', asyncHandler(async (req: Request, res: Respons
      ORDER BY created_at DESC LIMIT 1`,
     [sessionId]
   );
-  
+
   if (analysisResult.rows.length === 0) {
     throw new ValidationError('Session not found or expired');
   }
-  
+
   const { id: analysisId, status } = analysisResult.rows[0];
-  
+
   if (status !== 'completed') {
     return res.json({
       success: false,
@@ -545,9 +546,9 @@ router.get('/results/:sessionId', asyncHandler(async (req: Request, res: Respons
       status
     });
   }
-  
+
   const diagnosis = await buildDiagnosisResult(analysisId, sessionId);
-  
+
   res.json({
     success: true,
     data: diagnosis
@@ -560,36 +561,36 @@ router.get('/results/:sessionId', asyncHandler(async (req: Request, res: Respons
  */
 router.delete('/session/:sessionId', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.params;
-  
+
   // Get session
   const sessionResult = await query(
     `SELECT id FROM user_sessions WHERE id = $1`,
     [sessionId]
   );
-  
+
   if (sessionResult.rows.length === 0) {
     throw new ValidationError('Session not found');
   }
-  
+
   // Delete session (cascades to analysis and results)
   await query(`DELETE FROM user_sessions WHERE id = $1`, [sessionId]);
-  
+
   // Clear cache
   await cacheDelete(`session:${sessionId}`);
-  
+
   // Generate deletion confirmation
   const { generateDeletionToken } = require('../services/encryption');
   const confirmationToken = generateDeletionToken();
-  
+
   // Store deletion confirmation
   await query(
     `INSERT INTO deletion_confirmations (session_id, analysis_id, confirmation_token)
      VALUES ($1, $1, $2)`,
     [sessionId, confirmationToken]
   );
-  
+
   logger.info('Session deleted', { sessionId });
-  
+
   res.json({
     success: true,
     message: 'Session and all associated data have been deleted',
@@ -606,13 +607,13 @@ async function buildDiagnosisResult(analysisId: string, sessionId: string): Prom
     `SELECT * FROM diagnosis_results WHERE analysis_id = $1`,
     [analysisId]
   );
-  
+
   if (diagResult.rows.length === 0) {
     throw new ProcessingError('Diagnosis results not found');
   }
-  
+
   const diag = diagResult.rows[0];
-  
+
   // Get root causes with evidence
   const rcResult = await query(
     `SELECT rc.*, json_agg(e.*) as evidence
@@ -623,13 +624,13 @@ async function buildDiagnosisResult(analysisId: string, sessionId: string): Prom
      ORDER BY rc.priority`,
     [diag.id]
   );
-  
+
   // Get recommendations
   const recResult = await query(
     `SELECT * FROM recommendations WHERE diagnosis_id = $1 ORDER BY priority`,
     [diag.id]
   );
-  
+
   // Get analysis info
   const analysisResult = await query(
     `SELECT ra.*, c.title as canonical_title, c.category, c.seniority_level, c.industry
@@ -638,9 +639,9 @@ async function buildDiagnosisResult(analysisId: string, sessionId: string): Prom
      WHERE ra.id = $1`,
     [analysisId]
   );
-  
+
   const analysis = analysisResult.rows[0];
-  
+
   return {
     id: diag.id,
     sessionId,
