@@ -5,252 +5,197 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - JobMatch AI</title>
-    <link rel="stylesheet" href="/new-ui.css">
+    <link rel="stylesheet" href="new-ui.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8fafc;
-            color: #334155;
-            padding: 40px;
-        }
-
-        .admin-card {
-            max-width: 600px;
+        .admin-container {
+            max-width: 1000px;
             margin: 0 auto;
-            background: white;
-            padding: 32px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 40px 20px;
         }
 
-        h1 {
-            margin-top: 0;
-            color: #0f172a;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: #1e1e2e;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #2e2e3e;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #6366f1;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .config-section {
+            background: #1e1e2e;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #2e2e3e;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            font-weight: 600;
             margin-bottom: 8px;
+            color: #e2e8f0;
         }
 
-        input[type="password"] {
+        input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 10px;
+            background: #0a0a0f;
+            border: 1px solid #2e2e3e;
+            border-radius: 6px;
+            color: white;
         }
 
-        .status-box {
-            background: #f1f5f9;
-            padding: 24px;
-            border-radius: 12px;
-            margin-top: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #cbd5e1;
-        }
-
-        .dot.active {
-            background: #ef4444;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-        }
-
-        .dot.inactive {
-            background: #22c55e;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #22c55e;
-            /* Green = Free/Open */
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        /* When checked (Locked/Paywall ON) -> Red */
-        input:checked+.slider {
-            background-color: #ef4444;
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(26px);
-        }
-
-        .btn {
-            background: #3b82f6;
+        .btn-update {
+            background: #10b981;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-        }
-
-        .btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
         }
     </style>
 </head>
 
 <body>
-    <div class="admin-card">
-        <h1>Admin Controls</h1>
+    <div class="admin-container">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <h1>Admin Dashboard</h1>
+            <a href="/" style="color: #94a3b8;">← Back to App</a>
+        </header>
 
-        <div class="form-group">
-            <label>Admin Secret</label>
-            <input type="password" id="secret" placeholder="Enter ADMIN_SECRET from .env">
+        <!-- Initialize Button (Run Once) -->
+        <div style="margin-bottom: 20px;">
+            <button onclick="initDB()"
+                style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Initialize
+                DB Tables</button>
+            <span id="init-msg" style="margin-left: 10px; color: #10b981;"></span>
         </div>
-        <button class="btn" onclick="checkStatus()">Login / Refresh Status</button>
 
-        <div class="status-box" id="status-box" style="opacity: 0.5; pointer-events: none;">
-            <div class="status-indicator">
-                <div id="status-dot" class="dot"></div>
-                <div>
-                    <strong id="status-text">Unknown</strong>
-                    <div id="status-source" style="font-size: 0.8rem; color: #64748b;"></div>
-                </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="total-users">-</div>
             </div>
-
-            <label class="switch">
-                <input type="checkbox" id="toggle-paywall" onchange="togglePaywall()">
-                <span class="slider"></span>
-            </label>
+            <div class="stat-card">
+                <div class="stat-label">Total Analyses</div>
+                <div class="stat-value" id="total-analyses">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last 24h</div>
+                <div class="stat-value" id="recent-analyses">-</div>
+            </div>
         </div>
-        <p style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #64748b;">
-            Green = Free (Paywall OFF) <br> Red = Locked (Paywall ON)
-        </p>
+
+        <div class="config-section">
+            <h2>System Configuration</h2>
+            <div class="form-group">
+                <label>Pro Plan Price (Cents)</label>
+                <input type="number" id="price-cents" placeholder="999">
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: 5px;">Example: 999 = $9.99</p>
+            </div>
+            <button class="btn-update" onclick="updatePrice()">Update Price</button>
+        </div>
+
+        <div class="config-section">
+            <h2>Recent Users</h2>
+            <div id="users-list" style="font-family: monospace; color: #94a3b8;">Loading...</div>
+        </div>
     </div>
 
     <script>
-        const secretInput = document.getElementById('secret');
-        const statusBox = document.getElementById('status-box');
-        const toggle = document.getElementById('toggle-paywall');
-        const statusText = document.getElementById('status-text');
-        const statusSource = document.getElementById('status-source');
-        const dot = document.getElementById('status-dot');
+        // Auth Check
+        const sessionId = localStorage.getItem('jobmatch_session');
+        if (!sessionId) window.location.href = '/';
 
-        // Restore secret from storage
-        if (localStorage.getItem('admin_secret')) {
-            secretInput.value = localStorage.getItem('admin_secret');
-        }
-
-        async function checkStatus() {
-            const secret = secretInput.value;
-            if (!secret) return alert('Enter secret');
-
-            localStorage.setItem('admin_secret', secret);
-
+        // Fetch Stats
+        async function loadStats() {
             try {
-                const res = await fetch('/api/admin/paywall', {
-                    headers: { 'X-Admin-Secret': secret }
+                const res = await fetch('/api/admin/stats', {
+                    headers: { 'x-session-id': sessionId }
                 });
-
-                if (res.status === 403) {
-                    alert('Invalid Secret');
+                if (res.status === 403 || res.status === 401) {
+                    alert('Access Denied');
+                    window.location.href = '/';
                     return;
                 }
-
-                const data = await res.json();
-                updateUI(data.enabled, data.source);
-                statusBox.style.opacity = '1';
-                statusBox.style.pointerEvents = 'all';
-
-            } catch (e) {
-                alert('Connection error');
-            }
-        }
-
-        async function togglePaywall() {
-            const secret = secretInput.value;
-            const newState = toggle.checked; // If checked, we WANT it enabled
-
-            try {
-                const res = await fetch('/api/admin/paywall', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Admin-Secret': secret
-                    },
-                    body: JSON.stringify({ enabled: newState })
-                });
-
                 const data = await res.json();
                 if (data.success) {
-                    updateUI(data.enabled);
-                } else {
-                    alert('Update failed');
-                    toggle.checked = !newState; // Revert
+                    document.getElementById('total-users').textContent = data.data.totalUsers;
+                    document.getElementById('total-analyses').textContent = data.data.totalAnalyses;
+                    document.getElementById('recent-analyses').textContent = data.data.last24hAnalyses;
+
+                    document.getElementById('users-list').innerHTML = data.data.recentUsers.map(u =>
+                        `<div>${new Date(u.created_at).toISOString().split('T')[0]} - ${u.email} (${u.is_pro ? 'PRO' : 'FREE'})</div>`
+                    ).join('');
                 }
             } catch (e) {
-                alert('Error updating');
-                toggle.checked = !newState;
+                console.error(e);
             }
         }
 
-        function updateUI(isEnabled, source) {
-            toggle.checked = isEnabled;
-            if (isEnabled) {
-                statusText.innerText = "Paywall ACTIVE";
-                dot.className = "dot active";
-            } else {
-                statusText.innerText = "Paywall DISABLED";
-                dot.className = "dot inactive";
-            }
-            if (source) {
-                statusSource.innerText = "Source: " + source;
-            }
+        // Fetch Config
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/admin/config', {
+                    headers: { 'x-session-id': sessionId }
+                });
+                const data = await res.json();
+                if (data.success && data.data.pro_price_cents) {
+                    document.getElementById('price-cents').value = data.data.pro_price_cents;
+                }
+            } catch (e) { console.error(e); }
         }
+
+        // Actions
+        async function initDB() {
+            const res = await fetch('/api/admin/init', {
+                method: 'POST',
+                headers: { 'x-session-id': sessionId }
+            });
+            const data = await res.json();
+            document.getElementById('init-msg').textContent = data.success ? 'Success!' : 'Error: ' + data.error;
+        }
+
+        async function updatePrice() {
+            const price = document.getElementById('price-cents').value;
+            const res = await fetch('/api/admin/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-session-id': sessionId },
+                body: JSON.stringify({ key: 'pro_price_cents', value: price })
+            });
+            const data = await res.json();
+            if (data.success) alert('Price updated!');
+            else alert('Error: ' + data.error);
+        }
+
+        loadStats();
+        loadConfig();
     </script>
 </body>
 

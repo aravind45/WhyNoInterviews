@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+console.log('Loading api.ts...');
 import { v4 as uuidv4 } from 'uuid';
 import { uploadMiddleware, validateUploadedFile, cleanupTempFile, calculateFileHash } from '../middleware/fileUpload';
 import { createError, asyncHandler } from '../middleware/errorHandler';
@@ -732,6 +733,18 @@ router.post('/create-checkout-session', asyncHandler(async (req: Request, res: R
     return res.status(500).json({ error: 'Stripe not configured (Test Mode)' });
   }
 
+  // Fetch dynamic price
+  let priceCents = 999; // Default $9.99
+
+  try {
+    const settings = await query(`SELECT value FROM system_settings WHERE key = 'pro_price_cents'`);
+    if (settings.rows.length > 0) {
+      priceCents = parseInt(settings.rows[0].value, 10);
+    }
+  } catch (err) {
+    logger.warn('Failed to fetch dynamic price, using default:', err);
+  }
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [
@@ -743,7 +756,7 @@ router.post('/create-checkout-session', asyncHandler(async (req: Request, res: R
             description: 'Unlimited Job Matches, Deep Diagnosis, Cover Letters, and Interview Prep.',
             images: ['https://jobmatch-ai.com/logo.png'], // Replace with actual logo URL if available
           },
-          unit_amount: 1900, // $19.00
+          unit_amount: priceCents,
         },
         quantity: 1,
       },
@@ -802,4 +815,5 @@ router.get('/admin/paywall', asyncHandler(async (req: Request, res: Response) =>
   res.json({ success: true, enabled: isEnabled, source });
 }));
 
+console.log('Finished loading api.ts');
 export default router;

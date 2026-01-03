@@ -2523,8 +2523,29 @@
     // Initialize on page load
     restoreGlobalResume();
 
+    // Check for admin status and update UI
+    async function checkAdminStatus() {
+      if (!sessionId) return;
+      try {
+        const res = await fetch('/api/admin/config', { headers: { 'x-session-id': sessionId } });
+        if (res.ok) {
+          const userDropdown = document.getElementById('user-dropdown');
+          if (userDropdown && !document.getElementById('admin-link')) {
+            const adminLink = document.createElement('div');
+            adminLink.id = 'admin-link';
+            adminLink.className = 'dropdown-item';
+            adminLink.innerHTML = '⚙️ Admin Dashboard';
+            adminLink.onclick = () => window.location.href = '/admin.html';
+            userDropdown.insertBefore(adminLink, userDropdown.firstChild);
+          }
+        }
+      } catch (e) {
+        console.error('Admin check silent fail:', e);
+      }
+    }
+
     // Initialize auth UI on page load
-    function initAuth() {
+    async function initAuth() {
       if (currentUser) {
         document.getElementById('auth-buttons').style.display = 'none';
         document.getElementById('user-menu').style.display = 'flex';
@@ -2533,6 +2554,9 @@
 
         // Load saved resume if exists
         loadSavedUserData();
+
+        // Check Admin
+        await checkAdminStatus();
       }
     }
 

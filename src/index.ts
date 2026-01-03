@@ -27,6 +27,7 @@ connectDatabase().catch(err => {
 
 // Initialize LLM providers (Groq and Claude)
 initializeProviders();
+console.log('Providers initialized.');
 
 // Get Groq model from environment or use default
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
@@ -40,6 +41,7 @@ console.log('--------------------------------');
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+console.log('Passed json middleware');
 
 // Security Headers
 app.use((req, res, next) => {
@@ -51,13 +53,18 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+console.log('Passed static middleware');
 
 const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+console.log('Passed Groq init');
 
 // In-memory storage
 const sessions: Record<string, any> = {};
+console.log('Passed line 200');
+// Cache helper
+const cacheKey = (hash: string) => `analysis:${hash}`;
 
 /**
  * Parse resume file
@@ -1600,6 +1607,8 @@ app.post('/api/generate-interview-prep', paywallMiddleware, async (req, res) => 
       "What motivates you?",
       "Do you have any questions for us?"
     ];
+    console.log('Passed line 800');
+    // Helper to call LLM with retry
 
     // Questions candidate should ask the interviewer
     const questionsToAskInterviewer = [
@@ -1697,11 +1706,17 @@ Return ONLY the JSON array, no additional text.`;
 app.use('/api', require('./routes/api').default);
 
 // ICA Routes
+console.log('Loading ICA routes...');
 app.use('/api/ica', require('./routes/ica').default);
+console.log('ICA routes loaded.');
 
+// Admin Routes
+app.use('/api/admin', require('./routes/admin').default);
 
 // Target Companies Routes
+console.log('Loading Target Companies routes...');
 app.use('/api/target-companies', require('./routes/targetCompanies').default);
+console.log('Target Companies routes loaded.');
 
 // Migration Routes
 app.use('/api/migrate-target-companies', require('./routes/migrate-target-companies').default);
@@ -1899,6 +1914,7 @@ app.use((req, res) => {
 
 
 const PORT = process.env.PORT || 3000;
+console.log('Checking startup conditions - VERCEL:', process.env.VERCEL, 'PORT:', PORT);
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 }
