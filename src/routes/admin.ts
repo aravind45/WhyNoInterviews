@@ -1,7 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { checkAdmin } from '../middleware/admin';
-import { query } from '../database/connection';
 import { logger } from '../utils/logger';
+
+// Lazy load db to avoid circular dependency
+const getQuery = () => require('../database/connection').query;
 
 const router = Router();
 
@@ -14,6 +16,7 @@ router.use(checkAdmin);
  */
 router.get('/stats', async (req: Request, res: Response) => {
   try {
+    const query = getQuery();
     const usersRes = await query(`SELECT COUNT(*) as count FROM user_sessions`);
     const analysesRes = await query(`SELECT COUNT(*) as count FROM resume_analyses`);
     const recentRes = await query(`
@@ -50,6 +53,7 @@ router.get('/stats', async (req: Request, res: Response) => {
  */
 router.post('/init', async (req: Request, res: Response) => {
   try {
+    const query = getQuery();
     await query(`
             CREATE TABLE IF NOT EXISTS system_settings (
                 key VARCHAR(50) PRIMARY KEY,
@@ -77,6 +81,7 @@ router.post('/init', async (req: Request, res: Response) => {
  */
 router.get('/config', async (req: Request, res: Response) => {
   try {
+    const query = getQuery();
     const result = await query(`SELECT * FROM system_settings`);
     const config: Record<string, any> = {};
     result.rows.forEach(row => {
@@ -94,6 +99,7 @@ router.get('/config', async (req: Request, res: Response) => {
  */
 router.post('/config', async (req: Request, res: Response) => {
   try {
+    const query = getQuery();
     const { key, value } = req.body;
     if (!key || value === undefined) {
       return res.status(400).json({ success: false, error: 'Key and value required' });

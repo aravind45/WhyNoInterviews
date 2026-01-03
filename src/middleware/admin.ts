@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { query } from '../database/connection';
 import { logger } from '../utils/logger';
 
 // Default admin emails if env var is missing
@@ -15,6 +14,14 @@ export const checkAdmin = async (req: Request, res: Response, next: NextFunction
         }
 
         // Lookup user email from session
+        const { query } = require('../database/connection'); // Lazy load to avoid circular dep
+
+        if (!query) {
+            const msg = 'CRITICAL: query function is undefined in admin middleware';
+            logger.error(msg);
+            throw new Error(msg);
+        }
+
         const result = await query(
             `SELECT email FROM user_sessions WHERE session_id = $1`,
             [sessionId]
@@ -45,7 +52,7 @@ export const checkAdmin = async (req: Request, res: Response, next: NextFunction
         (req as any).isAdmin = true;
 
         next();
-    } catch (error) {
+    } catch (error: any) {
         logger.error('Admin check failed:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
