@@ -5,10 +5,14 @@ const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
   try {
+    // 0. Enable extensions
+    await query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+    await query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
+
     // 1. Create target_companies table
     await query(`
       CREATE TABLE IF NOT EXISTS target_companies (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), 
         session_id UUID NOT NULL REFERENCES user_sessions(id) ON DELETE CASCADE, 
         company_name VARCHAR(255) NOT NULL, 
         company_domain VARCHAR(255), 
@@ -31,7 +35,7 @@ router.post('/', async (req: Request, res: Response) => {
     // 2. Create company_job_searches table
     await query(`
       CREATE TABLE IF NOT EXISTS company_job_searches (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         company_id UUID NOT NULL REFERENCES target_companies(id) ON DELETE CASCADE,
         session_id UUID NOT NULL REFERENCES user_sessions(id) ON DELETE CASCADE,
         search_query VARCHAR(500) NOT NULL,
@@ -47,7 +51,7 @@ router.post('/', async (req: Request, res: Response) => {
     // 3. Create company_job_listings table
     await query(`
       CREATE TABLE IF NOT EXISTS company_job_listings (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         company_id UUID NOT NULL REFERENCES target_companies(id) ON DELETE CASCADE,
         search_id UUID REFERENCES company_job_searches(id) ON DELETE SET NULL,
         session_id UUID NOT NULL REFERENCES user_sessions(id) ON DELETE CASCADE,
@@ -118,7 +122,7 @@ router.post('/', async (req: Request, res: Response) => {
     `);
 
     // 6. Global Suggestions
-    await query(`CREATE TABLE IF NOT EXISTS global_company_suggestions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), company_name VARCHAR(255) NOT NULL UNIQUE, company_domain VARCHAR(255), industry VARCHAR(100), company_size VARCHAR(50), description TEXT, careers_page_url TEXT, linkedin_url TEXT, is_popular BOOLEAN DEFAULT TRUE, created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW())`);
+    await query(`CREATE TABLE IF NOT EXISTS global_company_suggestions (id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), company_name VARCHAR(255) NOT NULL UNIQUE, company_domain VARCHAR(255), industry VARCHAR(100), company_size VARCHAR(50), description TEXT, careers_page_url TEXT, linkedin_url TEXT, is_popular BOOLEAN DEFAULT TRUE, created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW())`);
 
     const companies = [['Revolut', 'revolut.com', 'Fintech', 'large', 'Global fintech'], ['Kraken', 'kraken.com', 'Cryptocurrency', 'large', 'Crypto exchange'], ['Teramind', 'teramind.com', 'Cybersecurity', 'medium', 'Employee monitoring'], ['Paylocity', 'paylocity.com', 'HR Tech', 'large', 'Payroll software'], ['Superside', 'superside.com', 'Design Services', 'medium', 'Design service'], ['HubSpot', 'hubspot.com', 'Marketing Tech', 'enterprise', 'CRM platform'], ['Docker Inc.', 'docker.com', 'DevOps', 'large', 'Container platform'], ['Canonical', 'canonical.com', 'Open Source', 'large', 'Ubuntu Linux'], ['Jerry', 'getjerry.com', 'Insurtech', 'startup', 'AI insurance'], ['Alpaca', 'alpaca.markets', 'Fintech', 'medium', 'Trading API'], ['Toast', 'toasttab.com', 'Restaurant Tech', 'large', 'Restaurant POS'], ['HackerOne', 'hackerone.com', 'Cybersecurity', 'medium', 'Bug bounty'], ['Coderio', 'coderio.co', 'Software Development', 'small', 'Consulting'], ['Socure', 'socure.com', 'Identity Verification', 'medium', 'ID verification'], ['Zapier', 'zapier.com', 'Automation', 'large', 'Workflow automation']];
 

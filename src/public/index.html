@@ -5469,7 +5469,7 @@
         }
       } catch (error) {
         console.error('Error loading suggestions:', error);
-        showToast('Failed to load company suggestions', 'error');
+        showToast(`Failed to load company suggestions: ${error.message || 'Unknown error'}. Try running the migration.`, 'error');
       }
     }
 
