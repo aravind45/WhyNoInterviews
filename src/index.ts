@@ -1692,8 +1692,12 @@ Return ONLY the JSON array, no additional text.`;
   }
 });
 
+// Core API Routes (Upload, Analyze, Stripe)
+app.use('/api', require('./routes/api').default);
+
 // ICA Routes
 app.use('/api/ica', require('./routes/ica').default);
+
 
 // Target Companies Routes
 app.use('/api/target-companies', require('./routes/targetCompanies').default);
