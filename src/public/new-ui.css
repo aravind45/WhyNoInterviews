@@ -328,6 +328,387 @@
   margin-bottom: 16px;
 }
 
+/* ============================================
+   THEME UNIFICATION - Apply warm theme to all pages
+   ============================================ */
+
+/* Card Backgrounds - White instead of dark */
+.new-ui .card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.new-ui .card-title {
+  color: #0f172a;
+}
+
+.new-ui .card-subtitle {
+  color: #64748b;
+}
+
+/* Input Fields - Light backgrounds */
+.new-ui .input,
+.new-ui textarea,
+.new-ui select {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+}
+
+.new-ui .input:focus,
+.new-ui textarea:focus,
+.new-ui select:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  outline: none;
+}
+
+.new-ui .input::placeholder,
+.new-ui textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Upload Zones - Light with orange accents */
+.new-ui .upload-zone {
+  background: #fffbeb;
+  border: 2px dashed #fbbf24;
+}
+
+.new-ui .upload-zone:hover {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.new-ui .upload-zone.has-file {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+/* Analysis Cards - Light backgrounds */
+.new-ui .analysis-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.new-ui .analysis-card h4 {
+  color: #0f172a;
+}
+
+/* Analysis Items - Colored backgrounds */
+.new-ui .item {
+  background: #f9fafb;
+  color: #1f2937;
+}
+
+.new-ui .item.success {
+  background: #f0fdf4;
+  border-left-color: #10b981;
+}
+
+.new-ui .item.warning {
+  background: #fffbeb;
+  border-left-color: #f59e0b;
+}
+
+.new-ui .item.danger {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+}
+
+.new-ui .item-title {
+  color: #0f172a;
+}
+
+.new-ui .item-desc {
+  color: #64748b;
+}
+
+.new-ui .item-fix {
+  color: #f59e0b;
+  border-top-color: #e5e7eb;
+}
+
+/* Job Cards - White backgrounds */
+.new-ui .job-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.new-ui .job-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #f59e0b;
+}
+
+.new-ui .job-title {
+  color: #0f172a;
+}
+
+.new-ui .job-company {
+  color: #64748b;
+}
+
+.new-ui .job-meta {
+  color: #64748b;
+}
+
+/* Score Display - Light backgrounds */
+.new-ui .score-hero {
+  background: white;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.new-ui .score-hero.strong {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-color: #10b981;
+}
+
+.new-ui .score-hero.moderate {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-color: #f59e0b;
+}
+
+.new-ui .score-hero.weak {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border-color: #ef4444;
+}
+
+/* Stats Cards - Light backgrounds */
+.new-ui .stat-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.new-ui .stat-label {
+  color: #64748b;
+}
+
+/* Company Cards - Light backgrounds */
+.new-ui .company-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.new-ui .company-card:hover {
+  background: #fafafa;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.new-ui .company-name {
+  color: #0f172a;
+}
+
+.new-ui .company-meta {
+  color: #64748b;
+}
+
+.new-ui .company-notes {
+  background: #f9fafb;
+  color: #64748b;
+}
+
+/* Suggestion Cards - Light backgrounds */
+.new-ui .suggestion-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+}
+
+.new-ui .suggestion-card:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.new-ui .suggestion-card.selected {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.new-ui .suggestion-card h4 {
+  color: #0f172a;
+}
+
+.new-ui .suggestion-card .description {
+  color: #64748b;
+}
+
+/* Bottom Line - Light background */
+.new-ui .bottom-line {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.new-ui .bottom-line h3 {
+  color: #f59e0b;
+}
+
+.new-ui .one-thing {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+.new-ui .one-thing-text {
+  color: #0f172a;
+}
+
+/* Cover Letter Box - Light background */
+.new-ui .cover-letter-box {
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+/* Text Colors */
+.new-ui .text-muted {
+  color: #64748b;
+}
+
+/* Empty State */
+.new-ui .empty-state {
+  color: #64748b;
+}
+
+/* Divider */
+.new-ui .divider {
+  background: #e5e7eb;
+}
+
+/* Tracker Stats */
+.new-ui .tracker-stats .stat-card {
+  background: white;
+}
+
+/* Modal Overlays - Adjust for light theme */
+.new-ui .modal {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.new-ui .modal-header h2 {
+  color: #0f172a;
+}
+
+.new-ui .modal-header p {
+  color: #64748b;
+}
+
+/* Form Groups */
+.new-ui .form-group label {
+  color: #374151;
+}
+
+.new-ui .form-group input {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+}
+
+.new-ui .form-group input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+/* Tags - Update for light theme */
+.new-ui .tag-success {
+  background: #dcfce7;
+  color: #059669;
+}
+
+.new-ui .tag-danger {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.new-ui .tag-warning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.new-ui .tag-info {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+/* Progress Bar */
+.new-ui .progress-bar {
+  background: #e5e7eb;
+}
+
+/* Saved Indicator */
+.new-ui .saved-indicator {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.new-ui .saved-indicator .text {
+  color: #059669;
+}
+
+/* Global Resume Bar - Keep hidden in new UI */
+.new-ui #global-resume-bar {
+  display: none;
+}
+
+/* Specific overrides for elements with inline dark styles */
+/* LLM Provider Select - Override inline dark background */
+.new-ui #llm-provider-select {
+  background: white !important;
+  border: 1px solid #d1d5db !important;
+  color: #1f2937 !important;
+}
+
+.new-ui #llm-provider-select:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Resume Optimizer Textarea - Override inline dark background */
+.new-ui #optimizer-job-description {
+  background: white !important;
+  border: 1px solid #d1d5db !important;
+  color: #1f2937 !important;
+}
+
+.new-ui #optimizer-job-description:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Networking Section - Override dark backgrounds */
+.new-ui #tab-networking .bg-slate-800,
+.new-ui #tab-networking .bg-gray-800,
+.new-ui #tab-networking [style*="background: #1e293b"],
+.new-ui #tab-networking [style*="background:#1e293b"] {
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Override any remaining dark backgrounds in new UI */
+.new-ui [style*="background: #1e293b"],
+.new-ui [style*="background:#1e293b"],
+.new-ui [style*="background: #0a0a0f"],
+.new-ui [style*="background:#0a0a0f"],
+.new-ui [style*="background: #12121a"],
+.new-ui [style*="background:#12121a"],
+.new-ui [style*="background: #1e1e2e"],
+.new-ui [style*="background:#1e1e2e"] {
+  background: white !important;
+}
+
+/* Override dark text colors */
+.new-ui [style*="color: #e2e8f0"],
+.new-ui [style*="color:#e2e8f0"],
+.new-ui [style*="color: #94a3b8"]:not(label):not(.card-subtitle):not(.text-muted) {
+  color: #1f2937 !important;
+}
+
+
 .new-ui .home-features-subtitle {
   font-size: 1.25rem;
   color: #64748b;
