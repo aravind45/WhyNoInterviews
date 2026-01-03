@@ -39,6 +39,16 @@ console.log('--------------------------------');
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Security Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Frame-Options', 'DENY');
+  // res.setHeader('Content-Security-Policy', "default-src 'self' ...");
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
@@ -1876,6 +1886,12 @@ OUTPUT FORMAT (JSON):
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
+// 404 Handler - Must be last
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
 
 const PORT = process.env.PORT || 3000;
 if (process.env.VERCEL !== '1') {

@@ -1,0 +1,3 @@
+# LLM Crawler Configuration
+User-agent: *
+Allow: /
