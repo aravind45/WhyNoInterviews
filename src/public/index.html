@@ -1431,6 +1431,28 @@
       font-size: 0.75rem;
       font-weight: 600;
     }
+
+    /* Library Tabs */
+    .lib-tab {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    .lib-tab:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: #e2e8f0;
+    }
+
+    .lib-tab.active {
+      background: #6366f1;
+      color: white;
+    }
   </style>
 </head>
 
@@ -1472,8 +1494,7 @@
                 <span style="color: #64748b;">▼</span>
               </div>
               <div class="dropdown-menu" id="user-dropdown">
-                <div class="dropdown-item" onclick="showMyData()">📁 My Saved Data</div>
-                <div class="dropdown-item" onclick="showMyCoverLetters()">✉️ My Cover Letters</div>
+                <div class="dropdown-item" onclick="showMyLibrary()">📚 My Library</div>
                 <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;"
                   onclick="logout()">🚪 Log Out</div>
               </div>
@@ -1608,30 +1629,31 @@
     </div>
   </div>
 
-  <!-- My Data Modal -->
-  <div class="modal-overlay" id="my-data-modal">
-    <div class="modal" style="position: relative; max-width: 600px;">
-      <button class="modal-close" onclick="hideMyDataModal()">&times;</button>
-      <div class="modal-header">
-        <h2>📁 My Saved Data</h2>
-        <p>Your saved resumes and profile information</p>
-      </div>
-      <div id="my-data-content">
-        <!-- Filled by JS -->
-      </div>
-    </div>
-  </div>
+  <!-- Unified Library Modal -->
+  <div class="modal-overlay" id="library-modal">
+    <div class="modal large"
+      style="position: relative; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+      <button class="modal-close" onclick="hideLibraryModal()">&times;</button>
 
-  <!-- My Cover Letters Modal -->
-  <div class="modal-overlay" id="cover-letters-modal">
-    <div class="modal" style="position: relative; max-width: 700px; max-height: 80vh; overflow-y: auto;">
-      <button class="modal-close" onclick="hideCoverLettersModal()">&times;</button>
-      <div class="modal-header">
-        <h2>✉️ My Cover Letters</h2>
-        <p>Your saved cover letters</p>
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h2 id="library-modal-title">📚 My Library</h2>
+        <p>Your saved resumes, cover letters, and AI-generated assets</p>
+
+        <div class="library-tabs"
+          style="display: flex; gap: 8px; margin-top: 20px; border-bottom: 1px solid #2e2e3e; padding-bottom: 12px;">
+          <button class="lib-tab active" data-lib-tab="resumes" onclick="switchLibraryTab('resumes')">📄
+            Resumes</button>
+          <button class="lib-tab" data-lib-tab="cover-letters" onclick="switchLibraryTab('cover-letters')">✉️ Cover
+            Letters</button>
+          <button class="lib-tab" data-lib-tab="pitches" onclick="switchLibraryTab('pitches')">🚀 Elevator
+            Pitches</button>
+          <button class="lib-tab" data-lib-tab="interview-prep" onclick="switchLibraryTab('interview-prep')">🎯
+            Interview Prep</button>
+        </div>
       </div>
-      <div id="cover-letters-content">
-        <!-- Filled by JS -->
+
+      <div class="modal-body" id="library-content" style="overflow-y: auto; padding: 20px 0; flex-grow: 1;">
+        <!-- Filled by JS based on active tab -->
       </div>
     </div>
   </div>
@@ -1660,13 +1682,13 @@
 
           <div class="home-cta-buttons">
             <button class="home-cta-primary" onclick="switchTab('analyze')">
-              Analyze Your Resume Now
+              🔍 Analyze Resume Match
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14m-7-7l7 7-7 7" />
               </svg>
             </button>
-            <button class="home-cta-secondary" onclick="switchTab('analyze')">
-              Get Your Match Score
+            <button class="home-cta-secondary" onclick="switchTab('search')">
+              💼 Search Jobs
             </button>
           </div>
 
@@ -1707,7 +1729,7 @@
             </div>
 
             <button class="home-preview-cta" onclick="switchTab('analyze')">
-              Get Your Match Score
+              🔍 Analyze Resume Match
             </button>
           </div>
         </div>
@@ -1852,7 +1874,7 @@
         </div>
 
         <button class="btn btn-primary btn-full mt-4" id="extract-btn" disabled>
-          <span id="extract-btn-text">Extract My Profile & Find Jobs</span>
+          <span id="extract-btn-text">🚀 Search Jobs with My Resume</span>
           <span class="loading" id="extract-loading" style="display:none"></span>
         </button>
       </div>
@@ -1984,7 +2006,7 @@
 
         <button class="btn btn-primary btn-full" id="optimize-resume-btn"
           style="margin-top: 24px; background: linear-gradient(135deg, #8b5cf6, #3b82f6);" disabled>
-          <span id="optimize-btn-text">🚀 Optimize My Resume</span>
+          <span id="optimize-btn-text">✨ Polish & Optimize</span>
           <span class="loading" id="optimize-loading" style="display:none"></span>
         </button>
       </div>
@@ -2024,16 +2046,9 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
         <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-          <button class="btn btn-primary" onclick="showAddCompanyModal()">
-            ➕ Add Company
-          </button>
-          <button class="btn btn-secondary" onclick="showSuggestionsModal()">
+          <button class="btn btn-primary" onclick="showSuggestionsModal()">
             💡 Browse Suggestions
-          </button>
-          <button class="btn btn-secondary" onclick="searchSelectedCompanies()">
-            🔍 Search Selected Companies
           </button>
         </div>
 
@@ -2042,7 +2057,7 @@
           <div style="text-align: center; padding: 40px; color: #64748b;">
             <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
             <h3 style="margin-bottom: 8px;">No target companies yet</h3>
-            <p>Add companies you're interested in working for</p>
+            <p>Browse suggestions to find companies you're interested in</p>
             <button class="btn btn-primary" onclick="showSuggestionsModal()" style="margin-top: 16px;">
               Get Started with Suggestions
             </button>
@@ -2486,15 +2501,33 @@
         }
       } else if (tabName === 'search') {
         // Ensure UI is ready for search
-        if (window.sessionId && window.profile) {
+      } else if (tabName === 'search') {
+        // Ensure UI is ready for search using GLOBAL STATE
+        if (globalResumeState.profile) {
           // If we have a profile, make sure it's displayed
           if (typeof displayProfile === 'function') {
-            displayProfile(window.profile);
+            displayProfile(globalResumeState.profile);
           }
+        } else if (globalResumeState.file || globalResumeState.fileName) {
+          // File exists in global state, pre-fill
+          if (globalResumeState.file) searchFile = globalResumeState.file;
+          const searchFileName = document.getElementById('search-file-name');
+          const searchUploadZone = document.getElementById('search-upload-zone');
+          if (searchFileName) {
+            searchFileName.textContent = '✓ ' + globalResumeState.fileName + (globalResumeState.file ? '' : ' (stored)');
+          }
+          if (searchUploadZone) {
+            searchUploadZone.classList.add('has-file');
+          }
+          const extractBtn = document.getElementById('extract-btn');
+          if (extractBtn) extractBtn.disabled = false;
+
+          // Remove hint if it exists
+          document.querySelectorAll('.empty-hint').forEach(h => h.remove());
         } else {
-          // No profile? Show a hint
+          // Really no profile? Show a hint
           const searchContainer = document.getElementById('tab-search');
-          if (searchContainer && !searchContainer.querySelector('.empty-hint')) {
+          if (searchContainer && !searchContainer.querySelector('.empty-hint') && !document.getElementById('profile-card').style.display === 'block') {
             const hint = document.createElement('div');
             hint.className = 'empty-hint';
             hint.style.padding = '40px';
@@ -2503,7 +2536,6 @@
                 <div style="font-size: 3rem; margin-bottom: 20px;">🔍</div>
                 <h3>Resume Not Found</h3>
                 <p style="color: #64748b; margin: 16px 0;">Upload your resume to start matching with relevant jobs!</p>
-                <button class="btn btn-primary" onclick="switchTab('analyze')">📤 Upload Resume</button>
              `;
             searchContainer.prepend(hint);
           }
@@ -2926,30 +2958,61 @@
       }
     }
 
-    function showMyData() {
-      document.getElementById('user-dropdown').classList.remove('show');
+    // ========== UNIFIED LIBRARY ==========
+    let currentLibraryTab = 'resumes';
 
-      const content = document.getElementById('my-data-content');
+    function showMyLibrary(initialTab = 'resumes') {
+      const dropdown = document.getElementById('user-dropdown');
+      if (dropdown) dropdown.classList.remove('show');
 
       if (!currentUser) {
-        content.innerHTML = '<p style="color: #64748b;">Please log in to see your saved data.</p>';
-      } else if (!currentUser.savedResumes || currentUser.savedResumes.length === 0) {
+        showToast('Please log in to see your library.', 'info');
+        showAuthModal('login');
+        return;
+      }
+
+      document.getElementById('library-modal').classList.add('show');
+      switchLibraryTab(initialTab);
+    }
+
+    function hideLibraryModal() {
+      document.getElementById('library-modal').classList.remove('show');
+    }
+
+    function switchLibraryTab(tab) {
+      currentLibraryTab = tab;
+
+      // Update tab UI
+      document.querySelectorAll('.lib-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.libTab === tab);
+      });
+
+      const content = document.getElementById('library-content');
+      content.innerHTML = '<div style="text-align: center; padding: 40px;"><span class="loading"></span></div>';
+
+      // Render content
+      if (tab === 'resumes') renderLibraryResumes();
+      else if (tab === 'cover-letters') renderLibraryCoverLetters();
+      else if (tab === 'pitches') renderLibraryPitches();
+      else if (tab === 'interview-prep') renderLibraryInterviewPrep();
+    }
+
+    function renderLibraryResumes() {
+      const content = document.getElementById('library-content');
+      const resumes = currentUser.savedResumes || [];
+
+      if (resumes.length === 0) {
         content.innerHTML = `
-      <p style="color: #64748b; margin-bottom: 16px;">No saved resumes yet.</p>
-      <p style="color: #94a3b8; font-size: 0.9rem;">Upload a resume in the "Analyze Resume" or "Find Jobs" tab and it will be saved automatically.</p>
-    `;
-      } else {
-        const resumes = currentUser.savedResumes || [];
-        content.innerHTML = `
-      <div class="saved-indicator">
-        <div class="icon">📄</div>
-        <div class="text">${resumes.length} saved resume${resumes.length > 1 ? 's' : ''}</div>
-      </div>
-      
-      <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">Your Saved Resumes</h4>
-      
-      ${resumes.map((r, idx) => `
-        <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
+          <div style="text-align: center; padding: 40px; color: #64748b;">
+            <p>No saved resumes yet.</p>
+            <p style="font-size: 0.85rem; margin-top: 8px;">Upload a resume to get started.</p>
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = resumes.map((r, idx) => `
+        <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #2e2e3e;">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
             <div>
               <h4 style="font-size: 0.95rem; margin-bottom: 4px;">📎 ${r.fileName}</h4>
@@ -2968,61 +3031,199 @@
             <button class="btn btn-secondary btn-sm" onclick="useSavedResume(${idx}, 'search')">💼 Find Jobs</button>
           </div>
         </div>
-      `).join('')}
-      
-      <button class="btn btn-secondary btn-full" style="margin-top: 8px;" onclick="clearSavedData()">🗑️ Clear All Data</button>
-    `;
-      }
-
-      document.getElementById('my-data-modal').classList.add('show');
+      `).join('');
     }
 
-    function hideMyDataModal() {
-      document.getElementById('my-data-modal').classList.remove('show');
+    function renderLibraryCoverLetters() {
+      const content = document.getElementById('library-content');
+      const letters = currentUser.savedCoverLetters || [];
+
+      if (letters.length === 0) {
+        content.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #64748b;">
+            <p>No saved cover letters yet.</p>
+            <p style="font-size: 0.85rem; margin-top: 8px;">Generate one in the Analyze tab!</p>
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = letters.map((cl, i) => `
+        <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #2e2e3e;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="font-size: 0.95rem;">${cl.jobTitle}</h4>
+              <p style="font-size: 0.85rem; color: #64748b;">${cl.companyName} • ${new Date(cl.savedAt).toLocaleDateString()}</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="copySavedCoverLetter(${i})">📋 Copy</button>
+              <button class="btn btn-secondary btn-sm" onclick="deleteCoverLetter(${i})">🗑️</button>
+            </div>
+          </div>
+          <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: #94a3b8; white-space: pre-wrap;">${cl.coverLetter.substring(0, 400)}${cl.coverLetter.length > 400 ? '...' : ''}</div>
+        </div>
+      `).join('');
     }
 
-    function useStoredProfile() {
-      if (currentUser && currentUser.savedProfile) {
-        profile = currentUser.savedProfile;
+    function renderLibraryPitches() {
+      const content = document.getElementById('library-content');
+      const pitches = JSON.parse(localStorage.getItem('saved_elevator_pitches') || '[]');
 
-        // Switch to Find Jobs tab and show profile
-        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-        document.querySelector('[data-tab="search"]').classList.add('active');
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById('tab-search').classList.add('active');
+      if (pitches.length === 0) {
+        content.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #64748b;">
+            <p>No saved elevator pitches yet.</p>
+            <p style="font-size: 0.85rem; margin-top: 8px;">Generate one after analyzing a job!</p>
+          </div>
+        `;
+        return;
+      }
 
-        // Display profile
-        displayProfile(profile);
-        document.getElementById('search-upload-card').style.display = 'none';
-        document.getElementById('profile-card').style.display = 'block';
+      content.innerHTML = pitches.map((pitch, i) => `
+        <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #2e2e3e;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="font-size: 0.95rem;">🚀 ${pitch.jobTitle} Elevator Pitch</h4>
+              <p style="font-size: 0.85rem; color: #64748b;">${pitch.companyName} • ${new Date(pitch.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="copySavedPitch(${i})">📋 Copy</button>
+              <button class="btn btn-secondary btn-sm" onclick="deleteSavedPitch(${i})">🗑️</button>
+            </div>
+          </div>
+          <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #94a3b8; white-space: pre-wrap;">${pitch.content}</div>
+        </div>
+      `).join('');
+    }
 
-        hideMyDataModal();
-        showToast('Profile loaded! Click "Search Jobs" to find matches.', 'success');
+    function renderLibraryInterviewPrep() {
+      const content = document.getElementById('library-content');
+      const prepList = JSON.parse(localStorage.getItem('saved_interview_prep') || '[]');
+
+      if (prepList.length === 0) {
+        content.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #64748b;">
+            <p>No saved interview prep yet.</p>
+            <p style="font-size: 0.85rem; margin-top: 8px;">Save prep guides from your analysis results!</p>
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = prepList.map((prep, i) => `
+        <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #2e2e3e;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="font-size: 0.95rem;">🎯 ${prep.jobTitle} Prep Guide</h4>
+              <p style="font-size: 0.85rem; color: #64748b;">${prep.companyName} • ${new Date(prep.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="viewSavedPrep(${i})">👁️ View Full</button>
+              <button class="btn btn-secondary btn-sm" onclick="deleteSavedPrep(${i})">🗑️</button>
+            </div>
+          </div>
+          <div style="font-size: 0.85rem; color: #94a3b8;">
+            ${(prep.questions || []).length} questions • Includes follow-ups & questions to ask.
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function copySavedPitch(index) {
+      const pitches = JSON.parse(localStorage.getItem('saved_elevator_pitches') || '[]');
+      if (pitches[index]) {
+        navigator.clipboard.writeText(pitches[index].content).then(() => {
+          showToast('Pitch copied to clipboard!', 'success');
+        });
       }
     }
 
-    function clearSavedData() {
-      if (!currentUser) return;
-      if (!confirm('Are you sure you want to clear all saved data?')) return;
+    function deleteSavedPitch(index) {
+      if (!confirm('Delete this elevator pitch?')) return;
+      const pitches = JSON.parse(localStorage.getItem('saved_elevator_pitches') || '[]');
+      pitches.splice(index, 1);
+      localStorage.setItem('saved_elevator_pitches', JSON.stringify(pitches));
+      renderLibraryPitches();
+      showToast('Pitch deleted', 'success');
+    }
 
-      const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
-      const user = users[currentUser.email];
+    function viewSavedPrep(index) {
+      const prepList = JSON.parse(localStorage.getItem('saved_interview_prep') || '[]');
+      const prep = prepList[index];
+      if (!prep) return;
 
-      if (user) {
-        user.savedProfile = null;
-        user.lastResumeText = null;
-        user.lastResumeFileName = null;
-        user.savedResumes = [];
-        user.lastResumeBase64 = null;
+      // Close library modal temporarily or show prep over it
+      // Let's reuse the existing prep output structure but in a modal or similar
+      document.getElementById('interview-prep-content').innerHTML = `
+        <div style="max-height: 600px; overflow-y: auto; padding: 10px;">
+          <h4 style="margin-bottom: 16px;">📚 Prep for ${prep.jobTitle} at ${prep.companyName}</h4>
+          ${(prep.questions || []).map((q, i) => `
+            <div class="analysis-card" style="margin-bottom: 16px; background: #1e1e2e;">
+              <h5 style="font-size: 0.95rem; color: #6366f1; margin-bottom: 8px;">${i + 1}. ${q.question}</h5>
+              <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-size: 0.85rem; color: #e2e8f0; margin-bottom: 8px;"><strong>Suggested Answer:</strong></div>
+                <div style="font-size: 0.85rem; color: #94a3b8; line-height: 1.6;">${q.suggestedAnswer}</div>
+              </div>
+              ${q.tips ? `<div style="font-size: 0.8rem; color: #64748b; font-style: italic;">💡 ${q.tips}</div>` : ''}
+            </div>
+          `).join('')}
+          
+          ${(prep.questionsToAsk || []).length > 0 ? `
+            <h4 style="margin-top: 24px; margin-bottom: 16px;">❓ Questions to Ask</h4>
+            ${prep.questionsToAsk.map((q, i) => `<div class="item success" style="margin-bottom: 8px;">${i + 1}. ${q}</div>`).join('')}
+          ` : ''}
+        </div>
+      `;
 
-        users[currentUser.email] = user;
-        localStorage.setItem('jobmatch_users', JSON.stringify(users));
-        currentUser = user;
-        localStorage.setItem('jobmatch_user', JSON.stringify(user));
+      document.getElementById('interview-prep-output').style.display = 'block';
+      hideLibraryModal();
+      document.getElementById('interview-prep-output').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function deleteSavedPrep(index) {
+      if (!confirm('Delete this interview prep guide?')) return;
+      const prepList = JSON.parse(localStorage.getItem('saved_interview_prep') || '[]');
+      prepList.splice(index, 1);
+      localStorage.setItem('saved_interview_prep', JSON.stringify(prepList));
+      renderLibraryInterviewPrep();
+      showToast('Prep guide deleted', 'success');
+    }
+
+    function saveCurrentInterviewPrep() {
+      if (!lastInterviewPrepData) {
+        showToast('No interview prep to save', 'error');
+        return;
       }
 
-      hideMyDataModal();
-      showToast('Saved data cleared', 'success');
+      const jobDesc = document.getElementById('job-description').value || '';
+
+      // Try to extract company name
+      const companyMatch = jobDesc.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i) ||
+        jobDesc.match(/([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+is\s+(?:seeking|hiring|looking)/i);
+      const companyName = companyMatch ? companyMatch[1].trim() : 'Company';
+
+      // Try to extract job title
+      const titleMatch = jobDesc.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
+        jobDesc.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i) ||
+        jobDesc.match(/^([A-Z][a-zA-Z\s]+(?:Engineer|Manager|Director|Developer|Architect|Lead|Analyst))/m);
+      const jobTitle = titleMatch ? titleMatch[1].trim().substring(0, 50) : 'Job Role';
+
+      const savedPrepList = JSON.parse(localStorage.getItem('saved_interview_prep') || '[]');
+
+      const prepData = {
+        id: Date.now(),
+        jobTitle,
+        companyName,
+        createdAt: new Date().toISOString(),
+        questions: lastInterviewPrepData.questions,
+        questionsToAsk: lastInterviewPrepData.questionsToAsk
+      };
+
+      savedPrepList.unshift(prepData);
+      if (savedPrepList.length > 50) savedPrepList.splice(50);
+
+      localStorage.setItem('saved_interview_prep', JSON.stringify(savedPrepList));
+      showToast('Interview prep guide saved to your Library!', 'success');
     }
 
     function deleteSavedResume(index) {
@@ -3039,7 +3240,7 @@
         currentUser = user;
         localStorage.setItem('jobmatch_user', JSON.stringify(user));
 
-        showMyData(); // Refresh
+        renderLibraryResumes(); // Refresh
         showToast('Resume deleted', 'success');
       }
     }
@@ -3052,20 +3253,18 @@
 
       const savedResume = currentUser.savedResumes[index];
 
-      hideMyDataModal();
+      hideLibraryModal();
 
       if (mode === 'analyze') {
         // Switch to Analyze tab
-        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-        document.querySelector('[data-tab="analyze"]').classList.add('active');
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById('tab-analyze').classList.add('active');
+        switchTab('analyze');
 
         if (savedResume.fileBase64) {
           // Convert base64 back to file and set it
           analyzeFile = base64ToFile(savedResume.fileBase64, savedResume.fileName);
           document.getElementById('analyze-file-name').textContent = '✓ ' + savedResume.fileName + ' (saved)';
-          document.getElementById('analyze-upload-zone').classList.add('has-file');
+          const analyzeUploadZone = document.getElementById('analyze-upload-zone');
+          if (analyzeUploadZone) analyzeUploadZone.classList.add('has-file');
           checkAnalyzeReady();
           showToast('Resume loaded! Paste a job description and click Analyze.', 'success');
         } else {
@@ -3073,10 +3272,7 @@
         }
       } else if (mode === 'search') {
         // Switch to Find Jobs tab
-        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-        document.querySelector('[data-tab="search"]').classList.add('active');
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById('tab-search').classList.add('active');
+        switchTab('search');
 
         if (savedResume.profile) {
           // Use saved profile directly
@@ -3089,58 +3285,25 @@
           }
 
           displayProfile();
-          document.getElementById('search-upload-card').style.display = 'none';
-          document.getElementById('profile-card').style.display = 'block';
+          const searchUploadCard = document.getElementById('search-upload-card');
+          const profileCard = document.getElementById('profile-card');
+          if (searchUploadCard) searchUploadCard.style.display = 'none';
+          if (profileCard) profileCard.style.display = 'block';
 
           showToast('Profile loaded! Click "Search Jobs" to find matches.', 'success');
         } else if (savedResume.fileBase64) {
           // Re-extract profile from saved file
           searchFile = base64ToFile(savedResume.fileBase64, savedResume.fileName);
           document.getElementById('search-file-name').textContent = '✓ ' + savedResume.fileName + ' (saved)';
-          document.getElementById('search-upload-zone').classList.add('has-file');
-          document.getElementById('extract-btn').disabled = false;
+          const searchUploadZone = document.getElementById('search-upload-zone');
+          if (searchUploadZone) searchUploadZone.classList.add('has-file');
+          const extractBtn = document.getElementById('extract-btn');
+          if (extractBtn) extractBtn.disabled = false;
           showToast('Resume loaded! Click "Extract My Profile" to continue.', 'success');
         } else {
           showToast('Resume data not available. Please re-upload.', 'error');
         }
       }
-    }
-
-    function showMyCoverLetters() {
-      document.getElementById('user-dropdown').classList.remove('show');
-
-      const content = document.getElementById('cover-letters-content');
-
-      if (!currentUser) {
-        content.innerHTML = '<p style="color: #64748b;">Please log in to see your cover letters.</p>';
-      } else if (!currentUser.savedCoverLetters || currentUser.savedCoverLetters.length === 0) {
-        content.innerHTML = `
-      <p style="color: #64748b; margin-bottom: 16px;">No saved cover letters yet.</p>
-      <p style="color: #94a3b8; font-size: 0.9rem;">Generate a cover letter in the "Analyze Resume" tab and save it.</p>
-    `;
-      } else {
-        content.innerHTML = currentUser.savedCoverLetters.map((cl, i) => `
-      <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div>
-            <h4 style="font-size: 0.95rem;">${cl.jobTitle}</h4>
-            <p style="font-size: 0.85rem; color: #64748b;">${cl.companyName} • ${new Date(cl.savedAt).toLocaleDateString()}</p>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-secondary btn-sm" onclick="copySavedCoverLetter(${i})">📋 Copy</button>
-            <button class="btn btn-secondary btn-sm" onclick="deleteCoverLetter(${i})">🗑️</button>
-          </div>
-        </div>
-        <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: #94a3b8; white-space: pre-wrap;">${cl.coverLetter.substring(0, 400)}${cl.coverLetter.length > 400 ? '...' : ''}</div>
-      </div>
-    `).join('');
-      }
-
-      document.getElementById('cover-letters-modal').classList.add('show');
-    }
-
-    function hideCoverLettersModal() {
-      document.getElementById('cover-letters-modal').classList.remove('show');
     }
 
     function copySavedCoverLetter(index) {
@@ -3165,10 +3328,11 @@
         currentUser = user;
         localStorage.setItem('jobmatch_user', JSON.stringify(user));
 
-        showMyCoverLetters(); // Refresh the modal
+        renderLibraryCoverLetters(); // Refresh
         showToast('Cover letter deleted', 'success');
       }
     }
+
 
     // Initialize auth on page load
     document.addEventListener('DOMContentLoaded', initAuth);
@@ -3225,14 +3389,28 @@
         // Load data when switching to specific tabs
         if (tab.dataset.tab === 'target-companies') {
           loadTargetCompanies();
-        } else if (tab.dataset.tab === 'search' && globalResumeState.profile) {
+        } else if (tab.dataset.tab === 'search') {
           // Auto-show profile if global resume exists
-          displayProfile(globalResumeState.profile);
+          if (globalResumeState.profile) {
+            displayProfile(globalResumeState.profile);
+          } else if (globalResumeState.file || globalResumeState.fileName) {
+            // Pre-fill search upload if file exists
+            if (globalResumeState.file) searchFile = globalResumeState.file;
+            document.getElementById('search-file-name').textContent = '✓ ' + globalResumeState.fileName + (globalResumeState.file ? '' : ' (stored)');
+            document.getElementById('search-upload-zone').classList.add('has-file');
+            document.getElementById('extract-btn').disabled = false;
+          }
         } else if (tab.dataset.tab === 'analyze' || tab.dataset.tab === 'optimizer') {
           // Enable buttons if global resume exists
           if (globalResumeState.sessionId) {
             checkAnalyzeReady();
             checkOptimizerReady();
+          } else if (globalResumeState.file) {
+            // If file exists but no session, pre-fill analyze
+            analyzeFile = globalResumeState.file;
+            document.getElementById('analyze-file-name').textContent = '✓ ' + globalResumeState.fileName;
+            document.getElementById('analyze-upload-zone').classList.add('has-file');
+            checkAnalyzeReady();
           }
         }
       });
@@ -3255,6 +3433,14 @@
       analyzeFile = file;
       document.getElementById('analyze-file-name').textContent = '✓ ' + file.name;
       analyzeZone.classList.add('has-file');
+
+      // SYNC GLOBAL STATE
+      globalResumeState.file = file;
+      globalResumeState.fileName = file.name;
+      globalResumeState.uploadedAt = Date.now();
+      saveGlobalResumeState();
+      updateGlobalResumeUI();
+
       checkAnalyzeReady();
     }
 
@@ -3305,9 +3491,17 @@
         if (data.sessionId) {
           sessionId = data.sessionId;
           localStorage.setItem('jobmatch_session', sessionId);
+          globalResumeState.sessionId = sessionId; // Sync global
         }
 
         lastAnalysisData = data.data; // Store for cover letter generation
+
+        // Sync global profile
+        if (data.data.profile) {
+          globalResumeState.profile = data.data.profile;
+          globalResumeState.resumeText = data.data.resumeText;
+          saveGlobalResumeState();
+        }
 
         // Save resume for logged-in users
         if (currentUser && analyzeFile) {
@@ -3995,6 +4189,7 @@
         document.getElementById('interview-prep-output').style.display = 'block';
         document.getElementById('interview-prep-output').scrollIntoView({ behavior: 'smooth' });
 
+        lastInterviewPrepData = data.data; // Store for saving
         showToast('Interview prep ready!', 'success');
 
       } catch (err) {
@@ -4070,6 +4265,9 @@
     function displayProfile(profileData) {
       // Use provided profile or global resume profile or default profile variable
       const profileToShow = profileData || globalResumeState.profile || profile;
+
+      // CLEANUP: Always remove empty hints when displaying a profile
+      document.querySelectorAll('.empty-hint').forEach(h => h.remove());
 
       if (!profileToShow) {
         console.warn('No profile data available');
@@ -5385,17 +5583,6 @@
       }
     }
 
-    function searchSelectedCompanies() {
-      if (selectedCompanyIds.size === 0) {
-        showToast('Please select companies first', 'warning');
-        return;
-      }
-      showToast('Bulk search feature coming soon!', 'info');
-    }
-
-    function showAddCompanyModal() {
-      showToast('Custom company addition coming soon! Use suggestions for now.', 'info');
-    }
 
     function closeModalById(modalId) {
       const modal = document.getElementById(modalId);

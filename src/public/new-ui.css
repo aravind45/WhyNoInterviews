@@ -1210,3 +1210,28 @@
   border: 2px dashed #f1f5f9;
   margin-bottom: 24px;
 }
+
+/* Fix Resume Optimizer contrast and theme */
+.new-ui #tab-optimizer h3,
+.new-ui #tab-optimizer label {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.new-ui #optimize-resume-btn {
+  background: linear-gradient(135deg, #f59e0b, #eab308) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+  border: none !important;
+}
+
+.new-ui #optimize-resume-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4) !important;
+}
+
+.new-ui #optimize-resume-btn:disabled {
+  background: #e2e8f0 !important;
+  box-shadow: none !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
+}
