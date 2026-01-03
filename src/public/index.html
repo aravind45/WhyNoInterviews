@@ -1449,32 +1449,37 @@
         <div class="main-tab" data-tab="networking">Networking</div>
       </nav>
 
-      <!-- Auth Section -->
-      <div id="auth-section">
-        <!-- Shown when logged out -->
-        <div id="auth-buttons" class="auth-buttons">
-          <button type="button" class="btn btn-secondary" onclick="showAuthModal('login')">Log In</button>
-          <button type="button" class="btn btn-primary" onclick="showAuthModal('signup')">Sign Up</button>
-        </div>
+      <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+        <a href="/upgrade.html" class="btn-upgrade-short">💎 Upgrade</a>
+        <a href="https://www.buymeacoffee.com/aravind.thiyaga" target="_blank" class="btn-support-short">☕ Support</a>
 
-        <!-- Shown when logged in -->
-        <div id="user-menu" class="user-menu" style="display: none;">
-          <div class="dropdown">
-            <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="toggleUserDropdown()">
-              <div class="user-avatar" id="user-avatar">U</div>
-              <span class="user-name" id="user-display-name">User</span>
-              <span style="color: #64748b;">▼</span>
-            </div>
-            <div class="dropdown-menu" id="user-dropdown">
-              <div class="dropdown-item" onclick="showMyData()">📁 My Saved Data</div>
-              <div class="dropdown-item" onclick="showMyCoverLetters()">✉️ My Cover Letters</div>
-              <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;"
-                onclick="logout()">🚪 Log Out</div>
+        <!-- Auth Section -->
+        <div id="auth-section">
+          <!-- Shown when logged out -->
+          <div id="auth-buttons" class="auth-buttons">
+            <button type="button" class="btn btn-secondary" onclick="showAuthModal('login')">Log In</button>
+            <button type="button" class="btn btn-primary" onclick="showAuthModal('signup')">Sign Up</button>
+          </div>
+
+          <!-- Shown when logged in -->
+          <div id="user-menu" class="user-menu" style="display: none;">
+            <div class="dropdown">
+              <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;"
+                onclick="toggleUserDropdown()">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <span class="user-name" id="user-display-name">User</span>
+                <span style="color: #64748b;">▼</span>
+              </div>
+              <div class="dropdown-menu" id="user-dropdown">
+                <div class="dropdown-item" onclick="showMyData()">📁 My Saved Data</div>
+                <div class="dropdown-item" onclick="showMyCoverLetters()">✉️ My Cover Letters</div>
+                <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;"
+                  onclick="logout()">🚪 Log Out</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   </header>
 
   <!-- Global Resume Upload Bar -->
@@ -1756,7 +1761,28 @@
             <h3>Elevator Pitch</h3>
             <p>Create a powerful 30-second pitch customized for each opportunity</p>
           </div>
+
+          <!-- PRO FEATURE CARD -->
+          <div class="home-feature-card pro" onclick="window.location.href='/upgrade.html'">
+            <div class="home-feature-icon">💎</div>
+            <h3>Go Pro</h3>
+            <p>Unlock deep diagnosis, unlimited matches, and interview prep.</p>
+            <div style="margin-top: 12px; font-weight: 700; color: #f59e0b;">View Plans →</div>
+          </div>
         </div>
+      </div>
+
+      <!-- BMC Support Section -->
+      <div
+        style="margin-top: 60px; text-align: center; padding: 40px; background: rgba(245, 158, 11, 0.05); border-radius: 20px; border: 1px dashed rgba(245, 158, 11, 0.2);">
+        <h3 style="margin-bottom: 20px;">Support the Mission ☕</h3>
+        <p style="color: #64748b; margin-bottom: 24px; max-width: 500px; margin-inline: auto;">
+          JobMatch AI is a labor of love. If it helped you, consider supporting the developer!
+        </p>
+        <a href="https://www.buymeacoffee.com/aravind.thiyaga" target="_blank">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee"
+            style="height: 50px !important; width: 181px !important;">
+        </a>
       </div>
     </section>
 
@@ -2408,12 +2434,34 @@
 
       // Load data for specific tabs
       if (tabName === 'target-companies') {
-        loadTargetCompanies();
+        if (typeof loadTargetCompanies === 'function') {
+          loadTargetCompanies();
+        } else {
+          console.warn('loadTargetCompanies not defined');
+        }
       } else if (tabName === 'search') {
         // Ensure UI is ready for search
         if (window.sessionId && window.profile) {
           // If we have a profile, make sure it's displayed
-          displayProfile(window.profile);
+          if (typeof displayProfile === 'function') {
+            displayProfile(window.profile);
+          }
+        } else {
+          // No profile? Show a hint
+          const searchContainer = document.getElementById('tab-search');
+          if (searchContainer && !searchContainer.querySelector('.empty-hint')) {
+            const hint = document.createElement('div');
+            hint.className = 'empty-hint';
+            hint.style.padding = '40px';
+            hint.style.textAlign = 'center';
+            hint.innerHTML = `
+                <div style="font-size: 3rem; margin-bottom: 20px;">🔍</div>
+                <h3>No Profile Data Found</h3>
+                <p style="color: #64748b; margin: 16px 0;">Please upload a resume in the "Resume Analysis" tab first to find matching jobs.</p>
+                <button class="btn btn-primary" onclick="switchTab('analyze')">Go to Analyze</button>
+             `;
+            searchContainer.prepend(hint);
+          }
         }
       }
     }
