@@ -188,7 +188,7 @@ app.post('/api/analyze-match', paywallMiddleware, upload.single('resume'), async
     sessions[sessionToken] = sessions[sessionToken] || {};
     sessions[sessionToken].resumeText = resumeText;
 
-    const prompt = `You are a brutally honest career coach who has reviewed 10,000+ resumes and knows exactly why people don't get interviews.
+    const prompt = `You are an expert career coach and hiring manager who has reviewed 10,000+ resumes. You are famous for your "Empathetic Realism"—you tell candidates the brutal truth about why they aren't getting interviews, but you do it because you want them to win. You provide the exact blueprint they need to fix their resume and stand out.
 
 RESUME:
 ${resumeText.substring(0, 5000)}
@@ -196,7 +196,7 @@ ${resumeText.substring(0, 5000)}
 JOB DESCRIPTION:
 ${jobDescription.substring(0, 4000)}
 
-Analyze like you're the hiring manager with 200 applications to review. Be specific, honest, helpful.
+Analyze this candidate's fit for the role. Be specifically honest, deeply constructive, and prioritize actions that will move the needle.
 
 Return ONLY this JSON:
 {
@@ -558,11 +558,27 @@ Return ONLY this JSON:
 
     console.log(`✅ Saved analysis to database with realistic score: ${realisticScore}%`);
 
+    // Save extracted profile to DB for cross-screen persistence
+    try {
+      await pool.query(
+        `UPDATE resume_analyses SET extracted_profile = $1 WHERE id = $2`,
+        [JSON.stringify(profileExtract), analysisId]
+      );
+      console.log('✅ Structured profile saved to DB');
+    } catch (saveError: any) {
+      console.warn('Failed to save structured profile to DB:', saveError.message);
+    }
+
     // Add provider info to response
     analysis.llmProvider = selectedProvider;
     analysis.modelUsed = modelUsed;
 
-    res.json({ success: true, data: analysis, sessionId: sessionToken });
+    res.json({
+      success: true,
+      data: analysis,
+      sessionId: sessionToken,
+      profile: profileExtract
+    });
 
   } catch (error: any) {
     console.error('Analysis error:', error);
@@ -632,12 +648,107 @@ ${resumeText.substring(0, 6000)}
 
     sessions[sessionId] = { profile, resumeText, jobs: [], savedJobs: [] };
 
+    // Save extracted profile to database for cross-screen persistence
+    try {
+      const pool = getPool();
+      const fileHash = crypto.createHash('sha256').update(fs.readFileSync(req.file.path)).digest('hex');
+
+      // Get session UUID
+      let sessionRes = await pool.query('SELECT id FROM user_sessions WHERE session_id = $1', [sessionId]);
+      let sessionUuid;
+      if (sessionRes.rows.length === 0) {
+        const newSess = await pool.query(
+          `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at)
+           VALUES ($1, $2, $3, NOW() + INTERVAL '30 days') RETURNING id`,
+          [sessionId, req.ip || '127.0.0.1', req.get('user-agent') || 'Unknown']
+        );
+        sessionUuid = newSess.rows[0].id;
+      } else {
+        sessionUuid = sessionRes.rows[0].id;
+      }
+
+      await pool.query(
+        `INSERT INTO resume_analyses 
+         (session_id, file_hash, encrypted_content, original_filename, file_type, file_size, 
+          target_job_title, status, expires_at, extracted_profile)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed', NOW() + INTERVAL '30 days', $8)`,
+        [
+          sessionUuid,
+          fileHash,
+          fs.readFileSync(req.file.path),
+          req.file.originalname,
+          path.extname(req.file.originalname).substring(1),
+          req.file.size,
+          profile.currentTitle || 'Extracted Profile',
+          JSON.stringify(profile)
+        ]
+      );
+      console.log('✅ Extracted profile saved to DB');
+    } catch (dbError: any) {
+      console.warn('Failed to save extracted profile to DB:', dbError.message);
+    }
+
     res.json({ success: true, data: { sessionId, profile, resumeText } });
 
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+});
+
+// GET profile by session ID
+app.get('/api/profile/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const pool = getPool();
+
+    // Find the latest analysis for this session that has an extracted profile
+    const result = await pool.query(
+      `SELECT ra.extracted_profile
+       FROM resume_analyses ra
+       JOIN user_sessions us ON ra.session_id = us.id
+       WHERE us.session_id = $1 AND ra.extracted_profile IS NOT NULL
+       ORDER BY ra.created_at DESC
+       LIMIT 1`,
+      [sessionId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ success: false, error: 'No profile found' });
+    }
+
+    res.json({ success: true, data: result.rows[0].extracted_profile });
+  } catch (error: any) {
+    console.error('Fetch profile error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET last resume by session ID
+app.get('/api/resume/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const pool = getPool();
+
+    const result = await pool.query(
+      `SELECT original_filename, file_type, created_at, status
+       FROM resume_analyses ra
+       JOIN user_sessions us ON ra.session_id = us.id
+       WHERE us.session_id = $1
+       ORDER BY ra.created_at DESC
+       LIMIT 1`,
+      [sessionId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ success: false, error: 'No resume found' });
+    }
+
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error: any) {
+    console.error('Fetch resume error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -906,10 +1017,33 @@ function getRelativeTime(dateString: string): string {
 app.post('/api/generate-cover-letter', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobId, jobDescription, companyName, jobTitle } = req.body;
-    const session = sessions[sessionId];
+    let session = sessions[sessionId] || {};
 
-    if (!session) {
-      return res.status(400).json({ success: false, error: 'Session not found' });
+    // Restore session from DB if missing (e.g. after server restart)
+    if (!session.resumeText && sessionId) {
+      try {
+        const pool = getPool();
+        const res = await pool.query(
+          `SELECT ra.encrypted_content, ra.extracted_profile 
+           FROM resume_analyses ra
+           JOIN user_sessions us ON ra.session_id = us.id
+           WHERE us.session_id = $1
+           ORDER BY ra.created_at DESC LIMIT 1`,
+          [sessionId]
+        );
+        if (res.rows.length > 0) {
+          session.resumeText = res.rows[0].encrypted_content.toString();
+          session.profile = res.rows[0].extracted_profile;
+          sessions[sessionId] = session;
+          console.log('🔄 Restored session from DB for:', sessionId);
+        }
+      } catch (dbErr) {
+        console.warn('Failed to restore session from DB:', dbErr);
+      }
+    }
+
+    if (!session.resumeText && !session.profile) {
+      return res.status(400).json({ success: false, error: 'Session not found or empty. Please upload resume.' });
     }
 
     const job = session.jobs?.find((j: any) => j.id === jobId);
@@ -957,10 +1091,25 @@ Return ONLY the cover letter text.`;
 app.post('/api/save-job', async (req, res) => {
   try {
     const { sessionId, job, status } = req.body;
-    const session = sessions[sessionId];
+    let session = sessions[sessionId] || {};
 
-    if (!session) {
-      return res.status(400).json({ success: false, error: 'Session not found' });
+    // Restore session from DB if missing
+    if (!session.profile && sessionId) {
+      try {
+        const pool = getPool();
+        const res = await pool.query(
+          `SELECT ra.extracted_profile 
+           FROM resume_analyses ra
+           JOIN user_sessions us ON ra.session_id = us.id
+           WHERE us.session_id = $1
+           ORDER BY ra.created_at DESC LIMIT 1`,
+          [sessionId]
+        );
+        if (res.rows.length > 0) {
+          session.profile = res.rows[0].extracted_profile;
+          sessions[sessionId] = session;
+        }
+      } catch (dbErr) { }
     }
 
     if (!session.savedJobs) session.savedJobs = [];
@@ -1083,7 +1232,30 @@ Keep it brief (3-4 sentences). ONLY include verified, publicly known facts. If y
 app.post('/api/generate-specific-cover-letter', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
-    const session = sessions[sessionId] || {};
+    let session = sessions[sessionId] || {};
+
+    // Restore session from DB if missing
+    if (!session.resumeText && sessionId) {
+      try {
+        const pool = getPool();
+        const dbRes = await pool.query(
+          `SELECT ra.encrypted_content, ra.extracted_profile 
+           FROM resume_analyses ra
+           JOIN user_sessions us ON ra.session_id = us.id
+           WHERE us.session_id = $1
+           ORDER BY ra.created_at DESC LIMIT 1`,
+          [sessionId]
+        );
+        if (dbRes.rows.length > 0) {
+          session.resumeText = dbRes.rows[0].encrypted_content.toString();
+          session.profile = dbRes.rows[0].extracted_profile;
+          sessions[sessionId] = session;
+          console.log('🔄 Restored session from DB for:', sessionId);
+        }
+      } catch (dbErr) {
+        console.warn('Failed to restore session from DB:', dbErr);
+      }
+    }
 
     if (!jobDescription) {
       return res.status(400).json({ success: false, error: 'Job description required' });
@@ -1215,7 +1387,30 @@ Return ONLY the cover letter text, no additional commentary.`;
 app.post('/api/generate-elevator-pitch', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
-    const session = sessions[sessionId] || {};
+    let session = sessions[sessionId] || {};
+
+    // Restore session from DB if missing (e.g. after server restart)
+    if (!session.resumeText && sessionId) {
+      try {
+        const pool = getPool();
+        const res = await pool.query(
+          `SELECT ra.encrypted_content, ra.extracted_profile 
+           FROM resume_analyses ra
+           JOIN user_sessions us ON ra.session_id = us.id
+           WHERE us.session_id = $1
+           ORDER BY ra.created_at DESC LIMIT 1`,
+          [sessionId]
+        );
+        if (res.rows.length > 0) {
+          session.resumeText = res.rows[0].encrypted_content.toString();
+          session.profile = res.rows[0].extracted_profile;
+          sessions[sessionId] = session;
+          console.log('🔄 Restored session from DB for:', sessionId);
+        }
+      } catch (dbErr) {
+        console.warn('Failed to restore session from DB:', dbErr);
+      }
+    }
 
     if (!jobDescription) {
       return res.status(400).json({ success: false, error: 'Job description required' });
@@ -1318,7 +1513,30 @@ Return ONLY the elevator pitch text as one flowing paragraph.`;
 app.post('/api/generate-interview-prep', paywallMiddleware, async (req, res) => {
   try {
     const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
-    const session = sessions[sessionId] || {};
+    let session = sessions[sessionId] || {};
+
+    // Restore session from DB if missing (e.g. after server restart)
+    if (!session.resumeText && sessionId) {
+      try {
+        const pool = getPool();
+        const res = await pool.query(
+          `SELECT ra.encrypted_content, ra.extracted_profile 
+           FROM resume_analyses ra
+           JOIN user_sessions us ON ra.session_id = us.id
+           WHERE us.session_id = $1
+           ORDER BY ra.created_at DESC LIMIT 1`,
+          [sessionId]
+        );
+        if (res.rows.length > 0) {
+          session.resumeText = res.rows[0].encrypted_content.toString();
+          session.profile = res.rows[0].extracted_profile;
+          sessions[sessionId] = session;
+          console.log('🔄 Restored session from DB for:', sessionId);
+        }
+      } catch (dbErr) {
+        console.warn('Failed to restore session from DB:', dbErr);
+      }
+    }
 
     if (!jobDescription) {
       return res.status(400).json({ success: false, error: 'Job description required' });
@@ -1504,18 +1722,46 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // ========== RESUME OPTIMIZER ENDPOINT ==========
 app.post('/api/optimize-resume', paywallMiddleware, upload.single('resume'), async (req, res) => {
   try {
-    const { jobDescription } = req.body;
+    const { jobDescription, sessionId } = req.body;
+    let resumeText = '';
 
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: 'Resume file required' });
+    if (req.file) {
+      // Extract from uploaded file
+      resumeText = await parseResume(req.file.path, req.file.mimetype);
+    } else if (sessionId) {
+      // Extract from session or DB
+      let session = sessions[sessionId] || {};
+      if (session.resumeText) {
+        resumeText = session.resumeText;
+      } else {
+        // Find in DB
+        try {
+          const pool = getPool();
+          const dbRes = await pool.query(
+            `SELECT ra.encrypted_content FROM resume_analyses ra
+             JOIN user_sessions us ON ra.session_id = us.id
+             WHERE us.session_id = $1
+             ORDER BY ra.created_at DESC LIMIT 1`,
+            [sessionId]
+          );
+          if (dbRes.rows.length > 0) {
+            resumeText = dbRes.rows[0].encrypted_content.toString();
+            session.resumeText = resumeText;
+            sessions[sessionId] = session;
+          }
+        } catch (dbErr) {
+          console.warn('Failed to restore resume from DB in optimizer:', dbErr);
+        }
+      }
+    }
+
+    if (!resumeText) {
+      return res.status(400).json({ success: false, error: 'Resume required. Please upload or set session.' });
     }
 
     if (!jobDescription || jobDescription.trim().length < 50) {
       return res.status(400).json({ success: false, error: 'Job description required (min 50 chars)' });
     }
-
-    // Extract resume text
-    const resumeText = await parseResume(req.file.path, req.file.mimetype);
 
     // Build comprehensive audit and optimization prompt
     const prompt = `You are a professional resume writer and ATS optimization expert.

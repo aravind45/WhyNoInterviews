@@ -1170,6 +1170,7 @@
       font-size: 2rem;
       font-weight: 700;
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
@@ -1790,8 +1791,8 @@
     <section class="section active" id="tab-analyze">
       <div class="card">
         <div class="card-header">
-          <h2 class="card-title">🔍 Why No Interviews?</h2>
-          <p class="card-subtitle">Get brutally honest feedback on why your resume isn't getting callbacks</p>
+          <h2 class="card-title">🚀 Stand Out Instantly</h2>
+          <p class="card-subtitle">Get expert, actionable feedback on how to make your resume an interview magnet</p>
         </div>
 
         <div class="grid-2">
@@ -2178,6 +2179,50 @@
   <div class="toast" id="toast"></div>
 
   <script>
+    // ========== UTILITIES ==========
+    function copyToClipboard(text, btn) {
+      // Decode escaped characters from template string
+      const sanitizedText = text.replace(/\\`/g, '`').replace(/\\\${/g, '${');
+      navigator.clipboard.writeText(sanitizedText).then(() => {
+        const originalText = btn.innerHTML;
+        const originalClass = btn.className;
+        btn.innerHTML = '✅ Copied!';
+        btn.className = 'btn btn-success btn-sm';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.className = originalClass;
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        showToast('Failed to copy', 'error');
+      });
+    }
+
+    function tailorForJob(jobId) {
+      const job = (window.jobs || []).find(j => j.id === jobId) || (window.savedJobs || []).find(j => j.id === jobId);
+      if (!job) {
+        showToast('Job not found - try searching again', 'error');
+        return;
+      }
+
+      // Populate analyze JD field
+      const jdField = document.getElementById('analyze-jd');
+      if (jdField) {
+        const desc = job.description || job.quickTake || `${job.title} at ${job.company}`;
+        jdField.value = desc;
+
+        // Show success message
+        showToast(`Ready to tailor for ${job.title}!`, 'success');
+
+        // Switch to analyze tab
+        switchTab('analyze');
+
+        // Scroll to the JD field to reduce friction
+        jdField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        jdField.focus();
+      }
+    }
+
     // ========== AUTH & USER STATE ==========
     let currentUser = JSON.parse(localStorage.getItem('jobmatch_user') || 'null');
 
@@ -2456,9 +2501,9 @@
             hint.style.textAlign = 'center';
             hint.innerHTML = `
                 <div style="font-size: 3rem; margin-bottom: 20px;">🔍</div>
-                <h3>No Profile Data Found</h3>
-                <p style="color: #64748b; margin: 16px 0;">Please upload a resume in the "Resume Analysis" tab first to find matching jobs.</p>
-                <button class="btn btn-primary" onclick="switchTab('analyze')">Go to Analyze</button>
+                <h3>Resume Not Found</h3>
+                <p style="color: #64748b; margin: 16px 0;">Upload your resume to start matching with relevant jobs!</p>
+                <button class="btn btn-primary" onclick="switchTab('analyze')">📤 Upload Resume</button>
              `;
             searchContainer.prepend(hint);
           }
@@ -2813,13 +2858,8 @@
       return false;
     }
 
-    function loadSavedUserData() {
+    async function loadSavedUserData() {
       if (!currentUser) return;
-
-      // Auto-load profile into Find Jobs tab
-      if (currentUser.savedProfile) {
-        profile = currentUser.savedProfile;
-      }
 
       // Ensure stable sessionId based on email
       if (!sessionId && currentUser.email) {
@@ -2827,36 +2867,62 @@
         localStorage.setItem('jobmatch_session', sessionId);
       }
 
-      // Auto-load the most recent resume file into Analyze Resume tab
-      if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName) {
-        try {
-          analyzeFile = base64ToFile(currentUser.lastResumeBase64, currentUser.lastResumeFileName);
-          document.getElementById('analyze-file-name').textContent = '✓ ' + currentUser.lastResumeFileName + ' (auto-loaded)';
-          document.getElementById('analyze-upload-zone').classList.add('has-file');
-          checkAnalyzeReady();
-          console.log('✓ Resume auto-loaded:', currentUser.lastResumeFileName);
-        } catch (e) {
-          console.error('Failed to auto-load resume:', e);
-        }
-      }
+      try {
+        // 1. Fetch Profile from DB
+        const profileRes = await fetch(`/api/profile/${sessionId}`);
+        const profileData = await profileRes.json();
 
-      // Auto-load the most recent resume file into Find Jobs tab as well
-      if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName && !searchFile) {
-        try {
-          searchFile = base64ToFile(currentUser.lastResumeBase64, currentUser.lastResumeFileName);
-          document.getElementById('search-file-name').textContent = '✓ ' + currentUser.lastResumeFileName + ' (auto-loaded)';
-          document.getElementById('search-upload-zone').classList.add('has-file');
-          document.getElementById('extract-btn').disabled = false;
-        } catch (e) {
-          console.error('Failed to auto-load resume for search:', e);
-        }
-      }
+        if (profileData.success && profileData.data) {
+          profile = profileData.data;
+          console.log('✅ Profile auto-loaded from DB');
 
-      // If we have a saved profile, display it directly in Find Jobs tab
-      if (currentUser.savedProfile) {
-        displayProfile();
-        document.getElementById('search-upload-card').style.display = 'none';
-        document.getElementById('profile-card').style.display = 'block';
+          // Update global profile
+          window.profile = profile;
+
+          // Auto-display in Find Jobs tab
+          if (typeof displayProfile === 'function') {
+            displayProfile(profile);
+            const searchUploadCard = document.getElementById('search-upload-card');
+            const profileCard = document.getElementById('profile-card');
+            if (searchUploadCard) searchUploadCard.style.display = 'none';
+            if (profileCard) profileCard.style.display = 'block';
+          }
+
+          // Remove empty hints if they exist
+          document.querySelectorAll('.empty-hint').forEach(h => h.remove());
+        }
+
+        // 2. Fetch Last Resume Metadata (for status visibility)
+        const resumeRes = await fetch(`/api/resume/${sessionId}`);
+        const resumeData = await resumeRes.json();
+
+        if (resumeData.success && resumeData.data) {
+          const resume = resumeData.data;
+          const fileName = resume.original_filename;
+
+          // We don't download the whole file automatically, but we show it's loaded
+          const analyzeFileName = document.getElementById('analyze-file-name');
+          const analyzeUploadZone = document.getElementById('analyze-upload-zone');
+          const searchFileName = document.getElementById('search-file-name');
+          const searchUploadZone = document.getElementById('search-upload-zone');
+
+          if (analyzeFileName) analyzeFileName.textContent = '✓ ' + fileName + ' (stored)';
+          if (analyzeUploadZone) analyzeUploadZone.classList.add('has-file');
+
+          if (!searchFile) {
+            if (searchFileName) searchFileName.textContent = '✓ ' + fileName + ' (stored)';
+            if (searchUploadZone) searchUploadZone.classList.add('has-file');
+            const extractBtn = document.getElementById('extract-btn');
+            if (extractBtn) extractBtn.disabled = false;
+          }
+
+          // Trigger check so analyze button is enabled if JD is present
+          if (typeof checkAnalyzeReady === 'function') checkAnalyzeReady();
+
+          console.log('✓ Last resume metadata restored from DB:', fileName);
+        }
+      } catch (err) {
+        console.error('Error auto-loading data from DB:', err);
       }
     }
 
@@ -3522,15 +3588,21 @@
     </div>
     
     <div class="card">
-      <h3 class="mb-4">📋 Action Plan</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0;">📋 Your Action Plan</h3>
+        <span class="tag tag-info">Quick Boost Available ⚡</span>
+      </div>
       <div class="grid-2">
         <div>
-          <div style="color:#ef4444; font-size:0.85rem; font-weight:600; margin-bottom:8px;">🚨 Before applying:</div>
+          <div style="color:#ef4444; font-size:0.85rem; font-weight:600; margin-bottom:8px;">🚨 Critical Fixes (High Impact):</div>
           <ul class="action-list urgent">${(d.prioritizedActionPlan?.before_applying || []).map(a => `<li>${a}</li>`).join('') || '<li class="text-muted">None</li>'}</ul>
         </div>
         <div>
-          <div style="color:#10b981; font-size:0.85rem; font-weight:600; margin-bottom:8px;">⚡ Quick wins:</div>
-          <ul class="action-list quick">${(d.prioritizedActionPlan?.quick_wins || []).map(a => `<li>${a}</li>`).join('') || '<li class="text-muted">None</li>'}</ul>
+          <div style="color:#10b981; font-size:0.85rem; font-weight:600; margin-bottom:8px;">⚡ Quick Wins (Low Effort):</div>
+          <ul class="action-list quick">
+            ${(d.prioritizedActionPlan?.quick_wins || []).map(a => `<li>${a}</li>`).join('')}
+            <li style="color: #f59e0b; font-weight: 500;">💡 Pro-Tip: Use the "Copy Optimized Text" buttons below to update your resume in seconds!</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -3538,13 +3610,22 @@
     ${(d.resumeRewrites || []).length > 0 ? `
     <div class="card">
       <h3 class="mb-4">✍️ Suggested Rewrites</h3>
-      ${d.resumeRewrites.map(r => `
-        <div style="border-radius:10px; padding:16px; margin-bottom:12px;" class="item">
+      <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Click the copy icon to quickly update your resume!</p>
+      ${d.resumeRewrites.map((r, idx) => `
+        <div style="border-radius:10px; padding:16px; margin-bottom:12px; position: relative;" class="item">
           <div style="font-size:0.8rem; margin-bottom:8px;" class="text-muted">${r.section || 'Resume section'}</div>
+          
           <div style="font-size:0.75rem; color:#ef4444; margin-bottom:4px;">BEFORE:</div>
-          <div style="padding:10px; border-radius:6px; text-decoration:line-through;" class="text-muted item danger">${r.currentText}</div>
-          <div style="font-size:0.75rem; color:#10b981; margin:12px 0 4px;">AFTER:</div>
-          <div style="padding:10px; border-radius:6px;" class="item success">${r.rewrittenText}</div>
+          <div style="padding:10px; border-radius:6px; text-decoration:line-through; font-size: 0.9rem;" class="text-muted item danger">${r.currentText}</div>
+          
+          <div style="font-size:0.75rem; color:#10b981; margin:12px 0 4px; display: flex; justify-content: space-between; align-items: center;">
+            <span>AFTER:</span>
+            <button class="btn btn-secondary btn-sm" onclick="copyToClipboard(\`${r.rewrittenText.replace(/`/g, '\\`').replace(/\${/g, '\\${')}\`, this)" style="padding: 2px 8px; font-size: 0.7rem;">
+               📋 Copy Optimized Text
+            </button>
+          </div>
+          <div style="padding:10px; border-radius:6px; font-size: 0.9rem; font-weight: 500;" class="item success">${r.rewrittenText}</div>
+          
           ${r.whyBetter ? `<div style="font-size:0.85rem; margin-top:8px; font-style:italic;" class="text-muted">Why: ${r.whyBetter}</div>` : ''}
         </div>
       `).join('')}
@@ -4267,9 +4348,10 @@
           <p style="color:#94a3b8; font-size:0.9rem; margin-top:12px;">${job.quickTake || job.description || ''}</p>
           <div class="flex gap-2 flex-wrap mt-4">
             <button class="btn btn-primary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
+            <button class="btn btn-info btn-sm" onclick="tailorForJob('${job.id}')">🎯 Tailor Resume</button>
             <button class="btn btn-secondary btn-sm" onclick="saveJob('${job.id}')">💾 Save</button>
             <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">
-              ${job.applyUrl ? '🔗 Apply Now' : '🔗 Find on LinkedIn'}
+               ${job.applyUrl ? '🔗 Apply Now' : '🔗 Find on LinkedIn'}
             </a>
             ${!job.applyUrl ? `<a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">🔗 Indeed</a>` : ''}
           </div>
@@ -4766,13 +4848,6 @@
     // Optimize button click handler
     optimizerBtn.addEventListener('click', async () => {
       // Use global resume if no local file uploaded
-      const resumeToUse = optimizerFile || globalResumeState.file;
-
-      if (!resumeToUse) {
-        showToast('Please upload a resume first', 'error');
-        return;
-      }
-
       const jobDesc = optimizerJobDesc.value.trim();
       if (jobDesc.length < 50) {
         showToast('Job description too short (min 50 chars)', 'error');
@@ -4786,8 +4861,16 @@
 
       try {
         const formData = new FormData();
-        formData.append('resume', resumeToUse);
+        if (optimizerFile) {
+          formData.append('resume', optimizerFile);
+        } else if (globalResumeState.file) {
+          formData.append('resume', globalResumeState.file);
+        }
+
         formData.append('jobDescription', jobDesc);
+        if (sessionId) {
+          formData.append('sessionId', sessionId);
+        }
 
         const response = await fetch('/api/optimize-resume', {
           method: 'POST',
