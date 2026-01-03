@@ -20,9 +20,15 @@ import { paywallMiddleware } from '../middleware/paywall';
 
 const router = Router();
 
-// Data retention TTL (24 hours per Requirement 9.2)
 const DATA_TTL_HOURS = parseInt(process.env.DATA_TTL_HOURS || '24');
 const DATA_TTL_MS = DATA_TTL_HOURS * 60 * 60 * 1000;
+
+// Initialize Stripe
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-12-15.clover',
+  typescript: true,
+});
 
 /**
  * POST /api/upload
@@ -714,6 +720,85 @@ router.get('/llm-providers', asyncHandler(async (req: Request, res: Response) =>
       default: getDefaultProvider()
     }
   });
+}));
+
+/**
+ * POST /api/create-checkout-session
+ * Create Stripe Checkout Session for Pro Access
+ */
+router.post('/create-checkout-session', asyncHandler(async (req: Request, res: Response) => {
+  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes('placeholder')) {
+    return res.status(500).json({ error: 'Stripe not configured (Test Mode)' });
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'JobMatch AI Pro Access',
+            description: 'Unlimited Job Matches, Deep Diagnosis, Cover Letters, and Interview Prep.',
+            images: ['https://jobmatch-ai.com/logo.png'], // Replace with actual logo URL if available
+          },
+          unit_amount: 1900, // $19.00
+        },
+        quantity: 1,
+      },
+    ],
+    mode: 'payment', // or 'subscription' if you want recurring
+    allow_promotion_codes: true,
+    success_url: `${req.protocol}://${req.get('host')}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${req.protocol}://${req.get('host')}/upgrade.html`,
+  });
+
+
+  res.json({ url: session.url });
+}));
+
+/**
+ * ADMIN ROUTES
+ */
+router.post('/admin/paywall', asyncHandler(async (req: Request, res: Response) => {
+  const secret = req.header('X-Admin-Secret');
+  if (secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const { enabled } = req.body;
+  if (typeof enabled !== 'boolean') {
+    return res.status(400).json({ error: 'enabled boolean required' });
+  }
+
+  // Update Redis
+  await cacheSet('config:paywall_enabled', enabled.toString());
+
+  logger.info(`Admin updated Paywall status to: ${enabled}`);
+  res.json({ success: true, enabled });
+}));
+
+router.get('/admin/paywall', asyncHandler(async (req: Request, res: Response) => {
+  const secret = req.header('X-Admin-Secret');
+  // Only check secret if one is set in env, otherwise assume dev mode or similar? 
+  // Actually, strict check is better.
+  if (process.env.ADMIN_SECRET && secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const dynamicState = await cacheGet<string>('config:paywall_enabled');
+  let isEnabled: boolean;
+  let source: 'redis' | 'env';
+
+  if (dynamicState !== null) {
+    isEnabled = dynamicState === 'true';
+    source = 'redis';
+  } else {
+    isEnabled = process.env.PAYWALL_ENABLED === 'true';
+    source = 'env';
+  }
+
+  res.json({ success: true, enabled: isEnabled, source });
 }));
 
 export default router;

@@ -92,9 +92,11 @@ export const getAvailableProviders = (): LLMProviderService[] => {
     providers.push(getProvider('groq'));
   }
 
+  /*
   if (claudeService.isClaudeAvailable()) {
     providers.push(getProvider('claude'));
   }
+  */
 
   if (openaiService.isOpenAIAvailable()) {
     providers.push(getProvider('openai'));

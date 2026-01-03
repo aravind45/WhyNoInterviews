@@ -708,6 +708,31 @@
   color: #1f2937 !important;
 }
 
+/* Action List Styles */
+.new-ui .action-list li {
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.new-ui .action-list.urgent li {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+  border-left-width: 4px;
+}
+
+.new-ui .action-list.quick li {
+  background: #f0fdf4;
+  border-left-color: #10b981;
+  border-left-width: 4px;
+}
+
+.new-ui .action-list.effort li {
+  background: #fffbeb;
+  border-left-color: #f59e0b;
+  border-left-width: 4px;
+}
+
 
 .new-ui .home-features-subtitle {
   font-size: 1.25rem;
@@ -732,6 +757,25 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.3s;
+}
+
+/* Paywall Modal - New UI Overrides */
+.new-ui .paywall-modal-content {
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.new-ui .paywall-close-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.new-ui .paywall-close-btn:hover {
+  background: #e5e7eb;
+  color: #1f2937;
 }
 
 .new-ui .home-feature-card:hover {

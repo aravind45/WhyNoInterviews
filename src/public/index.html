@@ -54,17 +54,14 @@
     }
 
     .logo {
-      font-size: 1.3rem;
-      font-weight: 700;
+      height: 40px;
       display: flex;
       align-items: center;
-      gap: 10px;
     }
 
-    .logo span {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .logo img {
+      height: 100%;
+      width: auto;
     }
 
     /* Main Tabs */
@@ -1442,7 +1439,7 @@
   </script>
   <header>
     <div class="header-content">
-      <div class="logo">🎯 <span>JobMatch AI</span></div>
+      <div class="logo"><img src="/logo.svg" alt="JobMatch AI" /></div>
       <nav class="main-tabs">
         <div class="main-tab" data-tab="home">Home</div>
         <div class="main-tab active" data-tab="analyze">Resume Analysis</div>
@@ -2407,6 +2404,17 @@
       const targetSection = document.getElementById(`tab-${tabName}`);
       if (targetSection) {
         targetSection.classList.add('active');
+      }
+
+      // Load data for specific tabs
+      if (tabName === 'target-companies') {
+        loadTargetCompanies();
+      } else if (tabName === 'search') {
+        // Ensure UI is ready for search
+        if (window.sessionId && window.profile) {
+          // If we have a profile, make sure it's displayed
+          displayProfile(window.profile);
+        }
       }
     }
 
@@ -3483,13 +3491,13 @@
     <div class="card">
       <h3 class="mb-4">✍️ Suggested Rewrites</h3>
       ${d.resumeRewrites.map(r => `
-        <div style="background:#1e1e2e; border-radius:10px; padding:16px; margin-bottom:12px;">
-          <div style="font-size:0.8rem; color:#64748b; margin-bottom:8px;">${r.section || 'Resume section'}</div>
+        <div style="border-radius:10px; padding:16px; margin-bottom:12px;" class="item">
+          <div style="font-size:0.8rem; margin-bottom:8px;" class="text-muted">${r.section || 'Resume section'}</div>
           <div style="font-size:0.75rem; color:#ef4444; margin-bottom:4px;">BEFORE:</div>
-          <div style="background:#0a0a0f; padding:10px; border-radius:6px; text-decoration:line-through; color:#64748b;">${r.currentText}</div>
+          <div style="padding:10px; border-radius:6px; text-decoration:line-through;" class="text-muted item danger">${r.currentText}</div>
           <div style="font-size:0.75rem; color:#10b981; margin:12px 0 4px;">AFTER:</div>
-          <div style="background:rgba(16,185,129,0.1); padding:10px; border-radius:6px;">${r.rewrittenText}</div>
-          ${r.whyBetter ? `<div style="font-size:0.85rem; color:#64748b; margin-top:8px; font-style:italic;">Why: ${r.whyBetter}</div>` : ''}
+          <div style="padding:10px; border-radius:6px;" class="item success">${r.rewrittenText}</div>
+          ${r.whyBetter ? `<div style="font-size:0.85rem; margin-top:8px; font-style:italic;" class="text-muted">Why: ${r.whyBetter}</div>` : ''}
         </div>
       `).join('')}
     </div>

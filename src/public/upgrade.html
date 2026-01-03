@@ -232,36 +232,53 @@
                     <li><span class="check-icon">✓</span> <strong>Elevator Pitch Generator</strong></li>
                     <li><span class="check-icon">✓</span> <strong>Priority Support</strong></li>
                 </ul>
-                <button onclick="joinWaitlist()" class="btn-block btn-primary-gradient" id="waitlist-btn">Join Priority
-                    Waitlist</button>
+                <button onclick="handleUpgrade()" class="btn-block btn-primary-gradient" id="upgrade-btn">
+                    Upgrade with Stripe 💳
+                </button>
             </div>
         </div>
 
         <div class="waitlist-form">
-            <p style="color: #6b7280; font-size: 0.9rem;">
-                We are currently rolling out Pro features to a limited number of users each week. <br>
-                Friends & Family users can bypass this page with their Secret Key.
+            <h3 style="margin-bottom: 20px; color: #4b5563;">Support the project</h3>
+            <a href="https://www.buymeacoffee.com/aravind.thiyaga" target="_blank" style="display: inline-block;">
+                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee"
+                    style="height: 60px !important; width: 217px !important;">
+            </a>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-top: 16px;">
+                Love the tool but not ready for Pro? Consider buying me a coffee to support development!
             </p>
-            <div id="success-msg" class="success-message">
-                🎉 You've been added to the priority list! We'll email you soon.
-            </div>
         </div>
     </div>
 
     <script>
-        function joinWaitlist() {
-            const btn = document.getElementById('waitlist-btn');
-            const msg = document.getElementById('success-msg');
-
-            btn.innerHTML = 'Adding you...';
+        async function handleUpgrade() {
+            const btn = document.getElementById('upgrade-btn');
+            btn.innerHTML = 'Loading Stripe...';
             btn.disabled = true;
 
-            // Simulate API call
-            setTimeout(() => {
-                btn.innerHTML = 'Joined Waitlist ✓';
-                btn.style.background = '#10b981';
-                msg.style.display = 'block';
-            }, 1000);
+            try {
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert('Error: ' + (data.error || 'Could not initiate checkout'));
+                    btn.innerHTML = 'Upgrade with Stripe 💳';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to connect to payment server');
+                btn.innerHTML = 'Upgrade with Stripe 💳';
+                btn.disabled = false;
+            }
         }
     </script>
 </body>

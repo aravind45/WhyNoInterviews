@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - JobMatch AI</title>
+    <link rel="stylesheet" href="/new-ui.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            padding: 40px;
+        }
+
+        .admin-card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #0f172a;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .status-box {
+            background: #f1f5f9;
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
+        .dot.active {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .dot.inactive {
+            background: #22c55e;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #22c55e;
+            /* Green = Free/Open */
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        /* When checked (Locked/Paywall ON) -> Red */
+        input:checked+.slider {
+            background-color: #ef4444;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-card">
+        <h1>Admin Controls</h1>
+
+        <div class="form-group">
+            <label>Admin Secret</label>
+            <input type="password" id="secret" placeholder="Enter ADMIN_SECRET from .env">
+        </div>
+        <button class="btn" onclick="checkStatus()">Login / Refresh Status</button>
+
+        <div class="status-box" id="status-box" style="opacity: 0.5; pointer-events: none;">
+            <div class="status-indicator">
+                <div id="status-dot" class="dot"></div>
+                <div>
+                    <strong id="status-text">Unknown</strong>
+                    <div id="status-source" style="font-size: 0.8rem; color: #64748b;"></div>
+                </div>
+            </div>
+
+            <label class="switch">
+                <input type="checkbox" id="toggle-paywall" onchange="togglePaywall()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <p style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #64748b;">
+            Green = Free (Paywall OFF) <br> Red = Locked (Paywall ON)
+        </p>
+    </div>
+
+    <script>
+        const secretInput = document.getElementById('secret');
+        const statusBox = document.getElementById('status-box');
+        const toggle = document.getElementById('toggle-paywall');
+        const statusText = document.getElementById('status-text');
+        const statusSource = document.getElementById('status-source');
+        const dot = document.getElementById('status-dot');
+
+        // Restore secret from storage
+        if (localStorage.getItem('admin_secret')) {
+            secretInput.value = localStorage.getItem('admin_secret');
+        }
+
+        async function checkStatus() {
+            const secret = secretInput.value;
+            if (!secret) return alert('Enter secret');
+
+            localStorage.setItem('admin_secret', secret);
+
+            try {
+                const res = await fetch('/api/admin/paywall', {
+                    headers: { 'X-Admin-Secret': secret }
+                });
+
+                if (res.status === 403) {
+                    alert('Invalid Secret');
+                    return;
+                }
+
+                const data = await res.json();
+                updateUI(data.enabled, data.source);
+                statusBox.style.opacity = '1';
+                statusBox.style.pointerEvents = 'all';
+
+            } catch (e) {
+                alert('Connection error');
+            }
+        }
+
+        async function togglePaywall() {
+            const secret = secretInput.value;
+            const newState = toggle.checked; // If checked, we WANT it enabled
+
+            try {
+                const res = await fetch('/api/admin/paywall', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Secret': secret
+                    },
+                    body: JSON.stringify({ enabled: newState })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    updateUI(data.enabled);
+                } else {
+                    alert('Update failed');
+                    toggle.checked = !newState; // Revert
+                }
+            } catch (e) {
+                alert('Error updating');
+                toggle.checked = !newState;
+            }
+        }
+
+        function updateUI(isEnabled, source) {
+            toggle.checked = isEnabled;
+            if (isEnabled) {
+                statusText.innerText = "Paywall ACTIVE";
+                dot.className = "dot active";
+            } else {
+                statusText.innerText = "Paywall DISABLED";
+                dot.className = "dot inactive";
+            }
+            if (source) {
+                statusSource.innerText = "Source: " + source;
+            }
+        }
+    </script>
+</body>
+
+</html>
