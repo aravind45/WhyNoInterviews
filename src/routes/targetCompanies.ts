@@ -16,12 +16,25 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     throw createError('sessionId is required', 400);
   }
 
+  // Get internal session ID
+  const sessionCheck = await query(
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+    [sessionId]
+  );
+
+  if (sessionCheck.rows.length === 0) {
+    res.json({ success: true, data: { companies: [], stats: null } });
+    return;
+  }
+
+  const internalSessionId = sessionCheck.rows[0].id;
+
   // Get companies with statistics
   const result = await query(`
     SELECT * FROM target_companies_summary
     WHERE session_id = $1
     ORDER BY priority ASC, company_name ASC
-  `, [sessionId]);
+  `, [internalSessionId]);
 
   res.json({
     success: true,
@@ -86,15 +99,17 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     throw createError('sessionId and companyName are required', 400);
   }
 
-  // Verify session exists
+  // Verify session exists and get internal UUID
   const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE id = $1 AND expires_at > NOW()',
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
     [sessionId]
   );
 
   if (sessionCheck.rows.length === 0) {
     throw createError('Session not found or expired', 404);
   }
+
+  const internalSessionId = sessionCheck.rows[0].id;
 
   // Insert new company
   const result = await query(`
@@ -105,7 +120,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *
   `, [
-    sessionId,
+    internalSessionId,
     companyName,
     companyDomain,
     industry,
@@ -143,15 +158,17 @@ router.post('/bulk', asyncHandler(async (req: Request, res: Response) => {
     throw createError('sessionId and companyNames array are required', 400);
   }
 
-  // Verify session exists
+  // Verify session exists and get internal UUID
   const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE id = $1 AND expires_at > NOW()',
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
     [sessionId]
   );
 
   if (sessionCheck.rows.length === 0) {
     throw createError('Session not found or expired', 404);
   }
+
+  const internalSessionId = sessionCheck.rows[0].id;
 
   // Get company details from suggestions
   const suggestions = await query(`
@@ -171,7 +188,7 @@ router.post('/bulk', asyncHandler(async (req: Request, res: Response) => {
         VALUES ($1, $2, $3, $4, $5, 3)
         RETURNING id, company_name
       `, [
-        sessionId,
+        internalSessionId,
         suggestion.company_name,
         suggestion.company_domain,
         suggestion.industry,
@@ -232,9 +249,16 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
     throw createError('sessionId is required', 400);
   }
 
+  const sessionCheck = await query(
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+    [sessionId]
+  );
+  if (sessionCheck.rows.length === 0) throw createError('Session not found', 404);
+  const internalSessionId = sessionCheck.rows[0].id;
+
   // Build update query dynamically
   const updates: string[] = [];
-  const values: any[] = [id, sessionId];
+  const values: any[] = [id, internalSessionId];
   let paramCounter = 3;
 
   if (companyName !== undefined) {
@@ -320,11 +344,23 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     throw createError('sessionId is required', 400);
   }
 
+  // Get internal session ID
+  const sessionCheck = await query(
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+    [sessionId]
+  );
+
+  if (sessionCheck.rows.length === 0) {
+    throw createError('Session not found or expired', 404);
+  }
+
+  const internalSessionId = sessionCheck.rows[0].id;
+
   const result = await query(`
     DELETE FROM target_companies
     WHERE id = $1 AND session_id = $2
     RETURNING company_name
-  `, [id, sessionId]);
+  `, [id, internalSessionId]);
 
   if (result.rows.length === 0) {
     throw createError('Company not found or access denied', 404);
@@ -354,6 +390,19 @@ router.get('/:id/jobs', asyncHandler(async (req: Request, res: Response) => {
     throw createError('sessionId is required', 400);
   }
 
+  // Get internal session ID
+  const sessionCheck = await query(
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+    [sessionId]
+  );
+
+  if (sessionCheck.rows.length === 0) {
+    res.json({ success: true, data: { jobs: [], stats: null } });
+    return;
+  }
+
+  const internalSessionId = sessionCheck.rows[0].id;
+
   let jobsQuery = `
     SELECT * FROM company_job_listings
     WHERE company_id = $1 AND session_id = $2
@@ -365,7 +414,7 @@ router.get('/:id/jobs', asyncHandler(async (req: Request, res: Response) => {
 
   jobsQuery += ' ORDER BY discovered_at DESC';
 
-  const result = await query(jobsQuery, [id, sessionId]);
+  const result = await query(jobsQuery, [id, internalSessionId]);
 
   res.json({
     success: true,
@@ -389,15 +438,23 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { sessionId } = req.body;
 
-  if (!sessionId) {
-    throw createError('sessionId is required', 400);
+  // Get internal session ID
+  const sessionCheck = await query(
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+    [sessionId]
+  );
+
+  if (sessionCheck.rows.length === 0) {
+    throw createError('Session not found or expired', 404);
   }
+
+  const internalSessionId = sessionCheck.rows[0].id;
 
   // Get company details
   const companyResult = await query(`
     SELECT * FROM target_companies
     WHERE id = $1 AND session_id = $2
-  `, [id, sessionId]);
+  `, [id, internalSessionId]);
 
   if (companyResult.rows.length === 0) {
     throw createError('Company not found', 404);
@@ -424,7 +481,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
       RETURNING *
     `, [
       id,
-      sessionId,
+      internalSessionId,
       req.body.searchQuery || req.body.roles?.join(', ') || 'all roles',
       platform.name,
       platform.url
@@ -498,10 +555,31 @@ router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
     throw createError('sessionId is required', 400);
   }
 
+  // Get internal session ID
+  const sessionCheck = await query(
+    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+    [sessionId]
+  );
+
+  if (sessionCheck.rows.length === 0) {
+    res.json({
+      success: true, data: {
+        total_companies: 0,
+        active_companies: 0,
+        high_priority: 0,
+        medium_high_priority: 0,
+        medium_priority: 0
+      }
+    });
+    return;
+  }
+
+  const internalSessionId = sessionCheck.rows[0].id;
+
   const stats = await query(`
     SELECT * FROM target_companies_stats
     WHERE session_id = $1
-  `, [sessionId]);
+  `, [internalSessionId]);
 
   res.json({
     success: true,
