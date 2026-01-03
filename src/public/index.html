@@ -6,6 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JobMatch AI - Resume Analyzer + Job Search</title>
 
+  <!-- Google Analytics (GA4) -->
+  <!-- REPLACE G-XXXXXXXXXX WITH YOUR ACTUAL MEASUREMENT ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXXXXX');
+
+    // Helper for event logging
+    window.logEvent = function (eventName, params = {}) {
+      if (typeof gtag === 'function') {
+        gtag('event', eventName, params);
+      }
+      console.log('📊 Event:', eventName, params);
+    };
+  </script>
+
   <!-- JSON-LD SEO -->
   <script type="application/ld+json">
     {
@@ -3519,6 +3538,8 @@
       document.getElementById('analyze-file-name').textContent = '✓ ' + file.name;
       analyzeZone.classList.add('has-file');
 
+      logEvent('resume_upload', { fileName: file.name, type: 'analyze' });
+
       // SYNC GLOBAL STATE
       globalResumeState.file = file;
       globalResumeState.fileName = file.name;
@@ -3538,6 +3559,7 @@
 
     analyzeBtn.addEventListener('click', async () => {
       setLoading('analyze', true, 'Analyzing (15-20 sec)...');
+      logEvent('analysis_start');
 
       try {
         const selectedProvider = document.getElementById('llm-provider-select').value;
@@ -3601,9 +3623,11 @@
         }
 
         displayAnalysisResults(data.data);
+        logEvent('analysis_complete', { score: data.data.overallScore });
 
       } catch (err) {
         showToast(err.message, 'error');
+        logEvent('analysis_error', { error: err.message });
       } finally {
         setLoading('analyze', false, '🎯 Analyze My Match');
       }

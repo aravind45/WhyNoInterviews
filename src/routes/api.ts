@@ -17,6 +17,7 @@ import {
   ProcessingError
 } from '../types';
 import { paywallMiddleware } from '../middleware/paywall';
+import { checkLifetimeLimit } from '../middleware/rateLimit';
 
 const router = Router();
 
@@ -236,7 +237,7 @@ router.post('/upload', asyncHandler(async (req: Request, res: Response, next: Ne
  * Run AI diagnosis on uploaded resume
  * Implements Requirements 3, 4, 5, 6
  */
-router.post('/analyze', paywallMiddleware, asyncHandler(async (req: Request, res: Response) => {
+router.post('/analyze', paywallMiddleware, checkLifetimeLimit, asyncHandler(async (req: Request, res: Response) => {
   const startTime = Date.now();
 
   // Validate request

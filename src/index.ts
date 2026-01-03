@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import { checkLifetimeLimit } from './middleware/rateLimit';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
@@ -125,7 +126,7 @@ ${resumeText.substring(0, 6000)}
 // FEATURE 1: RESUME ANALYSIS (Deep Diagnosis)
 // ============================================================
 
-app.post('/api/analyze-match', paywallMiddleware, upload.single('resume'), async (req, res) => {
+app.post('/api/analyze-match', paywallMiddleware, checkLifetimeLimit, upload.single('resume'), async (req, res) => {
   let filePath = '';
 
   try {
@@ -1734,7 +1735,7 @@ app.get('/api/llm-providers', (req, res) => {
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // ========== RESUME OPTIMIZER ENDPOINT ==========
-app.post('/api/optimize-resume', paywallMiddleware, upload.single('resume'), async (req, res) => {
+app.post('/api/optimize-resume', paywallMiddleware, checkLifetimeLimit, upload.single('resume'), async (req, res) => {
   try {
     const { jobDescription, sessionId } = req.body;
     let resumeText = '';
