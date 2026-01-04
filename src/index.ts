@@ -15,6 +15,11 @@ import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import { connectDatabase, getPool } from './database/connection';
 import icaRoutes from './routes/ica';
+// Routes
+// @ts-ignore
+import authRouter from './routes/auth';
+// Admin Routes
+import adminRouter from './routes/admin';
 import { initializeProviders } from './services/llmProvider';
 import { paywallMiddleware } from './middleware/paywall';
 

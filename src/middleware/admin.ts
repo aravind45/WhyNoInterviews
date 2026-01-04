@@ -14,7 +14,7 @@ export const checkAdmin = async (req: Request, res: Response, next: NextFunction
         }
 
         // Lookup user email from session
-        const { query } = require('../database/connection'); // Lazy load to avoid circular dep
+        const { query } = await import('../database/connection'); // Lazy load to avoid circular dep
 
         if (!query) {
             const msg = 'CRITICAL: query function is undefined in admin middleware';
@@ -53,7 +53,12 @@ export const checkAdmin = async (req: Request, res: Response, next: NextFunction
 
         next();
     } catch (error: any) {
-        logger.error('Admin check failed:', error);
+        const errMsg = `Admin Check Error: ${error.message}\nStack: ${error.stack}\n`;
+        logger.error(errMsg);
+        try {
+            require('fs').appendFileSync('admin_error.log', new Date().toISOString() + ' ' + errMsg + '\n');
+        } catch (e) { console.error('Failed to write log', e); }
+
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 };
