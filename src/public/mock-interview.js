@@ -220,20 +220,34 @@ async function finishInterview() {
         // Display strengths
         const strengthsList = document.getElementById('strengths-list');
         strengthsList.innerHTML = '';
-        (feedback.strengths || []).forEach(strength => {
+        if (feedback.strengths && feedback.strengths.length > 0) {
+            feedback.strengths.forEach(strength => {
+                const li = document.createElement('li');
+                li.textContent = strength;
+                strengthsList.appendChild(li);
+            });
+        } else {
             const li = document.createElement('li');
-            li.textContent = strength;
+            li.className = 'empty-state';
+            li.textContent = 'No specific strengths identified. Keep practicing to improve your performance!';
             strengthsList.appendChild(li);
-        });
+        }
 
         // Display improvements
         const improvementsList = document.getElementById('improvements-list');
         improvementsList.innerHTML = '';
-        (feedback.improvements || []).forEach(improvement => {
+        if (feedback.improvements && feedback.improvements.length > 0) {
+            feedback.improvements.forEach(improvement => {
+                const li = document.createElement('li');
+                li.textContent = improvement;
+                improvementsList.appendChild(li);
+            });
+        } else {
             const li = document.createElement('li');
-            li.textContent = improvement;
+            li.className = 'empty-state';
+            li.textContent = 'Great job! No major areas for improvement identified.';
             improvementsList.appendChild(li);
-        });
+        }
     } catch (error) {
         console.error('Error fetching results:', error);
         alert('Failed to load results. Please try again.');

@@ -187,15 +187,22 @@
         }
 
         .feedback-section {
-            background: #1e1e2e;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .feedback-section h3 {
             margin-bottom: 16px;
-            color: #cbd5e1;
+            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .feedback-list {
@@ -203,16 +210,151 @@
         }
 
         .feedback-list li {
-            padding: 12px;
-            background: #0a0a0f;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
+            margin-bottom: 12px;
+            color: #334155;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .feedback-list li:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .strengths-section .feedback-list li {
+            border-left: 4px solid #10b981;
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .strengths-section .feedback-list li:hover {
+            background: #ecfdf5;
+            border-color: #86efac;
+        }
+
+        .improvements-section .feedback-list li {
+            border-left: 4px solid #f59e0b;
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+        .improvements-section .feedback-list li:hover {
+            background: #fefce8;
+            border-color: #fcd34d;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .results-header h1 {
+            color: #1e293b;
             margin-bottom: 8px;
-            border-left: 3px solid #6366f1;
+        }
+
+        .results-header .subtitle {
+            color: #64748b;
+        }
+
+        /* Dark theme adjustments for results */
+        body {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Keep dark theme for setup and session screens */
+        #setup-screen .card,
+        #session-screen .card {
+            background: #12121a;
+            border: 1px solid #1e1e2e;
+            color: #e2e8f0;
+        }
+
+        #setup-screen h1,
+        #session-screen h1 {
+            color: #e2e8f0;
+        }
+
+        #setup-screen .subtitle,
+        #session-screen .subtitle {
+            color: #94a3b8;
+        }
+
+        /* Results screen specific styling */
+        #results-screen {
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        #results-screen .card {
+            background: #ffffff;
+            color: #1e293b;
+        }
+
+        .score-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .score-value {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .score-label {
+            color: #64748b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #64748b;
+            font-style: italic;
         }
 
         @media (max-width: 768px) {
             .score-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .btn {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+            }
+            
+            .feedback-list li {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -281,13 +423,15 @@
         <!-- Results Screen -->
         <div id="results-screen" class="hidden">
             <div class="card">
-                <h1>📊 Interview Results</h1>
-                <p class="subtitle">Here's how you performed</p>
+                <div class="results-header">
+                    <h1>📊 Interview Results</h1>
+                    <p class="subtitle">Here's how you performed in your mock interview</p>
+                </div>
 
                 <div class="score-grid">
                     <div class="score-card">
                         <div class="score-value" id="overall-score">--</div>
-                        <div class="score-label">Overall</div>
+                        <div class="score-label">Overall Score</div>
                     </div>
                     <div class="score-card">
                         <div class="score-value" id="communication-score">--</div>
@@ -295,7 +439,7 @@
                     </div>
                     <div class="score-card">
                         <div class="score-value" id="technical-score">--</div>
-                        <div class="score-label">Technical</div>
+                        <div class="score-label">Technical Skills</div>
                     </div>
                     <div class="score-card">
                         <div class="score-value" id="confidence-score">--</div>
@@ -303,17 +447,24 @@
                     </div>
                 </div>
 
-                <div class="feedback-section">
+                <div class="feedback-section strengths-section">
                     <h3>💪 Strengths</h3>
-                    <ul class="feedback-list" id="strengths-list"></ul>
+                    <ul class="feedback-list" id="strengths-list">
+                        <li class="empty-state">Loading your strengths...</li>
+                    </ul>
                 </div>
 
-                <div class="feedback-section">
+                <div class="feedback-section improvements-section">
                     <h3>📈 Areas for Improvement</h3>
-                    <ul class="feedback-list" id="improvements-list"></ul>
+                    <ul class="feedback-list" id="improvements-list">
+                        <li class="empty-state">Loading improvement suggestions...</li>
+                    </ul>
                 </div>
 
-                <button class="btn btn-primary" onclick="location.reload()">Start New Interview</button>
+                <div style="text-align: center; margin-top: 32px;">
+                    <button class="btn btn-primary" onclick="location.reload()" style="margin-right: 12px;">Start New Interview</button>
+                    <button class="btn btn-secondary" onclick="window.print()">Save Results</button>
+                </div>
             </div>
         </div>
     </div>
