@@ -4,6 +4,7 @@ dotenv.config();
 
 import express from 'express';
 import { checkLifetimeLimit } from './middleware/rateLimit';
+import { logger } from './utils/logger';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
@@ -45,6 +46,7 @@ console.log('--------------------------------');
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+logger.info('✅ Middleware configured');
 
 // Security Headers
 app.use((req, res, next) => {
@@ -131,6 +133,7 @@ ${resumeText.substring(0, 6000)}
 // FEATURE 1: RESUME ANALYSIS (Deep Diagnosis)
 // ============================================================
 
+logger.info('✅ Registering analyze-match route');
 app.post('/api/analyze-match', paywallMiddleware, checkLifetimeLimit, upload.single('resume'), async (req, res) => {
   let filePath = '';
 

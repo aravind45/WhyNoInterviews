@@ -19,18 +19,23 @@ import {
 } from '../types';
 import { paywallMiddleware } from '../middleware/paywall';
 import { checkLifetimeLimit } from '../middleware/rateLimit';
+import mockInterviewRouter from './mockInterview';
 
 const router = Router();
 
 const DATA_TTL_HOURS = parseInt(process.env.DATA_TTL_HOURS || '24');
 const DATA_TTL_MS = DATA_TTL_HOURS * 60 * 60 * 1000;
 
-// Initialize Stripe
+// Initialize Stripe (optional)
 import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover',
-  typescript: true,
-});
+let stripe: Stripe | null = null;
+
+if (process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.includes('placeholder')) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-12-15.clover',
+    typescript: true,
+  });
+}
 
 /**
  * POST /api/upload
@@ -729,7 +734,7 @@ router.get('/llm-providers', asyncHandler(async (req: Request, res: Response) =>
  * Create Stripe Checkout Session for Pro Access
  */
 router.post('/create-checkout-session', asyncHandler(async (req: Request, res: Response) => {
-  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes('placeholder')) {
+  if (!stripe) {
     return res.status(500).json({ error: 'Stripe not configured (Test Mode)' });
   }
 
@@ -816,4 +821,5 @@ router.get('/admin/paywall', asyncHandler(async (req: Request, res: Response) =>
 }));
 
 console.log('Finished loading api.ts');
+router.use('/mock-interview', mockInterviewRouter);
 export default router;

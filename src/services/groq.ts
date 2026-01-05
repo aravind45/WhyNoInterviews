@@ -360,9 +360,45 @@ const validateDifficulty = (difficulty: string): 'easy' | 'medium' | 'hard' => {
   return valid.includes(difficulty) ? difficulty as 'easy' | 'medium' | 'hard' : 'medium';
 };
 
+/**
+ * Generate text using Groq
+ */
+export const generateText = async (prompt: string): Promise<string> => {
+  if (!groqClient) {
+    throw new ProcessingError('Groq client not initialized');
+  }
+
+  try {
+    const response = await groqClient.chat.completions.create({
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
+      temperature: 0.7,
+      max_tokens: 2000,
+      top_p: 1,
+      stream: false
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new ProcessingError('No response from Groq');
+    }
+
+    return content;
+  } catch (error) {
+    logger.error('Groq text generation failed:', error);
+    throw new ProcessingError('Text generation failed. Please try again.');
+  }
+};
+
 export default {
   initializeGroq,
   getGroqClient,
   isGroqAvailable,
-  analyzeResume
+  analyzeResume,
+  generateText
 };

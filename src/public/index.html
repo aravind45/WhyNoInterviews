@@ -1517,6 +1517,7 @@
         <div class="main-tab" data-tab="optimizer">Resume Optimizer</div>
         <div class="main-tab" data-tab="target-companies">Target Companies</div>
         <div class="main-tab" data-tab="networking">Networking</div>
+        <div class="main-tab" data-tab="mock-interview">🎯 Mock Interview</div>
       </nav>
 
       <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
@@ -2189,6 +2190,100 @@
         </div>
       </div>
     </section>
+
+    <!-- TAB 6: Mock Interview -->
+    <section class="section" id="tab-mock-interview">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🎯 AI Mock Interview</h2>
+          <p class="card-subtitle">Practice your interview skills with AI-powered feedback and video analysis</p>
+        </div>
+
+        <!-- Setup Form -->
+        <div id="mock-interview-setup">
+          <div class="form-group">
+            <label for="mock-job-role">Job Role</label>
+            <input type="text" id="mock-job-role" placeholder="e.g., Software Engineer, Product Manager" required>
+          </div>
+
+          <div class="form-group">
+            <label for="mock-interview-type">Interview Type</label>
+            <select id="mock-interview-type">
+              <option value="technical">Technical</option>
+              <option value="behavioral">Behavioral</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="mock-duration">Duration</label>
+            <select id="mock-duration">
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary" onclick="startMockInterview()">🎯 Start Mock Interview</button>
+        </div>
+
+        <!-- Interview Session (Hidden initially) -->
+        <div id="mock-interview-session" style="display: none;">
+          <div class="card" style="background: #1e1e2e; margin-bottom: 20px;">
+            <div id="mock-question-number" style="color: #6366f1; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Question 1 of 5</div>
+            <div id="mock-question-text" style="font-size: 1.2rem; line-height: 1.6;">Loading question...</div>
+          </div>
+
+          <div style="background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+            <video id="mock-preview-video" autoplay muted style="width: 100%; height: auto; display: block;"></video>
+          </div>
+
+          <div id="mock-timer" style="font-size: 2rem; font-weight: 700; color: #f59e0b; text-align: center; margin: 20px 0;">00:00</div>
+
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <button class="btn btn-secondary" id="mock-start-recording-btn" onclick="startMockRecording()">🔴 Start Recording</button>
+            <button class="btn btn-primary" id="mock-stop-recording-btn" onclick="stopMockRecording()" style="display: none;">⏹️ Stop Recording</button>
+            <button class="btn btn-secondary" id="mock-next-question-btn" onclick="nextMockQuestion()" style="display: none;">➡️ Next Question</button>
+          </div>
+        </div>
+
+        <!-- Results (Hidden initially) -->
+        <div id="mock-interview-results" style="display: none;">
+          <h3 style="margin-bottom: 24px;">📊 Interview Results</h3>
+          
+          <div class="grid-4" style="margin-bottom: 24px;">
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Overall</div>
+              <div id="mock-overall-score" style="font-size: 2.5rem; font-weight: 700; color: #6366f1;">--</div>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Communication</div>
+              <div id="mock-communication-score" style="font-size: 2.5rem; font-weight: 700; color: #22c55e;">--</div>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Technical</div>
+              <div id="mock-technical-score" style="font-size: 2.5rem; font-weight: 700; color: #f59e0b;">--</div>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Confidence</div>
+              <div id="mock-confidence-score" style="font-size: 2.5rem; font-weight: 700; color: #8b5cf6;">--</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 20px;">
+            <h4 style="margin-bottom: 16px; color: #22c55e;">💪 Strengths</h4>
+            <ul id="mock-strengths-list" style="list-style: none; padding: 0;"></ul>
+          </div>
+
+          <div class="card" style="margin-bottom: 20px;">
+            <h4 style="margin-bottom: 16px; color: #f59e0b;">📈 Areas for Improvement</h4>
+            <ul id="mock-improvements-list" style="list-style: none; padding: 0;"></ul>
+          </div>
+
+          <button class="btn btn-primary" onclick="resetMockInterview()">🔄 Start New Interview</button>
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- Cover Letter Modal -->
@@ -2542,6 +2637,11 @@
           loadTargetCompanies();
         } else {
           console.warn('loadTargetCompanies not defined');
+        }
+      } else if (tabName === 'mock-interview') {
+        // Initialize mock interview if needed
+        if (typeof initializeMockInterview === 'function') {
+          initializeMockInterview();
         }
       } else if (tabName === 'search') {
         // Ensure UI is ready for search
@@ -5672,6 +5772,279 @@
       if (guideModal) {
         guideModal.classList.add('show');
       }
+    }
+
+    // ========== MOCK INTERVIEW FUNCTIONS ==========
+    let mockCurrentSession = null;
+    let mockCurrentQuestions = [];
+    let mockCurrentQuestionIndex = 0;
+    let mockMediaRecorder = null;
+    let mockRecordedChunks = [];
+    let mockStream = null;
+    let mockTimerInterval = null;
+    let mockRecordingStartTime = null;
+
+    function initializeMockInterview() {
+      // Reset any existing state
+      mockCurrentSession = null;
+      mockCurrentQuestions = [];
+      mockCurrentQuestionIndex = 0;
+      
+      // Show setup form
+      document.getElementById('mock-interview-setup').style.display = 'block';
+      document.getElementById('mock-interview-session').style.display = 'none';
+      document.getElementById('mock-interview-results').style.display = 'none';
+    }
+
+    async function startMockInterview() {
+      const jobRole = document.getElementById('mock-job-role').value;
+      const interviewType = document.getElementById('mock-interview-type').value;
+      const duration = parseInt(document.getElementById('mock-duration').value);
+
+      if (!jobRole) {
+        showToast('Please enter a job role', 'error');
+        return;
+      }
+
+      try {
+        showToast('Generating interview questions...', 'info');
+
+        // Generate questions
+        const questionsResponse = await fetch('/api/mock-interview/generate-interview-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobRole,
+            interviewType,
+            experienceLevel: 'mid',
+            duration
+          })
+        });
+
+        if (!questionsResponse.ok) throw new Error('Failed to generate questions');
+        const questionsData = await questionsResponse.json();
+        mockCurrentQuestions = questionsData.data;
+
+        // Create session
+        const sessionResponse = await fetch('/api/mock-interview/interview-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobRole, interviewType, duration })
+        });
+
+        if (!sessionResponse.ok) throw new Error('Failed to create session');
+        const sessionData = await sessionResponse.json();
+        mockCurrentSession = sessionData.data;
+
+        // Initialize camera
+        const cameraReady = await initializeMockCamera();
+        if (!cameraReady) return;
+
+        // Show session screen
+        document.getElementById('mock-interview-setup').style.display = 'none';
+        document.getElementById('mock-interview-session').style.display = 'block';
+
+        // Load first question
+        loadMockQuestion(0);
+        showToast('Mock interview started!', 'success');
+
+      } catch (error) {
+        console.error('Error starting interview:', error);
+        showToast('Failed to start interview. Please try again.', 'error');
+      }
+    }
+
+    async function initializeMockCamera() {
+      try {
+        mockStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 1280, height: 720 },
+          audio: true
+        });
+        const videoElement = document.getElementById('mock-preview-video');
+        if (videoElement) {
+          videoElement.srcObject = mockStream;
+        }
+        return true;
+      } catch (error) {
+        console.error('Camera initialization failed:', error);
+        showToast('Unable to access camera/microphone. Please grant permissions.', 'error');
+        return false;
+      }
+    }
+
+    function loadMockQuestion(index) {
+      if (index >= mockCurrentQuestions.length) {
+        finishMockInterview();
+        return;
+      }
+
+      mockCurrentQuestionIndex = index;
+      const question = mockCurrentQuestions[index];
+
+      document.getElementById('mock-question-number').textContent = `Question ${index + 1} of ${mockCurrentQuestions.length}`;
+      document.getElementById('mock-question-text').textContent = question.text;
+      document.getElementById('mock-timer').textContent = '00:00';
+
+      // Reset buttons
+      document.getElementById('mock-start-recording-btn').style.display = 'inline-flex';
+      document.getElementById('mock-stop-recording-btn').style.display = 'none';
+      document.getElementById('mock-next-question-btn').style.display = 'none';
+    }
+
+    function startMockRecording() {
+      mockRecordedChunks = [];
+      mockRecordingStartTime = Date.now();
+
+      mockMediaRecorder = new MediaRecorder(mockStream, {
+        mimeType: 'video/webm;codecs=vp9'
+      });
+
+      mockMediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          mockRecordedChunks.push(event.data);
+        }
+      };
+
+      mockMediaRecorder.onstop = () => {
+        uploadMockRecording();
+      };
+
+      mockMediaRecorder.start();
+
+      // Update UI
+      document.getElementById('mock-start-recording-btn').style.display = 'none';
+      document.getElementById('mock-stop-recording-btn').style.display = 'inline-flex';
+
+      // Start timer
+      mockTimerInterval = setInterval(updateMockTimer, 1000);
+    }
+
+    function updateMockTimer() {
+      const elapsed = Math.floor((Date.now() - mockRecordingStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      document.getElementById('mock-timer').textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function stopMockRecording() {
+      if (mockMediaRecorder && mockMediaRecorder.state === 'recording') {
+        mockMediaRecorder.stop();
+      }
+
+      if (mockTimerInterval) {
+        clearInterval(mockTimerInterval);
+        mockTimerInterval = null;
+      }
+
+      // Update UI
+      document.getElementById('mock-stop-recording-btn').style.display = 'none';
+      document.getElementById('mock-next-question-btn').style.display = 'inline-flex';
+    }
+
+    async function uploadMockRecording() {
+      try {
+        // For MVP, we'll just simulate upload and store placeholder URL
+        const videoUrl = `/uploads/mock-interview/${mockCurrentSession.sessionToken}_q${mockCurrentQuestionIndex}.webm`;
+
+        const response = await fetch('/api/mock-interview/upload-interview-response', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionToken: mockCurrentSession.sessionToken,
+            questionId: mockCurrentQuestions[mockCurrentQuestionIndex].id,
+            videoUrl
+          })
+        });
+
+        if (!response.ok) throw new Error('Upload failed');
+        console.log('Recording uploaded successfully');
+      } catch (error) {
+        console.error('Error uploading recording:', error);
+        showToast('Failed to upload recording. Please try again.', 'error');
+      }
+    }
+
+    function nextMockQuestion() {
+      loadMockQuestion(mockCurrentQuestionIndex + 1);
+    }
+
+    async function finishMockInterview() {
+      // Stop camera
+      if (mockStream) {
+        mockStream.getTracks().forEach(track => track.stop());
+      }
+
+      // Show results screen
+      document.getElementById('mock-interview-session').style.display = 'none';
+      document.getElementById('mock-interview-results').style.display = 'block';
+
+      try {
+        showToast('Analyzing your interview performance...', 'info');
+
+        // Fetch results
+        const response = await fetch(`/api/mock-interview/interview-results/${mockCurrentSession.sessionToken}`);
+        if (!response.ok) throw new Error('Failed to fetch results');
+
+        const data = await response.json();
+        const feedback = data.data;
+
+        // Display scores
+        document.getElementById('mock-overall-score').textContent = feedback.overallScore || '--';
+        document.getElementById('mock-communication-score').textContent = feedback.categoryScores?.communication || '--';
+        document.getElementById('mock-technical-score').textContent = feedback.categoryScores?.technical || '--';
+        document.getElementById('mock-confidence-score').textContent = feedback.categoryScores?.confidence || '--';
+
+        // Display strengths
+        const strengthsList = document.getElementById('mock-strengths-list');
+        strengthsList.innerHTML = '';
+        (feedback.strengths || []).forEach(strength => {
+          const li = document.createElement('li');
+          li.style.cssText = 'padding: 12px; background: #0a0a0f; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #22c55e;';
+          li.textContent = strength;
+          strengthsList.appendChild(li);
+        });
+
+        // Display improvements
+        const improvementsList = document.getElementById('mock-improvements-list');
+        improvementsList.innerHTML = '';
+        (feedback.improvements || []).forEach(improvement => {
+          const li = document.createElement('li');
+          li.style.cssText = 'padding: 12px; background: #0a0a0f; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #f59e0b;';
+          li.textContent = improvement;
+          improvementsList.appendChild(li);
+        });
+
+        showToast('Interview analysis complete!', 'success');
+      } catch (error) {
+        console.error('Error fetching results:', error);
+        showToast('Failed to load results. Please try again.', 'error');
+      }
+    }
+
+    function resetMockInterview() {
+      // Reset all state
+      mockCurrentSession = null;
+      mockCurrentQuestions = [];
+      mockCurrentQuestionIndex = 0;
+      
+      if (mockStream) {
+        mockStream.getTracks().forEach(track => track.stop());
+        mockStream = null;
+      }
+      
+      if (mockTimerInterval) {
+        clearInterval(mockTimerInterval);
+        mockTimerInterval = null;
+      }
+
+      // Reset form
+      document.getElementById('mock-job-role').value = '';
+      document.getElementById('mock-interview-type').value = 'technical';
+      document.getElementById('mock-duration').value = '15';
+
+      // Show setup screen
+      initializeMockInterview();
     }
 
   </script>

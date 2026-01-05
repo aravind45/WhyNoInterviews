@@ -15,6 +15,8 @@ interface AuthRequest extends Request {
         credential?: string; // Google ID Token
         fullName?: string;
         sessionId?: string; // Current guest session to link
+        oldPassword?: string;
+        newPassword?: string;
     };
 }
 

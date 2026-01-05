@@ -30,6 +30,7 @@ export interface LLMProviderService {
     },
     jobDescription?: string
   ) => Promise<LLMAnalysisResult>;
+  generateText: (prompt: string) => Promise<string>;
 }
 
 /**
@@ -62,14 +63,20 @@ export const getProvider = (provider: LLMProvider): LLMProviderService => {
         name: 'claude',
         displayName: 'Claude (Anthropic)',
         isAvailable: claudeService.isClaudeAvailable,
-        analyzeResume: claudeService.analyzeResume
+        analyzeResume: claudeService.analyzeResume,
+        generateText: async (prompt: string) => {
+          throw new Error('Claude text generation not implemented yet');
+        }
       };
     case 'openai':
       return {
         name: 'openai',
         displayName: 'GPT-4 (OpenAI)',
         isAvailable: openaiService.isOpenAIAvailable,
-        analyzeResume: openaiService.analyzeResume
+        analyzeResume: openaiService.analyzeResume,
+        generateText: async (prompt: string) => {
+          throw new Error('OpenAI text generation not implemented yet');
+        }
       };
     case 'groq':
     default:
@@ -77,7 +84,8 @@ export const getProvider = (provider: LLMProvider): LLMProviderService => {
         name: 'groq',
         displayName: 'Groq (Llama)',
         isAvailable: groqService.isGroqAvailable,
-        analyzeResume: groqService.analyzeResume
+        analyzeResume: groqService.analyzeResume,
+        generateText: groqService.generateText
       };
   }
 };
