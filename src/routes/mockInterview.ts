@@ -37,14 +37,22 @@ router.post('/generate-interview-questions', asyncHandler(async (req: Request, r
 router.post('/interview-session', asyncHandler(async (req: Request, res: Response) => {
     const { jobRole, interviewType, duration } = req.body;
     const sessionToken = generateSessionToken();
+    
+    // Get user ID from session if authenticated
+    let userId = null;
+    const userSession = req.session;
+    if (userSession && userSession.userId) {
+        userId = userSession.userId;
+    }
+    
     const result = await query(
-        `INSERT INTO interview_sessions (session_token, job_role, interview_type, duration_minutes, status, created_at) 
-     VALUES ($1, $2, $3, $4, 'setup', NOW()) RETURNING id, session_token`,
-        [sessionToken, jobRole, interviewType, duration]
+        `INSERT INTO interview_sessions (session_token, user_id, job_role, interview_type, duration_minutes, status, created_at) 
+     VALUES ($1, $2, $3, $4, $5, 'setup', NOW()) RETURNING id, session_token`,
+        [sessionToken, userId, jobRole, interviewType, duration]
     );
     const session = result.rows[0];
     // cache empty session state
-    await cacheSet(`interview:${session.session_token}`, { sessionId: session.id }, 60 * 60);
+    await cacheSet(`interview:${session.session_token}`, { sessionId: session.id, userId }, 60 * 60);
     res.json({ success: true, data: { sessionId: session.id, sessionToken: session.session_token } });
 }));
 
@@ -131,7 +139,155 @@ router.get('/interview-results/:sessionToken', asyncHandler(async (req: Request,
     }
     
     const feedback = await generateInterviewFeedback(sessionInfo.sessionId);
+    
+    // Store the results in the database for dashboard access
+    try {
+        await query(
+            `INSERT INTO interview_results (session_id, overall_score, communication_score, technical_score, confidence_score, strengths, improvements, detailed_feedback, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+             ON CONFLICT (session_id) DO UPDATE SET
+             overall_score = EXCLUDED.overall_score,
+             communication_score = EXCLUDED.communication_score,
+             technical_score = EXCLUDED.technical_score,
+             confidence_score = EXCLUDED.confidence_score,
+             strengths = EXCLUDED.strengths,
+             improvements = EXCLUDED.improvements,
+             detailed_feedback = EXCLUDED.detailed_feedback`,
+            [
+                sessionInfo.sessionId,
+                feedback.overallScore || 0,
+                feedback.categoryScores?.communication || 0,
+                feedback.categoryScores?.technical || 0,
+                feedback.categoryScores?.confidence || 0,
+                JSON.stringify(feedback.strengths || []),
+                JSON.stringify(feedback.improvements || []),
+                JSON.stringify(feedback)
+            ]
+        );
+        
+        // Update session status to completed
+        await query(
+            `UPDATE interview_sessions SET status = 'completed', completed_at = NOW() WHERE id = $1`,
+            [sessionInfo.sessionId]
+        );
+    } catch (error) {
+        logger.error('Error storing interview results:', error);
+        // Don't fail the request if storage fails
+    }
+    
     res.json({ success: true, data: feedback });
+}));
+
+// GET /api/interview-dashboard – get user's interview history
+router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Response) => {
+    // Get user ID from session
+    const userSession = req.session;
+    if (!userSession || !userSession.userId) {
+        return res.json({ success: true, data: { interviews: [], message: 'Please log in to view your interview history' } });
+    }
+    
+    const userId = userSession.userId;
+    
+    try {
+        // Get user's interview sessions with results
+        const result = await query(`
+            SELECT 
+                s.id,
+                s.session_token,
+                s.job_role,
+                s.interview_type,
+                s.duration_minutes,
+                s.status,
+                s.created_at,
+                s.completed_at,
+                r.overall_score,
+                r.communication_score,
+                r.technical_score,
+                r.confidence_score,
+                r.strengths,
+                r.improvements,
+                COUNT(resp.id) as total_questions
+            FROM interview_sessions s
+            LEFT JOIN interview_results r ON s.id = r.session_id
+            LEFT JOIN interview_responses resp ON s.id = resp.session_id
+            WHERE s.user_id = $1
+            GROUP BY s.id, r.id
+            ORDER BY s.created_at DESC
+            LIMIT 50
+        `, [userId]);
+        
+        const interviews = result.rows.map(row => ({
+            id: row.id,
+            sessionToken: row.session_token,
+            jobRole: row.job_role,
+            interviewType: row.interview_type,
+            duration: row.duration_minutes,
+            status: row.status,
+            createdAt: row.created_at,
+            completedAt: row.completed_at,
+            totalQuestions: parseInt(row.total_questions) || 0,
+            results: row.overall_score ? {
+                overallScore: row.overall_score,
+                categoryScores: {
+                    communication: row.communication_score,
+                    technical: row.technical_score,
+                    confidence: row.confidence_score
+                },
+                strengths: row.strengths ? JSON.parse(row.strengths) : [],
+                improvements: row.improvements ? JSON.parse(row.improvements) : []
+            } : null
+        }));
+        
+        // Calculate summary stats
+        const completedInterviews = interviews.filter(i => i.status === 'completed' && i.results);
+        const avgScore = completedInterviews.length > 0 
+            ? Math.round(completedInterviews.reduce((sum, i) => sum + i.results.overallScore, 0) / completedInterviews.length)
+            : 0;
+        
+        const summary = {
+            totalInterviews: interviews.length,
+            completedInterviews: completedInterviews.length,
+            averageScore: avgScore,
+            lastInterviewDate: interviews.length > 0 ? interviews[0].createdAt : null
+        };
+        
+        res.json({ 
+            success: true, 
+            data: { 
+                interviews, 
+                summary 
+            } 
+        });
+        
+    } catch (error) {
+        logger.error('Error fetching interview dashboard:', error);
+        throw new ProcessingError('Failed to fetch interview history');
+    }
+}));
+
+// DELETE /api/interview-session/:id – delete an interview session
+router.delete('/interview-session/:id', asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const userSession = req.session;
+    
+    if (!userSession || !userSession.userId) {
+        throw new ValidationError('Authentication required');
+    }
+    
+    // Verify the interview belongs to the user
+    const checkResult = await query(
+        `SELECT id FROM interview_sessions WHERE id = $1 AND user_id = $2`,
+        [id, userSession.userId]
+    );
+    
+    if (checkResult.rows.length === 0) {
+        throw new ValidationError('Interview not found or access denied');
+    }
+    
+    // Delete the interview (cascade will handle related records)
+    await query(`DELETE FROM interview_sessions WHERE id = $1`, [id]);
+    
+    res.json({ success: true, message: 'Interview deleted successfully' });
 }));
 
 export default router;
