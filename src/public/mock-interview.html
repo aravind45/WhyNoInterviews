@@ -331,6 +331,116 @@
             font-style: italic;
         }
 
+        .rubric-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .rubric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .rubric-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .rubric-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .score-stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .star {
+            width: 16px;
+            height: 16px;
+            color: #d1d5db;
+        }
+
+        .star.filled {
+            color: #fbbf24;
+        }
+
+        .rubric-feedback {
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .rubric-improvements {
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .detailed-feedback-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .question-header {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .tone-indicators {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .tone-item {
+            text-align: center;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .tone-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .tone-score {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .tone-indicators {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 768px) {
             .score-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -428,25 +538,16 @@
                     <p class="subtitle">Here's how you performed in your mock interview</p>
                 </div>
 
-                <div class="score-grid">
-                    <div class="score-card">
-                        <div class="score-value" id="overall-score">--</div>
-                        <div class="score-label">Overall Score</div>
-                    </div>
-                    <div class="score-card">
-                        <div class="score-value" id="communication-score">--</div>
-                        <div class="score-label">Communication</div>
-                    </div>
-                    <div class="score-card">
-                        <div class="score-value" id="technical-score">--</div>
-                        <div class="score-label">Technical Skills</div>
-                    </div>
-                    <div class="score-card">
-                        <div class="score-value" id="confidence-score">--</div>
-                        <div class="score-label">Confidence</div>
-                    </div>
+                <!-- Overall Score -->
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <div style="font-size: 3rem; font-weight: 700; background: linear-gradient(135deg, #6366f1, #8b5cf6); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;" id="overall-score">--</div>
+                    <div style="color: #64748b; font-size: 1.1rem;">Overall Performance Score</div>
                 </div>
 
+                <!-- Rubric Scores -->
+                <div id="rubric-scores" style="margin-bottom: 32px;"></div>
+
+                <!-- Strengths Section -->
                 <div class="feedback-section strengths-section">
                     <h3>💪 Strengths</h3>
                     <ul class="feedback-list" id="strengths-list">
@@ -454,11 +555,27 @@
                     </ul>
                 </div>
 
+                <!-- Growth Areas Section -->
                 <div class="feedback-section improvements-section">
-                    <h3>📈 Areas for Improvement</h3>
+                    <h3>📈 Growth Areas</h3>
                     <ul class="feedback-list" id="improvements-list">
                         <li class="empty-state">Loading improvement suggestions...</li>
                     </ul>
+                </div>
+
+                <!-- Detailed Feedback Section -->
+                <div id="detailed-feedback-section" style="margin-bottom: 32px;"></div>
+
+                <!-- Summary Section -->
+                <div class="feedback-section" id="summary-section" style="display: none;">
+                    <h3>📋 Summary</h3>
+                    <ul class="feedback-list" id="summary-list"></ul>
+                </div>
+
+                <!-- Next Steps Section -->
+                <div class="feedback-section" id="next-steps-section" style="display: none;">
+                    <h3>🎯 Next Steps</h3>
+                    <ul class="feedback-list" id="next-steps-list"></ul>
                 </div>
 
                 <div style="text-align: center; margin-top: 32px;">

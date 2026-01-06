@@ -2,23 +2,51 @@
 import { query } from '../database/connection';
 import { getProvider, getDefaultProvider } from './llmProvider';
 
+export interface RubricScore {
+    score: number; // 1-5 scale
+    maxScore: number; // Always 5
+    feedback: string;
+    improvements: string;
+    showInsights?: boolean;
+}
+
+export interface DetailedFeedback {
+    questionNumber: number;
+    questionText: string;
+    response: string;
+    feedback: string;
+    tone: {
+        professional: number;
+        clear: number;
+        relaxed: number;
+        confident: number;
+    };
+    conciseness?: {
+        timestamp: string;
+        originalText: string;
+        improvedText: string;
+        explanation: string;
+    };
+}
+
 export interface InterviewFeedback {
     overallScore: number;
-    categoryScores: {
-        communication: number;
-        technical: number;
-        confidence: number;
-        bodyLanguage: number;
+    rubrics: {
+        activeListening: RubricScore;
+        keyAccomplishments: RubricScore;
+        relevantQuestions: RubricScore;
+        communication: RubricScore;
+        technicalKnowledge: RubricScore;
+        problemSolving: RubricScore;
     };
     strengths: string[];
-    improvements: string[];
-    detailedFeedback: {
-        questionId: number;
-        visualScore: number;
-        audioScore: number;
-        transcript: string;
-        notes: string;
-    }[];
+    growthAreas: string[];
+    detailedFeedback: DetailedFeedback[];
+    summary: string[];
+    pronunciation?: {
+        syllableStress: string[];
+        consonantClusters: string[];
+    };
     nextSteps: string[];
 }
 
@@ -77,7 +105,7 @@ export async function generateInterviewFeedback(sessionId: string): Promise<Inte
 }
 
 async function generateAIFeedback(session: any, responses: any[], provider: any): Promise<InterviewFeedback> {
-    const feedbackPrompt = `You are an expert interview coach and technical recruiter with 15+ years of experience. Analyze this mock interview performance and provide detailed, actionable feedback.
+    const feedbackPrompt = `You are an expert interview coach from LHH (Lee Hecht Harrison) with 15+ years of experience in executive coaching and talent development. Analyze this mock interview performance and provide detailed, structured feedback following professional coaching standards.
 
 INTERVIEW CONTEXT:
 - Job Role: ${session.job_role}
@@ -90,82 +118,161 @@ ${responses.map((r, i) => `
 QUESTION ${i + 1} (${r.question_type}): ${r.question_text}
 Response Duration: ${r.response_duration_seconds || 'Not recorded'} seconds
 Transcript: ${r.transcript || 'No transcript available'}
-Analysis Data: ${JSON.stringify(r.analysis_data || {})}
 `).join('\n')}
 
-EVALUATION FRAMEWORK:
+EVALUATION FRAMEWORK - Use 1-5 scale for each rubric:
 
-COMMUNICATION ASSESSMENT (0-100):
-- Clarity and articulation of ideas
-- Structure and logical flow of responses
-- Use of specific examples and concrete details
-- Ability to explain complex concepts simply
-- Confidence in delivery without being arrogant
+ACTIVE LISTENING (1-5):
+- Demonstrates engagement with interviewer's questions
+- Asks clarifying questions when needed
+- Builds on interviewer's comments
+- Shows understanding through responses
 
-TECHNICAL COMPETENCE (0-100):
-- Depth of knowledge in relevant areas
-- Problem-solving approach and methodology
-- Understanding of best practices and trade-offs
-- Ability to discuss technical decisions and rationale
-- Awareness of current industry trends and tools
+KEY ACCOMPLISHMENTS (1-5):
+- Uses structured storytelling (STAR method)
+- Provides specific, measurable examples
+- Demonstrates clear impact and results
+- Includes relevant metrics and timelines
 
-BEHAVIORAL COMPETENCE (0-100):
-- Use of STAR method (Situation, Task, Action, Result)
-- Demonstration of leadership and collaboration skills
-- Self-awareness and ability to learn from mistakes
-- Growth mindset and adaptability
-- Cultural fit and team dynamics
+RELEVANT QUESTIONS (1-5):
+- Asks thoughtful, role-specific questions
+- Shows research and preparation
+- Demonstrates genuine interest
+- Engages throughout the conversation
 
-OVERALL PRESENCE (0-100):
-- Professional demeanor and confidence
-- Engagement and enthusiasm for the role
-- Ability to ask thoughtful questions
-- Recovery from difficult questions
-- Authenticity and genuineness
+COMMUNICATION (1-5):
+- Clear articulation and professional tone
+- Appropriate pace and volume
+- Minimal filler words
+- Confident delivery
 
-FEEDBACK QUALITY STANDARDS:
-- Be specific and actionable, not generic
-- Reference actual examples from their responses
-- Provide concrete improvement strategies
-- Balance constructive criticism with encouragement
-- Focus on behaviors that can be improved with practice
+TECHNICAL KNOWLEDGE (1-5):
+- Demonstrates relevant expertise
+- Explains concepts clearly
+- Shows current industry awareness
+- Provides practical examples
+
+PROBLEM SOLVING (1-5):
+- Structured approach to challenges
+- Creative and practical solutions
+- Shows analytical thinking
+- Learns from past experiences
+
+FEEDBACK STRUCTURE REQUIREMENTS:
+
+1. RUBRIC SCORES: Provide specific 1-5 scores with detailed feedback
+2. STRENGTHS: 2-3 specific positive observations with examples
+3. GROWTH AREAS: 2-4 specific improvement areas with actionable advice
+4. DETAILED FEEDBACK: Per-question analysis with tone assessment
+5. SUMMARY: Key accomplishments and themes from the interview
+6. NEXT STEPS: 5-6 specific, actionable recommendations
 
 Return feedback in this exact JSON format:
 {
-  "overallScore": 85,
-  "categoryScores": {
-    "communication": 80,
-    "technical": 90,
-    "confidence": 85,
-    "bodyLanguage": 75
+  "overallScore": 75,
+  "rubrics": {
+    "activeListening": {
+      "score": 3,
+      "maxScore": 5,
+      "feedback": "You demonstrated some good active listening skills, particularly when you asked for clarification about specific requirements, showing you were paying attention and wanted to fully understand the question.",
+      "improvements": "To improve your active listening, try to acknowledge and build on your conversation partner's comments more often. For example, when the interviewer mentions a challenge, you could respond with 'That's an interesting point about X - I've seen similar situations where Y approach worked well. How has your team typically handled this?'",
+      "showInsights": true
+    },
+    "keyAccomplishments": {
+      "score": 4,
+      "maxScore": 5,
+      "feedback": "You did well in sharing key accomplishments that demonstrate your impact through structured storytelling. Your examples showed clear situation-action-result frameworks with specific challenges and measurable outcomes.",
+      "improvements": "To strengthen future responses, consider including more specific metrics and timelines, and work on being more concise while maintaining the strong structural elements you already demonstrate well.",
+      "showInsights": false
+    },
+    "relevantQuestions": {
+      "score": 4,
+      "maxScore": 5,
+      "feedback": "You did well at asking relevant questions, particularly about team structure and role expectations. Your questions showed good preparation and genuine interest in the position.",
+      "improvements": "Consider asking follow-up questions throughout the conversation, not just at the end, to demonstrate continuous engagement and deepen the discussion about specific examples you're sharing.",
+      "showInsights": false
+    },
+    "communication": {
+      "score": 3,
+      "maxScore": 5,
+      "feedback": "Your communication was generally clear and professional, with good structure in your responses. You presented information in a logical flow that was easy to follow.",
+      "improvements": "Work on reducing filler words and varying your vocal tone to project more confidence. Practice pausing briefly instead of using 'um' or 'uh' when collecting your thoughts.",
+      "showInsights": true
+    },
+    "technicalKnowledge": {
+      "score": 4,
+      "maxScore": 5,
+      "feedback": "You demonstrated strong technical knowledge with relevant examples and current industry awareness. Your explanations were clear and showed practical experience.",
+      "improvements": "Consider providing more specific technical details when explaining implementation decisions, and relate your technical knowledge more directly to the role requirements.",
+      "showInsights": false
+    },
+    "problemSolving": {
+      "score": 3,
+      "maxScore": 5,
+      "feedback": "You showed good problem-solving approach with structured thinking and practical solutions. Your examples demonstrated analytical skills and learning from experience.",
+      "improvements": "Focus on presenting a more systematic problem-solving framework. Start with problem identification, then solution options, decision criteria, and measurable outcomes.",
+      "showInsights": true
+    }
   },
   "strengths": [
-    "Provided specific, measurable examples when discussing past projects",
-    "Demonstrated strong problem-solving methodology with clear step-by-step approach",
-    "Showed excellent self-awareness when discussing areas for improvement"
+    "You shared a variety of strong examples showcasing your leadership abilities and creative problem-solving. Nice job!",
+    "Demonstrated excellent use of the STAR method in your project management examples, providing clear context and measurable results.",
+    "Showed strong self-awareness and ability to learn from challenging situations, particularly in your conflict resolution example."
   ],
-  "improvements": [
-    "Structure responses using the STAR method for better clarity and impact",
-    "Provide more specific technical details when explaining implementation decisions",
-    "Practice maintaining eye contact and confident posture throughout responses"
+  "growthAreas": [
+    "Prioritize clarity and conciseness: Many of your answers could be more succinct. Focus on key takeaways and avoid unnecessary repetition to make your responses more impactful.",
+    "Engage with the interviewer by asking follow-up questions: Create more interactive dialogue throughout the conversation to demonstrate active listening and deeper engagement.",
+    "Use quantifiable impact wherever possible: Include specific metrics and measurable outcomes in your examples to make them more concrete and compelling.",
+    "Frame complex stories with clearer structure: Use intentional frameworks like STAR method consistently to make your responses easier to follow and more impactful."
   ],
+  "detailedFeedback": [
+    {
+      "questionNumber": 1,
+      "questionText": "Tell me about yourself",
+      "response": "Brief summary of response...",
+      "feedback": "Good job on expressing gratitude for the opportunity. Your response was polite and showed a positive attitude, which is a great way to start the interview. Consider elaborating slightly on how you are feeling to make your response more engaging and personable.",
+      "tone": {
+        "professional": 85,
+        "clear": 80,
+        "relaxed": 75,
+        "confident": 70
+      }
+    }
+  ],
+  "summary": [
+    "The candidate managed multiple complex projects with specific challenges, demonstrating strong leadership and coordination skills across business units.",
+    "They effectively handled conflicts and adapted to unforeseen situations, displaying emphasis on team well-being and delivery management.",
+    "Demonstrated strong empathy and leadership by addressing team performance issues with mentorship and support.",
+    "Showed ability to identify risks early and maintain transparency with stakeholders while adapting project timelines."
+  ],
+  "pronunciation": {
+    "syllableStress": [
+      "Focus on syllable stress in business words. The noun 'project' is stressed on the first syllable: /ˈprɑːdʒɛkt/, with emphasis on 'PRO'.",
+      "The word 'eventually' has stress on the second syllable: /ɪˈvɛntʃuəli/, with emphasis on 'VEN'."
+    ],
+    "consonantClusters": [
+      "Pay attention to fully pronouncing consonant clusters at word ends. In 'sprints planning', make the final /s/ in 'sprints' clear before 'planning'.",
+      "In 'past pain points', articulate the /t/ sound in 'past' clearly: /pæst peɪn pɔɪnts/."
+    ]
+  },
   "nextSteps": [
-    "Practice the STAR method with 3-5 prepared stories covering different competencies",
-    "Research the company's technical stack and prepare specific questions about their architecture",
-    "Record yourself answering common questions to improve delivery and reduce filler words",
-    "Prepare thoughtful questions about team dynamics, growth opportunities, and technical challenges",
-    "Practice explaining technical concepts to different audiences (technical vs. non-technical)"
+    "Practice the STAR method with 3-5 prepared stories covering different competencies relevant to your target role",
+    "Work on reducing filler words by recording yourself and practicing pausing instead of using 'um' or 'uh'",
+    "Prepare specific questions about team dynamics, technical challenges, and growth opportunities for each interview",
+    "Practice explaining technical concepts concisely while including specific metrics and outcomes",
+    "Develop a systematic approach to discussing problem-solving: problem identification → solution options → decision criteria → results",
+    "Schedule regular mock interviews to build confidence and consistency in your delivery"
   ]
 }
 
 SCORING GUIDELINES:
-- 90-100: Exceptional performance, ready for senior roles
-- 80-89: Strong performance with minor areas for improvement
-- 70-79: Good foundation with some development needed
-- 60-69: Adequate but requires focused improvement
-- Below 60: Significant development needed before interviewing
+- 5: Exceptional - Exceeds expectations, ready for senior roles
+- 4: Proficient - Meets expectations with minor areas for improvement  
+- 3: Developing - Good foundation, some development needed
+- 2: Needs Improvement - Adequate but requires focused work
+- 1: Inadequate - Significant development needed
 
-Focus on growth potential and specific, actionable advice. Be encouraging but honest about areas needing improvement.`;
+Focus on specific, actionable feedback with examples from their actual responses. Be encouraging but honest about areas needing improvement.`;
 
     try {
         const response = await provider.generateText(feedbackPrompt);
@@ -174,30 +281,35 @@ Focus on growth potential and specific, actionable advice. Be encouraging but ho
         // Try to parse JSON response
         let feedback: InterviewFeedback;
         try {
-            const parsed = JSON.parse(cleanResponse);
-            feedback = {
-                ...parsed,
-                detailedFeedback: generateDetailedFeedback(responses)
-            };
+            feedback = JSON.parse(cleanResponse);
         } catch (parseError) {
             // Try to extract JSON from response
             const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
-                feedback = {
-                    ...parsed,
-                    detailedFeedback: generateDetailedFeedback(responses)
-                };
+                feedback = JSON.parse(jsonMatch[0]);
             } else {
                 throw new Error('Could not parse feedback JSON');
             }
         }
 
-        // Validate scores are within range
+        // Validate and ensure proper structure
         feedback.overallScore = Math.max(0, Math.min(100, feedback.overallScore || 0));
-        Object.keys(feedback.categoryScores).forEach(key => {
-            const categoryKey = key as keyof typeof feedback.categoryScores;
-            feedback.categoryScores[categoryKey] = Math.max(0, Math.min(100, feedback.categoryScores[categoryKey] || 0));
+        
+        // Ensure all rubrics have proper structure
+        const rubricKeys = ['activeListening', 'keyAccomplishments', 'relevantQuestions', 'communication', 'technicalKnowledge', 'problemSolving'];
+        rubricKeys.forEach(key => {
+            if (!feedback.rubrics[key]) {
+                feedback.rubrics[key] = {
+                    score: 3,
+                    maxScore: 5,
+                    feedback: 'Assessment pending - complete more responses for detailed feedback.',
+                    improvements: 'Continue practicing to receive specific improvement recommendations.',
+                    showInsights: false
+                };
+            }
+            // Ensure scores are 1-5
+            feedback.rubrics[key].score = Math.max(1, Math.min(5, feedback.rubrics[key].score || 3));
+            feedback.rubrics[key].maxScore = 5;
         });
 
         return feedback;
@@ -209,111 +321,167 @@ Focus on growth potential and specific, actionable advice. Be encouraging but ho
 }
 
 function generateRuleBasedFeedback(session: any, responses: any[]): InterviewFeedback {
-    const detailedFeedback = generateDetailedFeedback(responses);
+    const responseCount = responses.length;
+    const hasTranscripts = responses.some(r => r.transcript && r.transcript.length > 10);
     
-    // Calculate more nuanced scores based on available data
-    const avgVisualScore = detailedFeedback.length > 0 
-        ? Math.round(detailedFeedback.reduce((sum, d) => sum + d.visualScore, 0) / detailedFeedback.length)
-        : 75;
+    // Calculate base scores (1-5 scale)
+    const baseScore = Math.min(5, Math.max(1, 2 + (responseCount * 0.5)));
+    const completionBonus = responseCount >= 3 ? 0.5 : 0;
     
-    const avgAudioScore = detailedFeedback.length > 0
-        ? Math.round(detailedFeedback.reduce((sum, d) => sum + d.audioScore, 0) / detailedFeedback.length)
-        : 78;
-
-    // More sophisticated overall scoring
-    const responseQuality = responses.length > 0 ? Math.min(100, responses.length * 20) : 60;
-    const completionBonus = responses.length >= 3 ? 10 : 0;
-    const overallScore = Math.round((avgVisualScore * 0.3 + avgAudioScore * 0.4 + responseQuality * 0.3) + completionBonus);
-
-    // Enhanced category scoring
-    const categoryScores = {
-        communication: Math.round(avgAudioScore * 0.8 + (responses.length > 0 ? 15 : 0)),
-        technical: session.interview_type === 'technical' 
-            ? Math.round(avgAudioScore * 0.9 + (responses.length >= 3 ? 10 : 0))
-            : Math.max(65, avgAudioScore - 5),
-        confidence: Math.round(avgVisualScore * 0.7 + avgAudioScore * 0.3),
-        bodyLanguage: Math.max(60, avgVisualScore - 3)
+    // Generate rubric scores
+    const rubrics = {
+        activeListening: {
+            score: Math.min(5, Math.round(baseScore + (hasTranscripts ? 0.5 : 0))),
+            maxScore: 5,
+            feedback: responseCount > 0 
+                ? "You demonstrated engagement by completing interview responses. This shows attention to the process and willingness to participate fully."
+                : "Complete more interview responses to demonstrate active listening and engagement with the questions.",
+            improvements: responseCount >= 3
+                ? "To improve active listening, practice acknowledging the interviewer's questions more explicitly and ask clarifying questions when needed."
+                : "Focus on completing full responses to each question to show active engagement with the interview process.",
+            showInsights: responseCount >= 2
+        },
+        keyAccomplishments: {
+            score: Math.min(5, Math.round(baseScore + completionBonus)),
+            maxScore: 5,
+            feedback: responseCount >= 2
+                ? "You provided examples during your responses, showing effort to share relevant experiences and accomplishments."
+                : "Work on sharing specific examples that demonstrate your key accomplishments and impact.",
+            improvements: "Structure your examples using the STAR method (Situation, Task, Action, Result) and include specific metrics and outcomes where possible.",
+            showInsights: responseCount >= 3
+        },
+        relevantQuestions: {
+            score: Math.min(5, Math.round(baseScore)),
+            maxScore: 5,
+            feedback: "Asking thoughtful questions shows preparation and genuine interest in the role and company.",
+            improvements: "Prepare 3-5 specific questions about the role, team dynamics, and company culture to ask during interviews.",
+            showInsights: false
+        },
+        communication: {
+            score: Math.min(5, Math.round(baseScore + (hasTranscripts ? 0.3 : 0))),
+            maxScore: 5,
+            feedback: hasTranscripts
+                ? "Your responses showed clear communication and professional tone. You articulated your thoughts in a structured manner."
+                : "Focus on clear articulation and professional communication in your responses.",
+            improvements: "Practice reducing filler words and maintaining consistent pace and volume throughout your responses.",
+            showInsights: hasTranscripts
+        },
+        technicalKnowledge: {
+            score: session.interview_type === 'technical' 
+                ? Math.min(5, Math.round(baseScore + 0.5))
+                : Math.min(5, Math.round(baseScore)),
+            maxScore: 5,
+            feedback: session.interview_type === 'technical'
+                ? "You engaged with technical questions, showing willingness to discuss your technical background and experience."
+                : "Consider how to effectively communicate your technical knowledge and problem-solving approach.",
+            improvements: "Prepare specific examples that demonstrate your technical expertise and explain complex concepts clearly.",
+            showInsights: session.interview_type === 'technical'
+        },
+        problemSolving: {
+            score: Math.min(5, Math.round(baseScore + (responseCount >= 3 ? 0.4 : 0))),
+            maxScore: 5,
+            feedback: responseCount >= 2
+                ? "You approached the interview questions systematically, showing structured thinking in your responses."
+                : "Demonstrate your problem-solving approach by working through examples step-by-step.",
+            improvements: "Use a consistent framework for problem-solving: identify the problem, explore options, explain your decision process, and describe results.",
+            showInsights: responseCount >= 3
+        }
     };
 
-    // Ensure scores are within bounds
-    Object.keys(categoryScores).forEach(key => {
-        const categoryKey = key as keyof typeof categoryScores;
-        categoryScores[categoryKey] = Math.max(50, Math.min(95, categoryScores[categoryKey]));
-    });
+    // Calculate overall score (convert 1-5 to 0-100 scale)
+    const avgRubricScore = Object.values(rubrics).reduce((sum, rubric) => sum + rubric.score, 0) / 6;
+    const overallScore = Math.round((avgRubricScore - 1) * 25); // Convert 1-5 to 0-100
 
-    // Generate sophisticated strengths and improvements
+    // Generate strengths based on performance
     const strengths = [];
-    const improvements = [];
+    if (responseCount >= 3) strengths.push("Completed the full interview session, demonstrating commitment and follow-through.");
+    if (rubrics.communication.score >= 4) strengths.push("Showed clear and professional communication throughout your responses.");
+    if (rubrics.technicalKnowledge.score >= 4) strengths.push("Demonstrated relevant technical knowledge and practical experience.");
+    if (hasTranscripts) strengths.push("Provided substantive responses that showed preparation and thoughtfulness.");
+    if (overallScore >= 75) strengths.push("Overall performance indicates strong interview readiness and professional presence.");
 
-    // Strengths based on performance
-    if (responses.length >= 3) strengths.push('Completed the full interview session, showing commitment and preparation');
-    if (categoryScores.communication > 80) strengths.push('Demonstrated clear and articulate communication throughout responses');
-    if (categoryScores.technical > 80) strengths.push('Showed strong technical knowledge and problem-solving approach');
-    if (categoryScores.confidence > 80) strengths.push('Maintained confident and professional demeanor during the interview');
-    if (categoryScores.bodyLanguage > 80) strengths.push('Exhibited strong professional presence and body language');
-    if (overallScore > 85) strengths.push('Overall performance indicates strong interview readiness');
-
-    // Improvements based on gaps
-    if (categoryScores.communication < 75) improvements.push('Focus on structuring responses more clearly using frameworks like STAR method');
-    if (categoryScores.technical < 75) improvements.push('Strengthen technical explanations with more specific examples and implementation details');
-    if (categoryScores.confidence < 75) improvements.push('Practice building confidence through mock interviews and positive self-talk');
-    if (categoryScores.bodyLanguage < 75) improvements.push('Work on maintaining eye contact and confident posture throughout responses');
-    if (responses.length < 3) improvements.push('Complete full interview sessions to build stamina and consistency');
-    if (overallScore < 70) improvements.push('Consider additional practice sessions to improve overall interview performance');
-
-    // Default strengths/improvements if none generated
+    // Default strengths if none generated
     if (strengths.length === 0) {
-        strengths.push('Showed willingness to practice and improve through mock interviews');
-        strengths.push('Demonstrated initiative by completing the interview setup process');
-    }
-    if (improvements.length === 0) {
-        improvements.push('Continue practicing with mock interviews to build confidence and fluency');
-        improvements.push('Focus on providing specific examples and measurable outcomes in responses');
+        strengths.push("Showed initiative by participating in mock interview practice.");
+        strengths.push("Demonstrated willingness to improve through structured feedback and coaching.");
     }
 
-    // Enhanced next steps
+    // Generate growth areas
+    const growthAreas = [];
+    if (rubrics.activeListening.score < 4) growthAreas.push("Focus on demonstrating active listening by asking clarifying questions and building on the interviewer's comments.");
+    if (rubrics.keyAccomplishments.score < 4) growthAreas.push("Strengthen your examples by using the STAR method and including specific, measurable outcomes.");
+    if (rubrics.communication.score < 4) growthAreas.push("Work on clarity and conciseness in your responses, reducing filler words and maintaining professional tone.");
+    if (rubrics.problemSolving.score < 4) growthAreas.push("Develop a more systematic approach to explaining your problem-solving process and decision-making.");
+    if (responseCount < 3) growthAreas.push("Complete full interview sessions to build stamina and consistency in your performance.");
+
+    // Default growth areas if none generated
+    if (growthAreas.length === 0) {
+        growthAreas.push("Continue practicing with mock interviews to build confidence and fluency in your responses.");
+        growthAreas.push("Focus on providing more specific examples with quantifiable results and clear impact statements.");
+    }
+
+    // Generate detailed feedback for each response
+    const detailedFeedback: DetailedFeedback[] = responses.map((response, idx) => ({
+        questionNumber: idx + 1,
+        questionText: response.question_text || `Question ${idx + 1}`,
+        response: response.transcript || 'Response recorded',
+        feedback: `Your response showed engagement with the question. ${hasTranscripts ? 'Consider structuring your answer more clearly and including specific examples.' : 'Focus on providing clear, structured responses with concrete examples.'}`,
+        tone: {
+            professional: Math.min(100, 70 + (responseCount * 5)),
+            clear: Math.min(100, 65 + (hasTranscripts ? 15 : 5)),
+            relaxed: Math.min(100, 60 + (responseCount * 8)),
+            confident: Math.min(100, 55 + (responseCount * 10))
+        },
+        conciseness: hasTranscripts ? {
+            timestamp: '0:30',
+            originalText: 'Sample of original response text...',
+            improvedText: 'More concise version of the response...',
+            explanation: 'This revision removes redundancy and focuses on key points for greater impact.'
+        } : undefined
+    }));
+
+    // Generate summary points
+    const summary = [
+        `Completed ${responseCount} interview response${responseCount !== 1 ? 's' : ''}, showing engagement with the mock interview process.`,
+        responseCount >= 3 
+            ? "Demonstrated consistency and stamina by completing the full interview session."
+            : "Building interview endurance through continued practice sessions.",
+        hasTranscripts 
+            ? "Provided substantive responses that showed preparation and relevant experience."
+            : "Focus on developing more detailed responses with specific examples and outcomes.",
+        session.interview_type === 'technical'
+            ? "Engaged with technical questions, showing willingness to discuss technical background."
+            : "Demonstrated professional communication appropriate for the interview context."
+    ];
+
+    // Generate next steps
     const nextSteps = [
-        'Practice the STAR method (Situation, Task, Action, Result) for behavioral questions',
-        'Prepare 5-7 specific examples that demonstrate key competencies for your target role',
-        'Research common interview questions for your field and practice responses out loud',
-        'Record yourself answering questions to identify areas for improvement in delivery',
-        'Schedule regular mock interview sessions to build confidence and consistency',
-        'Prepare thoughtful questions to ask interviewers about the role and company culture'
+        "Practice the STAR method (Situation, Task, Action, Result) with 5-7 prepared examples covering key competencies.",
+        "Record yourself answering common interview questions to identify areas for improvement in delivery and pacing.",
+        "Prepare specific, thoughtful questions to ask interviewers about the role, team, and company culture.",
+        "Work on reducing filler words by practicing pausing briefly instead of using 'um' or 'uh' when thinking.",
+        "Schedule regular mock interview sessions to build confidence and consistency in your performance.",
+        "Research the company and role thoroughly before each interview to demonstrate genuine interest and preparation."
     ];
 
     return {
-        overallScore: Math.max(55, Math.min(95, overallScore)),
-        categoryScores,
-        strengths: strengths.slice(0, 4), // Limit to top 4
-        improvements: improvements.slice(0, 4), // Limit to top 4
+        overallScore: Math.max(20, Math.min(95, overallScore)),
+        rubrics,
+        strengths: strengths.slice(0, 3),
+        growthAreas: growthAreas.slice(0, 4),
         detailedFeedback,
-        nextSteps: nextSteps.slice(0, 5) // Limit to top 5
+        summary,
+        pronunciation: {
+            syllableStress: [
+                "Focus on syllable stress in common business words. For example, 'project' (noun) is stressed on the first syllable: /ˈprɑːdʒɛkt/.",
+                "Practice words like 'eventually' with stress on the second syllable: /ɪˈvɛntʃuəli/."
+            ],
+            consonantClusters: [
+                "Pay attention to consonant clusters at word endings, especially before words starting with consonants.",
+                "Practice clear articulation in phrases like 'past projects' and 'next steps' to improve speech precision."
+            ]
+        },
+        nextSteps: nextSteps.slice(0, 6)
     };
 }
 
-function generateDetailedFeedback(responses: any[]) {
-    return responses.map((response: any, idx: number) => {
-        const analysisData = response.analysis_data || {};
-        const visual = analysisData.visual || { eyeContact: 75, bodyLanguage: 70, confidence: 75 };
-        const audio = analysisData.audio || { clarity: 80, pace: 120, fillerWords: 2, volume: 75 };
-
-        const visualScore = Math.round(
-            (visual.eyeContact * 0.3) + (visual.bodyLanguage * 0.3) + (visual.confidence * 0.4)
-        );
-
-        const audioScore = Math.round(
-            (audio.clarity * 0.4) + 
-            (Math.min(100, Math.max(0, 100 - Math.abs(audio.pace - 150) * 0.5)) * 0.2) + 
-            (audio.volume * 0.2) + 
-            (Math.max(0, 100 - audio.fillerWords * 10) * 0.2)
-        );
-
-        return {
-            questionId: idx + 1,
-            visualScore,
-            audioScore,
-            transcript: response.transcript || 'No transcript available',
-            notes: visual.notes || `Response ${idx + 1} analysis`
-        };
-    });
-}

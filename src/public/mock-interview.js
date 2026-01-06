@@ -211,11 +211,11 @@ async function finishInterview() {
         const data = await response.json();
         const feedback = data.data;
 
-        // Display scores
-        document.getElementById('overall-score').textContent = feedback.overallScore || '--';
-        document.getElementById('communication-score').textContent = feedback.categoryScores?.communication || '--';
-        document.getElementById('technical-score').textContent = feedback.categoryScores?.technical || '--';
-        document.getElementById('confidence-score').textContent = feedback.categoryScores?.confidence || '--';
+        // Display overall score
+        document.getElementById('overall-score').textContent = feedback.overallScore ? `${feedback.overallScore}%` : '--';
+
+        // Display rubric scores
+        displayRubricScores(feedback.rubrics || {});
 
         // Display strengths
         const strengthsList = document.getElementById('strengths-list');
@@ -233,11 +233,12 @@ async function finishInterview() {
             strengthsList.appendChild(li);
         }
 
-        // Display improvements
+        // Display growth areas (improvements)
         const improvementsList = document.getElementById('improvements-list');
         improvementsList.innerHTML = '';
-        if (feedback.improvements && feedback.improvements.length > 0) {
-            feedback.improvements.forEach(improvement => {
+        const growthAreas = feedback.growthAreas || feedback.improvements || [];
+        if (growthAreas.length > 0) {
+            growthAreas.forEach(improvement => {
                 const li = document.createElement('li');
                 li.textContent = improvement;
                 improvementsList.appendChild(li);
@@ -248,8 +249,135 @@ async function finishInterview() {
             li.textContent = 'Great job! No major areas for improvement identified.';
             improvementsList.appendChild(li);
         }
+
+        // Display detailed feedback
+        if (feedback.detailedFeedback && feedback.detailedFeedback.length > 0) {
+            displayDetailedFeedback(feedback.detailedFeedback);
+        }
+
+        // Display summary
+        if (feedback.summary && feedback.summary.length > 0) {
+            displaySummary(feedback.summary);
+        }
+
+        // Display next steps
+        if (feedback.nextSteps && feedback.nextSteps.length > 0) {
+            displayNextSteps(feedback.nextSteps);
+        }
     } catch (error) {
         console.error('Error fetching results:', error);
         alert('Failed to load results. Please try again.');
     }
+}
+
+function displayRubricScores(rubrics) {
+    const container = document.getElementById('rubric-scores');
+    container.innerHTML = '';
+    
+    const rubricNames = {
+        activeListening: 'Active Listening',
+        keyAccomplishments: 'Key Accomplishments',
+        relevantQuestions: 'Relevant Questions',
+        communication: 'Communication',
+        technicalKnowledge: 'Technical Knowledge',
+        problemSolving: 'Problem Solving'
+    };
+    
+    Object.entries(rubrics).forEach(([key, rubric]) => {
+        const rubricDiv = document.createElement('div');
+        rubricDiv.className = 'rubric-item';
+        
+        const stars = Array.from({length: 5}, (_, i) => 
+            `<span class="star ${i < rubric.score ? 'filled' : ''}">★</span>`
+        ).join('');
+        
+        rubricDiv.innerHTML = `
+            <div class="rubric-header">
+                <div class="rubric-title">${rubricNames[key] || key}</div>
+                <div class="rubric-score">
+                    <span class="score-display">${rubric.score}/${rubric.maxScore}</span>
+                    <div class="score-stars">${stars}</div>
+                </div>
+            </div>
+            <div class="rubric-feedback">${rubric.feedback}</div>
+            <div class="rubric-improvements">${rubric.improvements}</div>
+        `;
+        
+        container.appendChild(rubricDiv);
+    });
+}
+
+function displayDetailedFeedback(detailedFeedback) {
+    const container = document.getElementById('detailed-feedback-section');
+    container.innerHTML = '<h3 style="margin-bottom: 16px; color: #1e293b;">📝 Detailed Feedback</h3>';
+    
+    detailedFeedback.forEach(item => {
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'detailed-feedback-item';
+        
+        const toneHtml = item.tone ? `
+            <div class="tone-indicators">
+                <div class="tone-item">
+                    <div class="tone-label">Professional</div>
+                    <div class="tone-score">${item.tone.professional}%</div>
+                </div>
+                <div class="tone-item">
+                    <div class="tone-label">Clear</div>
+                    <div class="tone-score">${item.tone.clear}%</div>
+                </div>
+                <div class="tone-item">
+                    <div class="tone-label">Relaxed</div>
+                    <div class="tone-score">${item.tone.relaxed}%</div>
+                </div>
+                <div class="tone-item">
+                    <div class="tone-label">Confident</div>
+                    <div class="tone-score">${item.tone.confident}%</div>
+                </div>
+            </div>
+        ` : '';
+        
+        feedbackDiv.innerHTML = `
+            <div class="question-header">Question ${item.questionNumber}: ${item.questionText}</div>
+            <div style="color: #374151; margin: 12px 0;">${item.feedback}</div>
+            ${toneHtml}
+            ${item.conciseness ? `
+                <div style="margin-top: 16px; padding: 12px; background: #f0f9ff; border-radius: 8px; border-left: 3px solid #0ea5e9;">
+                    <strong>Conciseness Tip (${item.conciseness.timestamp}):</strong>
+                    <div style="margin: 8px 0; font-style: italic;">"${item.conciseness.originalText}"</div>
+                    <div style="margin: 8px 0; color: #059669;"><strong>Improved:</strong> "${item.conciseness.improvedText}"</div>
+                    <div style="font-size: 0.9rem; color: #6b7280;">${item.conciseness.explanation}</div>
+                </div>
+            ` : ''}
+        `;
+        
+        container.appendChild(feedbackDiv);
+    });
+}
+
+function displaySummary(summary) {
+    const section = document.getElementById('summary-section');
+    const list = document.getElementById('summary-list');
+    
+    list.innerHTML = '';
+    summary.forEach(point => {
+        const li = document.createElement('li');
+        li.textContent = point;
+        list.appendChild(li);
+    });
+    
+    section.style.display = 'block';
+}
+
+function displayNextSteps(nextSteps) {
+    const section = document.getElementById('next-steps-section');
+    const list = document.getElementById('next-steps-list');
+    
+    list.innerHTML = '';
+    nextSteps.forEach(step => {
+        const li = document.createElement('li');
+        li.textContent = step;
+        list.appendChild(li);
+    });
+    
+    section.style.display = 'block';
 }
