@@ -38,11 +38,24 @@ router.post('/interview-session', asyncHandler(async (req: Request, res: Respons
     const { jobRole, interviewType, duration } = req.body;
     const sessionToken = generateSessionToken();
     
-    // Get user ID from session if authenticated
+    // Get user ID from session token if provided
     let userId = null;
-    const userSession = req.session;
-    if (userSession && userSession.userId) {
-        userId = userSession.userId;
+    const clientSessionId = req.body.sessionId || req.headers['x-session-id'];
+    
+    if (clientSessionId) {
+        try {
+            // Look up user from session
+            const sessionResult = await query(
+                `SELECT user_id FROM user_sessions WHERE session_id = $1 AND is_active = true`,
+                [clientSessionId]
+            );
+            
+            if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
+                userId = sessionResult.rows[0].user_id;
+            }
+        } catch (error) {
+            logger.warn('Failed to lookup user from session:', error);
+        }
     }
     
     const result = await query(
@@ -181,12 +194,28 @@ router.get('/interview-results/:sessionToken', asyncHandler(async (req: Request,
 // GET /api/interview-dashboard – get user's interview history
 router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Response) => {
     // Get user ID from session
-    const userSession = req.session;
-    if (!userSession || !userSession.userId) {
-        return res.json({ success: true, data: { interviews: [], message: 'Please log in to view your interview history' } });
+    let userId = null;
+    const clientSessionId = req.headers['x-session-id'] as string || req.query.sessionId as string;
+    
+    if (clientSessionId) {
+        try {
+            // Look up user from session
+            const sessionResult = await query(
+                `SELECT user_id FROM user_sessions WHERE session_id = $1 AND is_active = true`,
+                [clientSessionId]
+            );
+            
+            if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
+                userId = sessionResult.rows[0].user_id;
+            }
+        } catch (error) {
+            logger.warn('Failed to lookup user from session:', error);
+        }
     }
     
-    const userId = userSession.userId;
+    if (!userId) {
+        return res.json({ success: true, data: { interviews: [], message: 'Please log in to view your interview history' } });
+    }
     
     try {
         // Get user's interview sessions with results
@@ -268,16 +297,35 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
 // DELETE /api/interview-session/:id – delete an interview session
 router.delete('/interview-session/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const userSession = req.session;
     
-    if (!userSession || !userSession.userId) {
+    // Get user ID from session
+    let userId = null;
+    const clientSessionId = req.headers['x-session-id'] as string || req.query.sessionId as string;
+    
+    if (clientSessionId) {
+        try {
+            // Look up user from session
+            const sessionResult = await query(
+                `SELECT user_id FROM user_sessions WHERE session_id = $1 AND is_active = true`,
+                [clientSessionId]
+            );
+            
+            if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
+                userId = sessionResult.rows[0].user_id;
+            }
+        } catch (error) {
+            logger.warn('Failed to lookup user from session:', error);
+        }
+    }
+    
+    if (!userId) {
         throw new ValidationError('Authentication required');
     }
     
     // Verify the interview belongs to the user
     const checkResult = await query(
         `SELECT id FROM interview_sessions WHERE id = $1 AND user_id = $2`,
-        [id, userSession.userId]
+        [id, userId]
     );
     
     if (checkResult.rows.length === 0) {

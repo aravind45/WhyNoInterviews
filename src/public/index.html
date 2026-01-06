@@ -1518,7 +1518,7 @@
         <div class="main-tab" data-tab="target-companies">Target Companies</div>
         <div class="main-tab" data-tab="networking">Networking</div>
         <div class="main-tab" data-tab="mock-interview">🎯 Mock Interview</div>
-        <a href="/interview-dashboard.html" class="main-tab" style="text-decoration: none; color: inherit;">📊 Dashboard</a>
+        <div class="main-tab" data-tab="interview-dashboard">📊 Dashboard</div>
       </nav>
 
       <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
@@ -2285,6 +2285,62 @@
         </div>
       </div>
     </section>
+
+    <!-- TAB 7: Interview Dashboard -->
+    <section class="section" id="tab-interview-dashboard">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📊 Interview Dashboard</h2>
+          <p class="card-subtitle">Track your mock interview progress and performance</p>
+        </div>
+
+        <div id="dashboard-error-message" class="error" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 16px; border-radius: 8px; margin-bottom: 20px;"></div>
+
+        <div id="dashboard-loading" class="loading" style="text-align: center; padding: 40px; color: #64748b;">
+          <div>Loading your interview history...</div>
+        </div>
+
+        <div id="dashboard-content" style="display: none;">
+          <!-- Summary Stats -->
+          <div class="grid-4" style="margin-bottom: 32px;">
+            <div class="card" style="text-align: center;">
+              <div id="total-interviews" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
+              <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Total Interviews</div>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div id="completed-interviews" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
+              <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Completed</div>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div id="average-score" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">--</div>
+              <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Average Score</div>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div id="last-interview" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">--</div>
+              <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Days Since Last</div>
+            </div>
+          </div>
+
+          <!-- Interview History -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: #1e293b;">Interview History</h3>
+            <button class="btn btn-primary" onclick="showTab('mock-interview')">Start New Interview</button>
+          </div>
+
+          <div id="interviews-container">
+            <div id="interviews-list"></div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="dashboard-empty-state" style="display: none; text-align: center; padding: 64px 32px; color: #64748b;">
+          <div style="font-size: 4rem; margin-bottom: 16px;">🎯</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 8px; color: #374151;">No interviews yet</h3>
+          <p style="margin-bottom: 24px; line-height: 1.6;">Start your first mock interview to begin tracking your progress and improving your interview skills.</p>
+          <button class="btn btn-primary" onclick="showTab('mock-interview')">Start Your First Interview</button>
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- Cover Letter Modal -->
@@ -2643,6 +2699,11 @@
         // Initialize mock interview if needed
         if (typeof initializeMockInterview === 'function') {
           initializeMockInterview();
+        }
+      } else if (tabName === 'interview-dashboard') {
+        // Load interview dashboard
+        if (typeof loadInterviewDashboard === 'function') {
+          loadInterviewDashboard();
         }
       } else if (tabName === 'search') {
         // Ensure UI is ready for search
@@ -5827,10 +5888,16 @@
         mockCurrentQuestions = questionsData.data;
 
         // Create session
+        const sessionId = globalResumeState.sessionId || localStorage.getItem('sessionId');
+        const sessionBody = { jobRole, interviewType, duration };
+        if (sessionId) {
+          sessionBody.sessionId = sessionId;
+        }
+
         const sessionResponse = await fetch('/api/mock-interview/interview-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jobRole, interviewType, duration })
+          body: JSON.stringify(sessionBody)
         });
 
         if (!sessionResponse.ok) throw new Error('Failed to create session');
@@ -6046,6 +6113,248 @@
 
       // Show setup screen
       initializeMockInterview();
+    }
+
+    // ========== INTERVIEW DASHBOARD FUNCTIONS ==========
+
+    async function loadInterviewDashboard() {
+      try {
+        // Show loading state
+        document.getElementById('dashboard-loading').style.display = 'block';
+        document.getElementById('dashboard-content').style.display = 'none';
+        document.getElementById('dashboard-empty-state').style.display = 'none';
+        document.getElementById('dashboard-error-message').style.display = 'none';
+
+        // Get session ID from global state
+        const sessionId = globalResumeState.sessionId || localStorage.getItem('sessionId');
+        const headers = {};
+        if (sessionId) {
+          headers['x-session-id'] = sessionId;
+        }
+
+        const response = await fetch('/api/mock-interview/interview-dashboard', { headers });
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to load dashboard');
+        }
+        
+        const { interviews, summary, message } = data.data;
+        
+        // Hide loading
+        document.getElementById('dashboard-loading').style.display = 'none';
+        
+        // Show login message if not authenticated
+        if (message) {
+          showDashboardError(message);
+          showDashboardEmptyState();
+          return;
+        }
+        
+        // Show empty state if no interviews
+        if (!interviews || interviews.length === 0) {
+          showDashboardEmptyState();
+          return;
+        }
+        
+        // Display dashboard content
+        displayDashboardSummaryStats(summary);
+        displayDashboardInterviews(interviews);
+        document.getElementById('dashboard-content').style.display = 'block';
+        
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        document.getElementById('dashboard-loading').style.display = 'none';
+        showDashboardError('Failed to load interview dashboard. Please try again.');
+      }
+    }
+
+    function displayDashboardSummaryStats(summary) {
+      document.getElementById('total-interviews').textContent = summary.totalInterviews || 0;
+      document.getElementById('completed-interviews').textContent = summary.completedInterviews || 0;
+      document.getElementById('average-score').textContent = summary.averageScore ? `${summary.averageScore}%` : '--';
+      
+      // Calculate days since last interview
+      if (summary.lastInterviewDate) {
+        const lastDate = new Date(summary.lastInterviewDate);
+        const today = new Date();
+        const diffTime = Math.abs(today - lastDate);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        document.getElementById('last-interview').textContent = diffDays === 0 ? 'Today' : `${diffDays}d`;
+      } else {
+        document.getElementById('last-interview').textContent = '--';
+      }
+    }
+
+    function displayDashboardInterviews(interviews) {
+      const container = document.getElementById('interviews-list');
+      container.innerHTML = '';
+      
+      interviews.forEach(interview => {
+        const card = createDashboardInterviewCard(interview);
+        container.appendChild(card);
+      });
+    }
+
+    function createDashboardInterviewCard(interview) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.cssText = 'margin-bottom: 20px; transition: all 0.2s ease;';
+      
+      const statusClass = getDashboardStatusClass(interview.status);
+      const formattedDate = formatDashboardDate(interview.createdAt);
+      const duration = interview.completedAt ? 
+        formatDashboardDuration(new Date(interview.completedAt) - new Date(interview.createdAt)) : 
+        `${interview.duration} min planned`;
+      
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+          <div style="flex: 1;">
+            <div style="font-size: 1.2rem; font-weight: 600; color: #e2e8f0; margin-bottom: 4px;">${interview.jobRole}</div>
+            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px;">
+              ${capitalizeFirst(interview.interviewType)} • ${formattedDate} • ${duration}
+            </div>
+            <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; text-transform: uppercase; ${statusClass}">${interview.status}</span>
+          </div>
+        </div>
+        
+        ${interview.results ? `
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">
+            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
+              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.overallScore}</div>
+              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Overall</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
+              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.categoryScores.communication}</div>
+              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Communication</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
+              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.categoryScores.technical}</div>
+              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Technical</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
+              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.categoryScores.confidence}</div>
+              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Confidence</div>
+            </div>
+          </div>
+        ` : `
+          <div style="text-align: center; padding: 20px; color: #64748b; font-style: italic;">
+            ${interview.status === 'completed' ? 'Results processing...' : 'Interview not completed'}
+          </div>
+        `}
+        
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          ${interview.results ? `
+            <button class="btn btn-secondary" onclick="viewDashboardResults('${interview.sessionToken}')">
+              View Results
+            </button>
+          ` : ''}
+          ${interview.status !== 'completed' ? `
+            <button class="btn btn-primary" onclick="continueDashboardInterview('${interview.sessionToken}')">
+              Continue Interview
+            </button>
+          ` : ''}
+          <button class="btn btn-secondary" onclick="deleteDashboardInterview('${interview.id}')" style="background: #dc2626; border-color: #dc2626;">
+            Delete
+          </button>
+        </div>
+      `;
+      
+      return card;
+    }
+
+    function getDashboardStatusClass(status) {
+      switch (status) {
+        case 'completed': return 'background: #dcfce7; color: #166534;';
+        case 'in_progress': return 'background: #fef3c7; color: #92400e;';
+        case 'setup': return 'background: #e0e7ff; color: #3730a3;';
+        default: return 'background: #e0e7ff; color: #3730a3;';
+      }
+    }
+
+    function formatDashboardDate(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      });
+    }
+
+    function formatDashboardDuration(milliseconds) {
+      const minutes = Math.floor(milliseconds / (1000 * 60));
+      if (minutes < 60) return `${minutes} min`;
+      
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return `${hours}h ${remainingMinutes}m`;
+    }
+
+    function capitalizeFirst(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function showDashboardError(message) {
+      const errorDiv = document.getElementById('dashboard-error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    function showDashboardEmptyState() {
+      document.getElementById('dashboard-empty-state').style.display = 'block';
+    }
+
+    // Action handlers
+    function viewDashboardResults(sessionToken) {
+      // Switch to mock interview tab and show results
+      showTab('mock-interview');
+      // TODO: Load specific results
+      showToast('Loading interview results...', 'info');
+    }
+
+    function continueDashboardInterview(sessionToken) {
+      // Switch to mock interview tab and continue
+      showTab('mock-interview');
+      showToast('Continuing interview...', 'info');
+    }
+
+    async function deleteDashboardInterview(interviewId) {
+      if (!confirm('Are you sure you want to delete this interview? This action cannot be undone.')) {
+        return;
+      }
+      
+      try {
+        // Get session ID from global state
+        const sessionId = globalResumeState.sessionId || localStorage.getItem('sessionId');
+        const headers = {};
+        if (sessionId) {
+          headers['x-session-id'] = sessionId;
+        }
+
+        const response = await fetch(`/api/mock-interview/interview-session/${interviewId}`, {
+          method: 'DELETE',
+          headers
+        });
+        
+        if (response.ok) {
+          // Reload the dashboard
+          loadInterviewDashboard();
+          showToast('Interview deleted successfully', 'success');
+        } else {
+          throw new Error('Failed to delete interview');
+        }
+      } catch (error) {
+        console.error('Error deleting interview:', error);
+        showToast('Failed to delete interview. Please try again.', 'error');
+      }
     }
 
   </script>
