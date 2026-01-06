@@ -81,10 +81,18 @@ export async function generateInterviewFeedback(sessionId: string): Promise<Inte
         // Return default feedback if no responses
         return {
             overallScore: 0,
-            categoryScores: { communication: 0, technical: 0, confidence: 0, bodyLanguage: 0 },
+            rubrics: {
+                activeListening: { score: 0, maxScore: 5, feedback: 'Pending', improvements: 'Pending', showInsights: false },
+                keyAccomplishments: { score: 0, maxScore: 5, feedback: 'Pending', improvements: 'Pending', showInsights: false },
+                relevantQuestions: { score: 0, maxScore: 5, feedback: 'Pending', improvements: 'Pending', showInsights: false },
+                communication: { score: 0, maxScore: 5, feedback: 'Pending', improvements: 'Pending', showInsights: false },
+                technicalKnowledge: { score: 0, maxScore: 5, feedback: 'Pending', improvements: 'Pending', showInsights: false },
+                problemSolving: { score: 0, maxScore: 5, feedback: 'Pending', improvements: 'Pending', showInsights: false }
+            },
             strengths: [],
-            improvements: ['Complete the interview to receive feedback'],
+            growthAreas: ['Complete the interview to receive feedback'],
             detailedFeedback: [],
+            summary: [],
             nextSteps: ['Start recording your responses to get AI-powered feedback']
         };
     }
@@ -92,7 +100,7 @@ export async function generateInterviewFeedback(sessionId: string): Promise<Inte
     // Generate AI-powered feedback
     try {
         const provider = getProvider(getDefaultProvider());
-        
+
         if (provider.isAvailable()) {
             return await generateAIFeedback(session, responses, provider);
         }
@@ -277,7 +285,7 @@ Focus on specific, actionable feedback with examples from their actual responses
     try {
         const response = await provider.generateText(feedbackPrompt);
         const cleanResponse = response.trim();
-        
+
         // Try to parse JSON response
         let feedback: InterviewFeedback;
         try {
@@ -294,9 +302,9 @@ Focus on specific, actionable feedback with examples from their actual responses
 
         // Validate and ensure proper structure
         feedback.overallScore = Math.max(0, Math.min(100, feedback.overallScore || 0));
-        
+
         // Ensure all rubrics have proper structure
-        const rubricKeys = ['activeListening', 'keyAccomplishments', 'relevantQuestions', 'communication', 'technicalKnowledge', 'problemSolving'];
+        const rubricKeys = ['activeListening', 'keyAccomplishments', 'relevantQuestions', 'communication', 'technicalKnowledge', 'problemSolving'] as const;
         rubricKeys.forEach(key => {
             if (!feedback.rubrics[key]) {
                 feedback.rubrics[key] = {
@@ -323,17 +331,17 @@ Focus on specific, actionable feedback with examples from their actual responses
 function generateRuleBasedFeedback(session: any, responses: any[]): InterviewFeedback {
     const responseCount = responses.length;
     const hasTranscripts = responses.some(r => r.transcript && r.transcript.length > 10);
-    
+
     // Calculate base scores (1-5 scale)
     const baseScore = Math.min(5, Math.max(1, 2 + (responseCount * 0.5)));
     const completionBonus = responseCount >= 3 ? 0.5 : 0;
-    
+
     // Generate rubric scores
     const rubrics = {
         activeListening: {
             score: Math.min(5, Math.round(baseScore + (hasTranscripts ? 0.5 : 0))),
             maxScore: 5,
-            feedback: responseCount > 0 
+            feedback: responseCount > 0
                 ? "You demonstrated engagement by completing interview responses. This shows attention to the process and willingness to participate fully."
                 : "Complete more interview responses to demonstrate active listening and engagement with the questions.",
             improvements: responseCount >= 3
@@ -367,7 +375,7 @@ function generateRuleBasedFeedback(session: any, responses: any[]): InterviewFee
             showInsights: hasTranscripts
         },
         technicalKnowledge: {
-            score: session.interview_type === 'technical' 
+            score: session.interview_type === 'technical'
                 ? Math.min(5, Math.round(baseScore + 0.5))
                 : Math.min(5, Math.round(baseScore)),
             maxScore: 5,
@@ -443,10 +451,10 @@ function generateRuleBasedFeedback(session: any, responses: any[]): InterviewFee
     // Generate summary points
     const summary = [
         `Completed ${responseCount} interview response${responseCount !== 1 ? 's' : ''}, showing engagement with the mock interview process.`,
-        responseCount >= 3 
+        responseCount >= 3
             ? "Demonstrated consistency and stamina by completing the full interview session."
             : "Building interview endurance through continued practice sessions.",
-        hasTranscripts 
+        hasTranscripts
             ? "Provided substantive responses that showed preparation and relevant experience."
             : "Focus on developing more detailed responses with specific examples and outcomes.",
         session.interview_type === 'technical'

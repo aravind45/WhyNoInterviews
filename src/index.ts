@@ -27,12 +27,14 @@ import { paywallMiddleware } from './middleware/paywall';
 const app = express();
 
 // Initialize database connection
-connectDatabase().catch(err => {
-  console.error('Failed to connect to database:', err);
-});
+if (process.env.NODE_ENV !== 'test') {
+  connectDatabase().catch(err => {
+    console.error('Failed to connect to database:', err);
+  });
 
-// Initialize LLM providers (Groq and Claude)
-initializeProviders();
+  // Initialize LLM providers (Groq and Claude)
+  initializeProviders();
+}
 
 // Get Groq model from environment or use default
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
@@ -58,6 +60,16 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Mount Routers
+app.use('/api/auth', authRouter);
+app.use('/api/ica', icaRoutes);
+app.use('/api/admin', adminRouter);
+
+// Import and mount Mock Interview Router
+import mockInterviewRouter from './routes/mockInterview';
+app.use('/api', mockInterviewRouter); // Routes in file are like /interview-session
+
 
 const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -1912,7 +1924,7 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 console.log('Checking startup conditions - VERCEL:', process.env.VERCEL, 'PORT:', PORT);
-if (process.env.VERCEL !== '1') {
+if (process.env.VERCEL !== '1' && require.main === module) {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 }
 

@@ -1,34 +1,34 @@
+import { closeDatabase, connectDatabase } from '../database/connection';
 import dotenv from 'dotenv';
+import path from 'path';
 
-// Load test environment
-dotenv.config({ path: '.env.test' });
+// Load test env vars early
+dotenv.config({ path: path.resolve(__dirname, '../../.env.test') });
 
-// Set test environment
-process.env.NODE_ENV = 'test';
-
-// Mock console for cleaner test output
-if (process.env.SILENT_TESTS === 'true') {
-  global.console = {
-    ...console,
-    log: jest.fn(),
-    debug: jest.fn(),
+// Mock logger to reduce noise during tests
+jest.mock('../utils/logger', () => ({
+  logger: {
     info: jest.fn(),
     warn: jest.fn(),
-  };
-}
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
-// Increase timeout for integration tests
-jest.setTimeout(30000);
+beforeAll(async () => {
+  // Silence console logs if needed, or redirect
+  // console.log = jest.fn(); 
 
-// Clean up after all tests
-afterAll(async () => {
-  // Close any open connections
   try {
-    const { closeDatabase } = require('../database/connection');
-    const { closeRedis } = require('../cache/redis');
-    await closeDatabase();
-    await closeRedis();
-  } catch {
-    // Ignore errors during cleanup
+    // Attempt connection
+    await connectDatabase();
+  } catch (error) {
+    // If it fails here, individual tests might fail or we might be mocking DB in unit tests
+    // For integration tests, we need this.
+    // console.error('Test DB connection failed:', error);
   }
+});
+
+afterAll(async () => {
+  await closeDatabase();
 });

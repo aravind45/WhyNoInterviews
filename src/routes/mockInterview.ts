@@ -16,20 +16,20 @@ const router = Router();
 // POST /api/generate-interview-questions
 router.post('/generate-interview-questions', asyncHandler(async (req: Request, res: Response) => {
     const { jobRole, interviewType, experienceLevel, duration, jobDescription } = req.body;
-    
+
     if (!jobRole || !interviewType || !experienceLevel || !duration) {
         throw new ValidationError('Missing required fields: jobRole, interviewType, experienceLevel, duration');
     }
-    
+
     const provider = getDefaultProvider();
-    const questions = await generateInterviewQuestions({ 
-        jobRole, 
-        interviewType, 
-        experienceLevel, 
-        duration, 
-        jobDescription 
+    const questions = await generateInterviewQuestions({
+        jobRole,
+        interviewType,
+        experienceLevel,
+        duration,
+        jobDescription
     }, provider);
-    
+
     res.json({ success: true, data: questions });
 }));
 
@@ -37,12 +37,12 @@ router.post('/generate-interview-questions', asyncHandler(async (req: Request, r
 router.post('/interview-session', asyncHandler(async (req: Request, res: Response) => {
     const { jobRole, interviewType, duration } = req.body;
     const sessionToken = generateSessionToken();
-    
+
     // Get user ID from session token or direct user ID
     let userId = null;
     const clientSessionId = req.body.sessionId || req.headers['x-session-id'];
     const directUserId = req.headers['x-user-id'] as string;
-    
+
     // Try direct user ID first
     if (directUserId) {
         userId = directUserId;
@@ -54,7 +54,7 @@ router.post('/interview-session', asyncHandler(async (req: Request, res: Respons
                 `SELECT user_id FROM user_sessions WHERE session_id = $1 AND is_active = true`,
                 [clientSessionId]
             );
-            
+
             if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
                 userId = sessionResult.rows[0].user_id;
                 logger.info('Interview session: Found user from session', { sessionId: clientSessionId, userId });
@@ -63,9 +63,9 @@ router.post('/interview-session', asyncHandler(async (req: Request, res: Respons
             logger.warn('Failed to lookup user from session:', error);
         }
     }
-    
+
     logger.info('Creating interview session', { userId, jobRole, interviewType, duration });
-    
+
     const result = await query(
         `INSERT INTO interview_sessions (session_token, user_id, job_role, interview_type, duration_minutes, status, created_at) 
      VALUES ($1, $2, $3, $4, $5, 'setup', NOW()) RETURNING id, session_token`,
@@ -80,27 +80,27 @@ router.post('/interview-session', asyncHandler(async (req: Request, res: Respons
 // POST /api/upload-interview-response – upload video for a question
 router.post('/upload-interview-response', asyncHandler(async (req: Request, res: Response) => {
     const { sessionToken, questionId, videoUrl } = req.body;
-    
+
     // First try to get from cache
     let sessionInfo = await cacheGet(`interview:${sessionToken}`);
-    
+
     // If not in cache, get from database
     if (!sessionInfo) {
         const sessionResult = await query(
             `SELECT id FROM interview_sessions WHERE session_token = $1`,
             [sessionToken]
         );
-        
+
         if (sessionResult.rows.length === 0) {
             throw new ValidationError('Invalid session token');
         }
-        
+
         sessionInfo = { sessionId: sessionResult.rows[0].id };
-        
+
         // Cache it for future use
         await cacheSet(`interview:${sessionToken}`, sessionInfo, 60 * 60);
     }
-    
+
     // For testing purposes, if questionId is a number, create a mock question
     let actualQuestionId = questionId;
     if (typeof questionId === 'number' || !questionId.includes('-')) {
@@ -112,7 +112,7 @@ router.post('/upload-interview-response', asyncHandler(async (req: Request, res:
         );
         actualQuestionId = mockQuestionResult.rows[0].id;
     }
-    
+
     const result = await query(
         `INSERT INTO interview_responses (session_id, question_id, video_url, created_at) 
      VALUES ($1, $2, $3, NOW()) RETURNING id`,
@@ -138,29 +138,34 @@ router.post('/analyze-interview-video', asyncHandler(async (req: Request, res: R
 // GET /api/interview-results/:sessionToken – compile feedback for the whole session
 router.get('/interview-results/:sessionToken', asyncHandler(async (req: Request, res: Response) => {
     const { sessionToken } = req.params;
-    
+
     // First try to get from cache
     let sessionInfo = await cacheGet(`interview:${sessionToken}`);
-    
+
     // If not in cache, get from database
     if (!sessionInfo) {
         const sessionResult = await query(
             `SELECT id FROM interview_sessions WHERE session_token = $1`,
             [sessionToken]
         );
-        
+
         if (sessionResult.rows.length === 0) {
             throw new ValidationError('Invalid session token');
         }
-        
+
         sessionInfo = { sessionId: sessionResult.rows[0].id };
-        
+
         // Cache it for future use
         await cacheSet(`interview:${sessionToken}`, sessionInfo, 60 * 60);
     }
-    
+
     const feedback = await generateInterviewFeedback(sessionInfo.sessionId);
-    
+
+    // Calculate average confidence from detailed feedback
+    const avgConfidence = feedback.detailedFeedback?.length > 0
+        ? Math.round(feedback.detailedFeedback.reduce((sum: number, f: any) => sum + (f.tone?.confident || 0), 0) / feedback.detailedFeedback.length)
+        : 0;
+
     // Store the results in the database for dashboard access
     try {
         await query(
@@ -177,15 +182,15 @@ router.get('/interview-results/:sessionToken', asyncHandler(async (req: Request,
             [
                 sessionInfo.sessionId,
                 feedback.overallScore || 0,
-                feedback.categoryScores?.communication || 0,
-                feedback.categoryScores?.technical || 0,
-                feedback.categoryScores?.confidence || 0,
+                (feedback.rubrics?.communication?.score || 0) * 20,
+                (feedback.rubrics?.technicalKnowledge?.score || 0) * 20,
+                avgConfidence,
                 JSON.stringify(feedback.strengths || []),
-                JSON.stringify(feedback.improvements || []),
+                JSON.stringify(feedback.growthAreas || []),
                 JSON.stringify(feedback)
             ]
         );
-        
+
         // Update session status to completed
         await query(
             `UPDATE interview_sessions SET status = 'completed', completed_at = NOW() WHERE id = $1`,
@@ -195,7 +200,7 @@ router.get('/interview-results/:sessionToken', asyncHandler(async (req: Request,
         logger.error('Error storing interview results:', error);
         // Don't fail the request if storage fails
     }
-    
+
     res.json({ success: true, data: feedback });
 }));
 
@@ -205,7 +210,7 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
     let userId = null;
     const clientSessionId = req.headers['x-session-id'] as string || req.query.sessionId as string;
     const directUserId = req.headers['x-user-id'] as string;
-    
+
     // Try direct user ID first
     if (directUserId) {
         userId = directUserId;
@@ -217,7 +222,7 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
                 `SELECT user_id FROM user_sessions WHERE session_id = $1 AND is_active = true`,
                 [clientSessionId]
             );
-            
+
             if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
                 userId = sessionResult.rows[0].user_id;
                 logger.info('Dashboard: Found user from session', { sessionId: clientSessionId, userId });
@@ -226,12 +231,12 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
             logger.warn('Failed to lookup user from session:', error);
         }
     }
-    
+
     if (!userId) {
         logger.warn('Dashboard: No user ID found', { sessionId: clientSessionId, directUserId });
         return res.json({ success: true, data: { interviews: [], message: 'Please log in to view your interview history' } });
     }
-    
+
     try {
         // Get user's interview sessions with results
         const result = await query(`
@@ -259,9 +264,9 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
             ORDER BY s.created_at DESC
             LIMIT 50
         `, [userId]);
-        
+
         logger.info('Dashboard: Found interviews', { userId, count: result.rows.length });
-        
+
         const interviews = result.rows.map(row => ({
             id: row.id,
             sessionToken: row.session_token,
@@ -283,28 +288,28 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
                 improvements: row.improvements ? JSON.parse(row.improvements) : []
             } : null
         }));
-        
+
         // Calculate summary stats
         const completedInterviews = interviews.filter(i => i.status === 'completed' && i.results);
-        const avgScore = completedInterviews.length > 0 
-            ? Math.round(completedInterviews.reduce((sum, i) => sum + i.results.overallScore, 0) / completedInterviews.length)
+        const avgScore = completedInterviews.length > 0
+            ? Math.round(completedInterviews.reduce((sum, i) => sum + (i.results?.overallScore || 0), 0) / completedInterviews.length)
             : 0;
-        
+
         const summary = {
             totalInterviews: interviews.length,
             completedInterviews: completedInterviews.length,
             averageScore: avgScore,
             lastInterviewDate: interviews.length > 0 ? interviews[0].createdAt : null
         };
-        
-        res.json({ 
-            success: true, 
-            data: { 
-                interviews, 
-                summary 
-            } 
+
+        res.json({
+            success: true,
+            data: {
+                interviews,
+                summary
+            }
         });
-        
+
     } catch (error) {
         logger.error('Error fetching interview dashboard:', error);
         throw new ProcessingError('Failed to fetch interview history');
@@ -314,11 +319,11 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
 // DELETE /api/interview-session/:id – delete an interview session
 router.delete('/interview-session/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    
+
     // Get user ID from session
     let userId = null;
     const clientSessionId = req.headers['x-session-id'] as string || req.query.sessionId as string;
-    
+
     if (clientSessionId) {
         try {
             // Look up user from session
@@ -326,7 +331,7 @@ router.delete('/interview-session/:id', asyncHandler(async (req: Request, res: R
                 `SELECT user_id FROM user_sessions WHERE session_id = $1 AND is_active = true`,
                 [clientSessionId]
             );
-            
+
             if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
                 userId = sessionResult.rows[0].user_id;
             }
@@ -334,24 +339,24 @@ router.delete('/interview-session/:id', asyncHandler(async (req: Request, res: R
             logger.warn('Failed to lookup user from session:', error);
         }
     }
-    
+
     if (!userId) {
         throw new ValidationError('Authentication required');
     }
-    
+
     // Verify the interview belongs to the user
     const checkResult = await query(
         `SELECT id FROM interview_sessions WHERE id = $1 AND user_id = $2`,
         [id, userId]
     );
-    
+
     if (checkResult.rows.length === 0) {
         throw new ValidationError('Interview not found or access denied');
     }
-    
+
     // Delete the interview (cascade will handle related records)
     await query(`DELETE FROM interview_sessions WHERE id = $1`, [id]);
-    
+
     res.json({ success: true, message: 'Interview deleted successfully' });
 }));
 
