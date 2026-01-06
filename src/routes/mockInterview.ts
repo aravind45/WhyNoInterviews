@@ -38,11 +38,16 @@ router.post('/interview-session', asyncHandler(async (req: Request, res: Respons
     const { jobRole, interviewType, duration } = req.body;
     const sessionToken = generateSessionToken();
     
-    // Get user ID from session token if provided
+    // Get user ID from session token or direct user ID
     let userId = null;
     const clientSessionId = req.body.sessionId || req.headers['x-session-id'];
+    const directUserId = req.headers['x-user-id'] as string;
     
-    if (clientSessionId) {
+    // Try direct user ID first
+    if (directUserId) {
+        userId = directUserId;
+        logger.info('Interview session: Using direct user ID', { userId });
+    } else if (clientSessionId) {
         try {
             // Look up user from session
             const sessionResult = await query(
@@ -52,11 +57,14 @@ router.post('/interview-session', asyncHandler(async (req: Request, res: Respons
             
             if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
                 userId = sessionResult.rows[0].user_id;
+                logger.info('Interview session: Found user from session', { sessionId: clientSessionId, userId });
             }
         } catch (error) {
             logger.warn('Failed to lookup user from session:', error);
         }
     }
+    
+    logger.info('Creating interview session', { userId, jobRole, interviewType, duration });
     
     const result = await query(
         `INSERT INTO interview_sessions (session_token, user_id, job_role, interview_type, duration_minutes, status, created_at) 
@@ -193,11 +201,16 @@ router.get('/interview-results/:sessionToken', asyncHandler(async (req: Request,
 
 // GET /api/interview-dashboard – get user's interview history
 router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Response) => {
-    // Get user ID from session
+    // Get user ID from session or direct user ID header
     let userId = null;
     const clientSessionId = req.headers['x-session-id'] as string || req.query.sessionId as string;
+    const directUserId = req.headers['x-user-id'] as string;
     
-    if (clientSessionId) {
+    // Try direct user ID first
+    if (directUserId) {
+        userId = directUserId;
+        logger.info('Dashboard: Using direct user ID', { userId });
+    } else if (clientSessionId) {
         try {
             // Look up user from session
             const sessionResult = await query(
@@ -207,6 +220,7 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
             
             if (sessionResult.rows.length > 0 && sessionResult.rows[0].user_id) {
                 userId = sessionResult.rows[0].user_id;
+                logger.info('Dashboard: Found user from session', { sessionId: clientSessionId, userId });
             }
         } catch (error) {
             logger.warn('Failed to lookup user from session:', error);
@@ -214,6 +228,7 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
     }
     
     if (!userId) {
+        logger.warn('Dashboard: No user ID found', { sessionId: clientSessionId, directUserId });
         return res.json({ success: true, data: { interviews: [], message: 'Please log in to view your interview history' } });
     }
     
@@ -244,6 +259,8 @@ router.get('/interview-dashboard', asyncHandler(async (req: Request, res: Respon
             ORDER BY s.created_at DESC
             LIMIT 50
         `, [userId]);
+        
+        logger.info('Dashboard: Found interviews', { userId, count: result.rows.length });
         
         const interviews = result.rows.map(row => ({
             id: row.id,

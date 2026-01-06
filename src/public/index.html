@@ -5922,15 +5922,28 @@
         mockCurrentQuestions = questionsData.data;
 
         // Create session
-        const sessionId = globalResumeState.sessionId || localStorage.getItem('sessionId');
+        const sessionId = globalResumeState.sessionId || 
+                         localStorage.getItem('sessionId') || 
+                         localStorage.getItem('currentSessionId') ||
+                         localStorage.getItem('jobmatch_session');
+        
         const sessionBody = { jobRole, interviewType, duration };
+        const headers = { 'Content-Type': 'application/json' };
+        
         if (sessionId) {
           sessionBody.sessionId = sessionId;
         }
+        
+        // Also include user ID if available
+        if (currentUser && currentUser.id) {
+          headers['x-user-id'] = currentUser.id;
+        }
+
+        console.log('Mock Interview: Creating session with', { sessionId, userId: currentUser?.id });
 
         const sessionResponse = await fetch('/api/mock-interview/interview-session', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(sessionBody)
         });
 
@@ -6159,12 +6172,23 @@
         document.getElementById('dashboard-empty-state').style.display = 'none';
         document.getElementById('dashboard-error-message').style.display = 'none';
 
-        // Get session ID from global state
-        const sessionId = globalResumeState.sessionId || localStorage.getItem('sessionId');
+        // Get session ID from multiple sources
+        const sessionId = globalResumeState.sessionId || 
+                         localStorage.getItem('sessionId') || 
+                         localStorage.getItem('currentSessionId') ||
+                         localStorage.getItem('jobmatch_session');
+        
         const headers = {};
         if (sessionId) {
           headers['x-session-id'] = sessionId;
         }
+
+        // Also try to get user info if available
+        if (currentUser && currentUser.id) {
+          headers['x-user-id'] = currentUser.id;
+        }
+
+        console.log('Dashboard: Attempting to load with sessionId:', sessionId, 'user:', currentUser);
 
         const response = await fetch('/api/mock-interview/interview-dashboard', { headers });
         const data = await response.json();
