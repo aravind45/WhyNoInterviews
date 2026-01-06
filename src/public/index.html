@@ -96,6 +96,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .logo {
@@ -112,17 +114,23 @@
     /* Main Tabs */
     .main-tabs {
       display: flex;
-      gap: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+      min-width: 0;
+      justify-content: center;
     }
 
     .main-tab {
-      padding: 10px 20px;
+      padding: 8px 14px;
       border-radius: 8px;
       cursor: pointer;
       color: #94a3b8;
       font-weight: 500;
+      font-size: 0.85rem;
       transition: all 0.2s;
       border: 1px solid transparent;
+      white-space: nowrap;
     }
 
     .main-tab:hover {
@@ -245,6 +253,24 @@
     }
 
     @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px 24px;
+      }
+
+      .main-tabs {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .header-actions {
+        order: 1;
+      }
+
       .grid-2 {
         grid-template-columns: 1fr;
       }
@@ -252,9 +278,17 @@
       .grid-4 {
         grid-template-columns: 1fr 1fr;
       }
+    }
 
+    @media (max-width: 1024px) {
       .main-tabs {
         flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .main-tab {
+        padding: 6px 12px;
+        font-size: 0.8rem;
       }
     }
 
