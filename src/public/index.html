@@ -1556,6 +1556,8 @@
       </nav>
 
       <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+        <a href="/help-guide.html" target="_blank" class="help-icon-btn" title="User Guide"
+          style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(99, 102, 241, 0.15); color: #a5b4fc; text-decoration: none; font-size: 1.1rem; transition: all 0.2s; border: 1px solid rgba(99, 102, 241, 0.3);">❓</a>
         <a href="/upgrade.html" class="btn-upgrade-short">💎 Upgrade</a>
         <a href="https://www.buymeacoffee.com/aravind.thiyaga" target="_blank" class="btn-support-short">☕ Support</a>
 
@@ -1580,7 +1582,7 @@
                 <div class="dropdown-item" onclick="showMyLibrary()">📚 My Library</div>
                 <div class="dropdown-item" onclick="showUserGuide()">📖 User Guide</div>
                 <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;"
-                  onclick="window.location.reload()">🚪 Log Out</div>
+                  onclick="logout()">🚪 Log Out</div>
               </div>
             </div>
           </div>
@@ -2265,7 +2267,8 @@
         <!-- Interview Session (Hidden initially) -->
         <div id="mock-interview-session" style="display: none;">
           <div class="card" style="background: #1e1e2e; margin-bottom: 20px;">
-            <div id="mock-question-number" style="color: #6366f1; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Question 1 of 5</div>
+            <div id="mock-question-number"
+              style="color: #6366f1; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Question 1 of 5</div>
             <div id="mock-question-text" style="font-size: 1.2rem; line-height: 1.6;">Loading question...</div>
           </div>
 
@@ -2273,19 +2276,23 @@
             <video id="mock-preview-video" autoplay muted style="width: 100%; height: auto; display: block;"></video>
           </div>
 
-          <div id="mock-timer" style="font-size: 2rem; font-weight: 700; color: #f59e0b; text-align: center; margin: 20px 0;">00:00</div>
+          <div id="mock-timer"
+            style="font-size: 2rem; font-weight: 700; color: #f59e0b; text-align: center; margin: 20px 0;">00:00</div>
 
           <div style="display: flex; gap: 12px; justify-content: center;">
-            <button class="btn btn-secondary" id="mock-start-recording-btn" onclick="startMockRecording()">🔴 Start Recording</button>
-            <button class="btn btn-primary" id="mock-stop-recording-btn" onclick="stopMockRecording()" style="display: none;">⏹️ Stop Recording</button>
-            <button class="btn btn-secondary" id="mock-next-question-btn" onclick="nextMockQuestion()" style="display: none;">➡️ Next Question</button>
+            <button class="btn btn-secondary" id="mock-start-recording-btn" onclick="startMockRecording()">🔴 Start
+              Recording</button>
+            <button class="btn btn-primary" id="mock-stop-recording-btn" onclick="stopMockRecording()"
+              style="display: none;">⏹️ Stop Recording</button>
+            <button class="btn btn-secondary" id="mock-next-question-btn" onclick="nextMockQuestion()"
+              style="display: none;">➡️ Next Question</button>
           </div>
         </div>
 
         <!-- Results (Hidden initially) -->
         <div id="mock-interview-results" style="display: none;">
           <h3 style="margin-bottom: 24px;">📊 Interview Results</h3>
-          
+
           <div class="grid-4" style="margin-bottom: 24px;">
             <div class="card" style="text-align: center;">
               <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Overall</div>
@@ -2328,7 +2335,9 @@
           <p class="card-subtitle">Track your mock interview progress and performance</p>
         </div>
 
-        <div id="dashboard-error-message" class="error" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 16px; border-radius: 8px; margin-bottom: 20px;"></div>
+        <div id="dashboard-error-message" class="error"
+          style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+        </div>
 
         <div id="dashboard-loading" class="loading" style="text-align: center; padding: 40px; color: #64748b;">
           <div>Loading your interview history...</div>
@@ -2338,19 +2347,23 @@
           <!-- Summary Stats -->
           <div class="grid-4" style="margin-bottom: 32px;">
             <div class="card" style="text-align: center;">
-              <div id="total-interviews" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
+              <div id="total-interviews"
+                style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
               <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Total Interviews</div>
             </div>
             <div class="card" style="text-align: center;">
-              <div id="completed-interviews" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
+              <div id="completed-interviews"
+                style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
               <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Completed</div>
             </div>
             <div class="card" style="text-align: center;">
-              <div id="average-score" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">--</div>
+              <div id="average-score" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">
+                --</div>
               <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Average Score</div>
             </div>
             <div class="card" style="text-align: center;">
-              <div id="last-interview" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">--</div>
+              <div id="last-interview" style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">
+                --</div>
               <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Days Since Last</div>
             </div>
           </div>
@@ -2370,7 +2383,8 @@
         <div id="dashboard-empty-state" style="display: none; text-align: center; padding: 64px 32px; color: #64748b;">
           <div style="font-size: 4rem; margin-bottom: 16px;">🎯</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 8px; color: #374151;">No interviews yet</h3>
-          <p style="margin-bottom: 24px; line-height: 1.6;">Start your first mock interview to begin tracking your progress and improving your interview skills.</p>
+          <p style="margin-bottom: 24px; line-height: 1.6;">Start your first mock interview to begin tracking your
+            progress and improving your interview skills.</p>
           <button class="btn btn-primary" onclick="showTab('mock-interview')">Start Your First Interview</button>
         </div>
       </div>
@@ -2897,11 +2911,36 @@
 
     function logout() {
       currentUser = null;
+
+      // Clear all possible session storage keys
       localStorage.removeItem('jobmatch_user');
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('currentSessionId');
+      localStorage.removeItem('jobmatch_session');
+
+      // Clear global state
+      globalResumeState = {
+        sessionId: null,
+        fileName: null,
+        file: null,
+        profile: null
+      };
+
+      // Update UI
+      updateUserDisplay(null);
       document.getElementById('auth-buttons').style.display = 'flex';
       document.getElementById('user-menu').style.display = 'none';
       document.getElementById('user-dropdown').classList.remove('show');
+
+      // Clear any cached data
+      if (typeof updateGlobalResumeUI === 'function') {
+        updateGlobalResumeUI();
+      }
+
       showToast('Logged out successfully', 'success');
+
+      // Optionally redirect to home tab
+      switchTab('home');
     }
 
     // ========== GOOGLE OAUTH ==========
@@ -5885,7 +5924,7 @@
       mockCurrentSession = null;
       mockCurrentQuestions = [];
       mockCurrentQuestionIndex = 0;
-      
+
       // Show setup form
       document.getElementById('mock-interview-setup').style.display = 'block';
       document.getElementById('mock-interview-session').style.display = 'none';
@@ -5922,18 +5961,18 @@
         mockCurrentQuestions = questionsData.data;
 
         // Create session
-        const sessionId = globalResumeState.sessionId || 
-                         localStorage.getItem('sessionId') || 
-                         localStorage.getItem('currentSessionId') ||
-                         localStorage.getItem('jobmatch_session');
-        
+        const sessionId = globalResumeState.sessionId ||
+          localStorage.getItem('sessionId') ||
+          localStorage.getItem('currentSessionId') ||
+          localStorage.getItem('jobmatch_session');
+
         const sessionBody = { jobRole, interviewType, duration };
         const headers = { 'Content-Type': 'application/json' };
-        
+
         if (sessionId) {
           sessionBody.sessionId = sessionId;
         }
-        
+
         // Also include user ID if available
         if (currentUser && currentUser.id) {
           headers['x-user-id'] = currentUser.id;
@@ -6142,12 +6181,12 @@
       mockCurrentSession = null;
       mockCurrentQuestions = [];
       mockCurrentQuestionIndex = 0;
-      
+
       if (mockStream) {
         mockStream.getTracks().forEach(track => track.stop());
         mockStream = null;
       }
-      
+
       if (mockTimerInterval) {
         clearInterval(mockTimerInterval);
         mockTimerInterval = null;
@@ -6173,11 +6212,11 @@
         document.getElementById('dashboard-error-message').style.display = 'none';
 
         // Get session ID from multiple sources
-        const sessionId = globalResumeState.sessionId || 
-                         localStorage.getItem('sessionId') || 
-                         localStorage.getItem('currentSessionId') ||
-                         localStorage.getItem('jobmatch_session');
-        
+        const sessionId = globalResumeState.sessionId ||
+          localStorage.getItem('sessionId') ||
+          localStorage.getItem('currentSessionId') ||
+          localStorage.getItem('jobmatch_session');
+
         const headers = {};
         if (sessionId) {
           headers['x-session-id'] = sessionId;
@@ -6192,34 +6231,34 @@
 
         const response = await fetch('/api/mock-interview/interview-dashboard', { headers });
         const data = await response.json();
-        
+
         if (!data.success) {
           throw new Error(data.error || 'Failed to load dashboard');
         }
-        
+
         const { interviews, summary, message } = data.data;
-        
+
         // Hide loading
         document.getElementById('dashboard-loading').style.display = 'none';
-        
+
         // Show login message if not authenticated
         if (message) {
           showDashboardError(message);
           showDashboardEmptyState();
           return;
         }
-        
+
         // Show empty state if no interviews
         if (!interviews || interviews.length === 0) {
           showDashboardEmptyState();
           return;
         }
-        
+
         // Display dashboard content
         displayDashboardSummaryStats(summary);
         displayDashboardInterviews(interviews);
         document.getElementById('dashboard-content').style.display = 'block';
-        
+
       } catch (error) {
         console.error('Error loading dashboard:', error);
         document.getElementById('dashboard-loading').style.display = 'none';
@@ -6231,7 +6270,7 @@
       document.getElementById('total-interviews').textContent = summary.totalInterviews || 0;
       document.getElementById('completed-interviews').textContent = summary.completedInterviews || 0;
       document.getElementById('average-score').textContent = summary.averageScore ? `${summary.averageScore}%` : '--';
-      
+
       // Calculate days since last interview
       if (summary.lastInterviewDate) {
         const lastDate = new Date(summary.lastInterviewDate);
@@ -6247,7 +6286,7 @@
     function displayDashboardInterviews(interviews) {
       const container = document.getElementById('interviews-list');
       container.innerHTML = '';
-      
+
       interviews.forEach(interview => {
         const card = createDashboardInterviewCard(interview);
         container.appendChild(card);
@@ -6258,13 +6297,13 @@
       const card = document.createElement('div');
       card.className = 'card';
       card.style.cssText = 'margin-bottom: 20px; transition: all 0.2s ease;';
-      
+
       const statusClass = getDashboardStatusClass(interview.status);
       const formattedDate = formatDashboardDate(interview.createdAt);
-      const duration = interview.completedAt ? 
-        formatDashboardDuration(new Date(interview.completedAt) - new Date(interview.createdAt)) : 
+      const duration = interview.completedAt ?
+        formatDashboardDuration(new Date(interview.completedAt) - new Date(interview.createdAt)) :
         `${interview.duration} min planned`;
-      
+
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
           <div style="flex: 1;">
@@ -6317,7 +6356,7 @@
           </button>
         </div>
       `;
-      
+
       return card;
     }
 
@@ -6335,13 +6374,13 @@
       const now = new Date();
       const diffTime = Math.abs(now - date);
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
+
       if (diffDays === 0) return 'Today';
       if (diffDays === 1) return 'Yesterday';
       if (diffDays < 7) return `${diffDays} days ago`;
-      
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
+
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
         day: 'numeric',
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
       });
@@ -6350,7 +6389,7 @@
     function formatDashboardDuration(milliseconds) {
       const minutes = Math.floor(milliseconds / (1000 * 60));
       if (minutes < 60) return `${minutes} min`;
-      
+
       const hours = Math.floor(minutes / 60);
       const remainingMinutes = minutes % 60;
       return `${hours}h ${remainingMinutes}m`;
@@ -6388,7 +6427,7 @@
       if (!confirm('Are you sure you want to delete this interview? This action cannot be undone.')) {
         return;
       }
-      
+
       try {
         // Get session ID from global state
         const sessionId = globalResumeState.sessionId || localStorage.getItem('sessionId');
@@ -6401,7 +6440,7 @@
           method: 'DELETE',
           headers
         });
-        
+
         if (response.ok) {
           // Reload the dashboard
           loadInterviewDashboard();
