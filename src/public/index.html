@@ -2944,9 +2944,26 @@
     }
 
     // ========== GOOGLE OAUTH ==========
-    const GOOGLE_CLIENT_ID = '716137943102-fs0qtqqttu53ndvvt5mauhwdjqfl2xt.apps.googleusercontent.com';
+    let GOOGLE_CLIENT_ID = '';
+
+    // Fetch Google Client ID from backend
+    async function loadGoogleClientId() {
+      try {
+        const response = await fetch('/api/config');
+        const data = await response.json();
+        GOOGLE_CLIENT_ID = data.googleClientId;
+        console.log('Google Client ID loaded from backend');
+        initGoogleSignIn();
+      } catch (error) {
+        console.error('Failed to load Google Client ID:', error);
+      }
+    }
 
     function initGoogleSignIn() {
+      if (!GOOGLE_CLIENT_ID) {
+        console.warn('Google Client ID not loaded yet');
+        return;
+      }
       if (typeof google !== 'undefined' && google.accounts) {
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
@@ -6468,12 +6485,25 @@
       </div>
 
       <!-- Google Button Container -->
-      <div id="g_id_onload" data-client_id="716137943102-fs0qtqqttu53ndvvt5mauhwdjqfl2xt.apps.googleusercontent.com"
-        data-context="signin" data-ux_mode="popup" data-callback="handleGoogleCredential" data-auto_prompt="false">
+      <div id="g_id_onload" data-context="signin" data-ux_mode="popup" data-callback="handleGoogleCredential"
+        data-auto_prompt="false">
       </div>
-      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
-        data-text="continue_with" data-size="large" data-logo_alignment="left" data-width="100%">
+      <div id="g_id_signin_container" class="g_id_signin" data-type="standard" data-shape="rectangular"
+        data-theme="outline" data-text="continue_with" data-size="large" data-logo_alignment="left" data-width="100%">
       </div>
+      <script>
+        // Load Google Client ID and initialize button
+        fetch('/api/config')
+          .then(res => res.json())
+          .then(data => {
+            const container = document.getElementById('g_id_onload');
+            if (container && data.googleClientId) {
+              container.setAttribute('data-client_id', data.googleClientId);
+              console.log('Google Sign-In button configured');
+            }
+          })
+          .catch(err => console.error('Failed to load Google Client ID:', err));
+      </script>
 
       <div style="display: flex; align-items: center; gap: 10px; margin: 20px 0; color: #64748b; font-size: 0.8rem;">
         <div style="flex: 1; height: 1px; background: #2e2e3e;"></div>
