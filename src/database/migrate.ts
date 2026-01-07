@@ -11,17 +11,17 @@ const parseSqlStatements = (sql: string): string[] => {
   let currentStatement = '';
   let inDollarQuote = false;
   let dollarTag = '';
-  
+
   const lines = sql.split('\n');
-  
+
   for (const line of lines) {
     // Skip pure comment lines when not in a statement
     if (line.trim().startsWith('--') && currentStatement.trim() === '') {
       continue;
     }
-    
+
     currentStatement += line + '\n';
-    
+
     // Track dollar-quoted strings ($$, $tag$, etc.)
     const dollarMatches = line.match(/\$([a-zA-Z_]*)\$/g);
     if (dollarMatches) {
@@ -35,7 +35,7 @@ const parseSqlStatements = (sql: string): string[] => {
         }
       }
     }
-    
+
     // End of statement (only when not inside dollar quotes)
     if (!inDollarQuote && line.trim().endsWith(';')) {
       const trimmed = currentStatement.trim();
@@ -45,55 +45,61 @@ const parseSqlStatements = (sql: string): string[] => {
       currentStatement = '';
     }
   }
-  
+
   // Add any remaining statement
   if (currentStatement.trim() && !currentStatement.trim().startsWith('--')) {
     statements.push(currentStatement.trim());
   }
-  
+
   return statements;
 };
 
-export const runMigrations = async (): Promise<{ executed: number; skipped: number; failed: number }> => {
+export const runMigrations = async (): Promise<{
+  executed: number;
+  skipped: number;
+  failed: number;
+}> => {
   const client = await getClient();
   const results = { executed: 0, skipped: 0, failed: 0 };
-  
+
   try {
     logger.info('Starting database migrations...');
-    
+
     const schemaPath = path.join(__dirname, 'schema.sql');
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
     const statements = parseSqlStatements(schemaSql);
-    
+
     logger.info(`Found ${statements.length} SQL statements to execute`);
-    
+
     for (let i = 0; i < statements.length; i++) {
       const statement = statements[i];
       const preview = statement.substring(0, 60).replace(/\n/g, ' ').trim();
-      
+
       try {
         await client.query(statement);
         results.executed++;
         logger.debug(`[${i + 1}/${statements.length}] ✓ ${preview}...`);
       } catch (error: any) {
         // Expected errors (already exists, duplicate, etc.)
-        const isExpectedError = 
+        const isExpectedError =
           error.message?.includes('already exists') ||
           error.message?.includes('duplicate key') ||
           error.code === '42P07' || // relation already exists
           error.code === '42710' || // object already exists
-          error.code === '42723';   // function already exists
-        
+          error.code === '42723'; // function already exists
+
         if (isExpectedError) {
           results.skipped++;
           logger.debug(`[${i + 1}/${statements.length}] ⊘ Skipped (exists): ${preview}...`);
         } else {
           results.failed++;
-          logger.warn(`[${i + 1}/${statements.length}] ✗ Failed: ${preview}...`, { error: error.message });
+          logger.warn(`[${i + 1}/${statements.length}] ✗ Failed: ${preview}...`, {
+            error: error.message,
+          });
         }
       }
     }
-    
+
     logger.info('Database migrations completed', results);
     return results;
   } catch (error) {

@@ -61,7 +61,15 @@ export interface ResumeData {
 }
 
 export interface ResumeSection {
-  type: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'other';
+  type:
+    | 'contact'
+    | 'summary'
+    | 'experience'
+    | 'education'
+    | 'skills'
+    | 'projects'
+    | 'certifications'
+    | 'other';
   title: string;
   content: string;
   startIndex: number;
@@ -92,7 +100,7 @@ export interface RootCause {
   priority: number; // 1-5, where 1 is highest priority
 }
 
-export type RootCauseCategory = 
+export type RootCauseCategory =
   | 'keyword_mismatch'
   | 'experience_gap'
   | 'skill_deficiency'
@@ -184,7 +192,7 @@ export interface ResumeAnalysis {
   deletedAt?: Date;
 }
 
-export type AnalysisStatus = 
+export type AnalysisStatus =
   | 'pending'
   | 'processing'
   | 'analyzing'
@@ -251,32 +259,28 @@ export interface SessionResponse {
 // ============================================
 
 export const UploadRequestSchema = z.object({
-  targetJobTitle: z.string()
+  targetJobTitle: z
+    .string()
     .min(2, 'Job title must be at least 2 characters')
     .max(100, 'Job title must be less than 100 characters'),
-  jobDescription: z.string()
+  jobDescription: z
+    .string()
     .max(5000, 'Job description must be less than 5000 characters')
     .optional(),
-  applicationCount: z.number()
-    .int()
-    .min(0)
-    .max(10000)
-    .optional(),
+  applicationCount: z.number().int().min(0).max(10000).optional(),
 });
 
 export const AnalyzeRequestSchema = z.object({
   sessionId: z.string().uuid('Invalid session ID format'),
-  targetJobTitle: z.string()
+  targetJobTitle: z
+    .string()
     .min(2, 'Job title must be at least 2 characters')
     .max(100, 'Job title must be less than 100 characters'),
-  jobDescription: z.string()
+  jobDescription: z
+    .string()
     .max(5000, 'Job description must be less than 5000 characters')
     .optional(),
-  applicationCount: z.number()
-    .int()
-    .min(0)
-    .max(10000)
-    .optional(),
+  applicationCount: z.number().int().min(0).max(10000).optional(),
 });
 
 // ============================================
@@ -288,7 +292,7 @@ export class AppError extends Error {
     public message: string,
     public statusCode: number = 500,
     public code?: string,
-    public details?: Record<string, any>
+    public details?: Record<string, any>,
   ) {
     super(message);
     this.name = 'AppError';

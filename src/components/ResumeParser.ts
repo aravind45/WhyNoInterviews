@@ -14,39 +14,35 @@ const PROCESSING_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '30') * 1000;
 const SECTION_PATTERNS: Record<string, RegExp[]> = {
   contact: [
     /^(contact|personal)\s*(info|information|details)?$/i,
-    /^(email|phone|address|location)$/i
+    /^(email|phone|address|location)$/i,
   ],
   summary: [
     /^(summary|profile|objective|about|overview)$/i,
     /^(professional|career)\s*(summary|profile|objective)$/i,
-    /^(executive|personal)\s*summary$/i
+    /^(executive|personal)\s*summary$/i,
   ],
   experience: [
     /^(work|professional|employment)\s*(experience|history)?$/i,
     /^experience$/i,
-    /^(career|job)\s*history$/i
+    /^(career|job)\s*history$/i,
   ],
   education: [
     /^education$/i,
     /^(academic|educational)\s*(background|qualifications|history)?$/i,
-    /^degrees?$/i
+    /^degrees?$/i,
   ],
   skills: [
     /^(technical\s*)?skills$/i,
     /^(core\s*)?(competencies|qualifications)$/i,
     /^expertise$/i,
-    /^proficiencies$/i
+    /^proficiencies$/i,
   ],
-  projects: [
-    /^projects?$/i,
-    /^(personal|professional|key)\s*projects$/i,
-    /^portfolio$/i
-  ],
+  projects: [/^projects?$/i, /^(personal|professional|key)\s*projects$/i, /^portfolio$/i],
   certifications: [
     /^certifications?$/i,
     /^(professional\s*)?(certifications?|licenses?|credentials?)$/i,
-    /^training$/i
-  ]
+    /^training$/i,
+  ],
 };
 
 // Parse PDF file
@@ -55,7 +51,7 @@ const parsePDF = async (filePath: string): Promise<{ text: string; pageCount: nu
 
   const options = {
     max: MAX_PAGES, // Limit pages per Requirement 10
-    pagerender: undefined // Use default text extraction
+    pagerender: undefined, // Use default text extraction
   };
 
   const data = await pdfParse(dataBuffer, options);
@@ -63,13 +59,13 @@ const parsePDF = async (filePath: string): Promise<{ text: string; pageCount: nu
   if (data.numpages > MAX_PAGES) {
     throw new ProcessingError(
       `Resume exceeds maximum page limit (${MAX_PAGES} pages). Please upload a shorter version.`,
-      { pageCount: data.numpages, maxPages: MAX_PAGES }
+      { pageCount: data.numpages, maxPages: MAX_PAGES },
     );
   }
 
   return {
     text: data.text,
-    pageCount: data.numpages
+    pageCount: data.numpages,
   };
 };
 
@@ -83,13 +79,13 @@ const parseWord = async (filePath: string): Promise<{ text: string; pageCount: n
   if (estimatedPages > MAX_PAGES) {
     throw new ProcessingError(
       `Resume appears to exceed maximum page limit (${MAX_PAGES} pages). Please upload a shorter version.`,
-      { estimatedPages, maxPages: MAX_PAGES }
+      { estimatedPages, maxPages: MAX_PAGES },
     );
   }
 
   return {
     text: result.value,
-    pageCount: estimatedPages
+    pageCount: estimatedPages,
   };
 };
 
@@ -139,26 +135,23 @@ const extractSections = (text: string): ResumeSection[] => {
   matches.sort((a, b) => a.index - b.index);
 
   // Remove duplicates
-  const uniqueMatches = matches.filter((m, i) =>
-    i === 0 || m.index !== matches[i - 1].index
-  );
+  const uniqueMatches = matches.filter((m, i) => i === 0 || m.index !== matches[i - 1].index);
 
   // Create sections
   for (let i = 0; i < uniqueMatches.length; i++) {
     const current = uniqueMatches[i];
-    const nextIndex = i < uniqueMatches.length - 1
-      ? uniqueMatches[i + 1].index
-      : text.length;
+    const nextIndex = i < uniqueMatches.length - 1 ? uniqueMatches[i + 1].index : text.length;
 
     const sectionContent = text.substring(current.index, nextIndex).trim();
 
-    if (sectionContent.length > 10) { // Minimum content threshold
+    if (sectionContent.length > 10) {
+      // Minimum content threshold
       sections.push({
         type: identifySectionType(current.heading),
         title: current.heading,
         content: sectionContent,
         startIndex: current.index,
-        endIndex: nextIndex
+        endIndex: nextIndex,
       });
     }
   }
@@ -170,7 +163,7 @@ const extractSections = (text: string): ResumeSection[] => {
       title: 'Resume Content',
       content: text,
       startIndex: 0,
-      endIndex: text.length
+      endIndex: text.length,
     });
   }
 
@@ -179,21 +172,23 @@ const extractSections = (text: string): ResumeSection[] => {
 
 // Count words in text
 const countWords = (text: string): number => {
-  return text.split(/\s+/).filter(word => word.length > 0).length;
+  return text.split(/\s+/).filter((word) => word.length > 0).length;
 };
 
 // Main parsing function with timeout
 export const parseResume = async (
   filePath: string,
   originalName: string,
-  fileSize: number
+  fileSize: number,
 ): Promise<ResumeData> => {
   const startTime = Date.now();
 
   return new Promise(async (resolve, reject) => {
     // Set timeout per Requirement 1 (30 seconds for processing)
     const timeout = setTimeout(() => {
-      reject(new TimeoutError('Resume processing timeout exceeded. Please try with a smaller file.'));
+      reject(
+        new TimeoutError('Resume processing timeout exceeded. Please try with a smaller file.'),
+      );
     }, PROCESSING_TIMEOUT);
 
     try {
@@ -214,7 +209,7 @@ export const parseResume = async (
       // Validate text extraction
       if (!text || text.trim().length < 50) {
         throw new ProcessingError(
-          'Could not extract text from resume. Please try a different format or ensure the file is not corrupted.'
+          'Could not extract text from resume. Please try a different format or ensure the file is not corrupted.',
         );
       }
 
@@ -231,7 +226,7 @@ export const parseResume = async (
         fileName: originalName,
         fileType: ext.replace('.', '') as 'pdf' | 'doc' | 'docx',
         fileSize,
-        processingTime
+        processingTime,
       };
 
       logger.info('Resume parsed successfully', {
@@ -239,7 +234,7 @@ export const parseResume = async (
         pageCount,
         wordCount: metadata.wordCount,
         sectionCount: sections.length,
-        processingTime
+        processingTime,
       });
 
       clearTimeout(timeout);
@@ -248,9 +243,8 @@ export const parseResume = async (
         rawText: text,
         sections,
         metadata,
-        extractedAt: new Date()
+        extractedAt: new Date(),
       });
-
     } catch (error) {
       clearTimeout(timeout);
 
@@ -258,16 +252,20 @@ export const parseResume = async (
         reject(error);
       } else {
         logger.error('Resume parsing failed:', error);
-        reject(new ProcessingError(
-          'Failed to process resume. Please ensure the file is not corrupted and try again.'
-        ));
+        reject(
+          new ProcessingError(
+            'Failed to process resume. Please ensure the file is not corrupted and try again.',
+          ),
+        );
       }
     }
   });
 };
 
 // Extract key information from parsed resume
-export const extractKeyInfo = (resumeData: ResumeData): {
+export const extractKeyInfo = (
+  resumeData: ResumeData,
+): {
   hasContactInfo: boolean;
   hasExperience: boolean;
   hasEducation: boolean;
@@ -277,12 +275,13 @@ export const extractKeyInfo = (resumeData: ResumeData): {
 } => {
   const sections = resumeData.sections;
 
-  const hasContactInfo = sections.some(s => s.type === 'contact') ||
+  const hasContactInfo =
+    sections.some((s) => s.type === 'contact') ||
     /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/.test(resumeData.rawText);
 
-  const hasExperience = sections.some(s => s.type === 'experience');
-  const hasEducation = sections.some(s => s.type === 'education');
-  const hasSkills = sections.some(s => s.type === 'skills');
+  const hasExperience = sections.some((s) => s.type === 'experience');
+  const hasEducation = sections.some((s) => s.type === 'education');
+  const hasSkills = sections.some((s) => s.type === 'skills');
 
   // Try to extract years of experience
   let experienceYears: number | null = null;
@@ -292,14 +291,14 @@ export const extractKeyInfo = (resumeData: ResumeData): {
   }
 
   // Extract skills list
-  const skillsSection = sections.find(s => s.type === 'skills');
+  const skillsSection = sections.find((s) => s.type === 'skills');
   let skillsList: string[] = [];
   if (skillsSection) {
     // Split by common delimiters
     skillsList = skillsSection.content
       .split(/[,•·|\n]/)
-      .map(s => s.trim())
-      .filter(s => s.length > 1 && s.length < 50 && !s.includes(':'));
+      .map((s) => s.trim())
+      .filter((s) => s.length > 1 && s.length < 50 && !s.includes(':'));
   }
 
   return {
@@ -308,11 +307,11 @@ export const extractKeyInfo = (resumeData: ResumeData): {
     hasEducation,
     hasSkills,
     experienceYears,
-    skillsList
+    skillsList,
   };
 };
 
 export default {
   parseResume,
-  extractKeyInfo
+  extractKeyInfo,
 };

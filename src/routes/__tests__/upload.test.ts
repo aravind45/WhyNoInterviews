@@ -12,7 +12,7 @@ jest.mock('../../utils/logger');
 jest.mock('../../cache/redis', () => ({
   cacheSet: jest.fn().mockResolvedValue(undefined),
   cacheGet: jest.fn().mockResolvedValue(null),
-  cacheDelete: jest.fn().mockResolvedValue(undefined)
+  cacheDelete: jest.fn().mockResolvedValue(undefined),
 }));
 
 // Create test app
@@ -31,15 +31,17 @@ beforeAll(() => {
   if (!fs.existsSync(testFilesDir)) {
     fs.mkdirSync(testFilesDir, { recursive: true });
   }
-  
+
   // Create sample PDF file (minimal PDF structure)
-  const pdfContent = Buffer.from('%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n>>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000074 00000 n \n0000000120 00000 n \ntrailer\n<<\n/Size 4\n/Root 1 0 R\n>>\nstartxref\n179\n%%EOF');
+  const pdfContent = Buffer.from(
+    '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n>>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000074 00000 n \n0000000120 00000 n \ntrailer\n<<\n/Size 4\n/Root 1 0 R\n>>\nstartxref\n179\n%%EOF',
+  );
   fs.writeFileSync(validPdfPath, pdfContent);
-  
+
   // Create sample DOCX file (minimal ZIP structure with required files)
   const docxContent = Buffer.from('PK\x03\x04\x14\x00\x00\x00\x08\x00');
   fs.writeFileSync(validDocxPath, docxContent);
-  
+
   // Create invalid text file
   fs.writeFileSync(invalidTxtPath, 'This is not a valid resume file format');
 });
@@ -89,9 +91,7 @@ describe('File Upload Routes', () => {
     });
 
     test('should reject requests without files', async () => {
-      const response = await request(app)
-        .post('/api/upload')
-        .expect(400);
+      const response = await request(app).post('/api/upload').expect(400);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error).toContain('No file uploaded');
@@ -111,12 +111,12 @@ describe('File Upload Routes', () => {
       // This test would need to be implemented with actual file creation
       // For now, we test the validation logic separately
       const { validateUploadedFile } = require('../../middleware/fileUpload');
-      
+
       const mockFile = {
         originalname: '../../../etc/passwd',
         size: 1000,
         mimetype: 'application/pdf',
-        path: '/tmp/test'
+        path: '/tmp/test',
       } as Express.Multer.File;
 
       // The validation should be handled by multer's fileFilter
@@ -127,9 +127,7 @@ describe('File Upload Routes', () => {
 
   describe('GET /api/upload/session/:sessionId', () => {
     test('should return 400 for invalid session ID', async () => {
-      const response = await request(app)
-        .get('/api/upload/session/invalid-id')
-        .expect(404);
+      const response = await request(app).get('/api/upload/session/invalid-id').expect(404);
 
       expect(response.body.success).toBe(false);
     });
@@ -146,10 +144,7 @@ describe('File Upload Routes', () => {
 
   describe('DELETE /api/upload/session/:sessionId', () => {
     test('should return 400 for invalid session ID', async () => {
-      const response = await request(app)
-        .delete('/api/upload/session/')
-        .expect(404); // Express returns 404 for missing route params
-
+      const response = await request(app).delete('/api/upload/session/').expect(404); // Express returns 404 for missing route params
     });
 
     test('should successfully cleanup non-existent session', async () => {
@@ -165,12 +160,12 @@ describe('File Upload Routes', () => {
   describe('File Validation', () => {
     test('should validate file extensions correctly', () => {
       const { validateUploadedFile } = require('../../middleware/fileUpload');
-      
+
       const validPdfFile = {
         originalname: 'resume.pdf',
         size: 1000,
         mimetype: 'application/pdf',
-        path: '/tmp/test.pdf'
+        path: '/tmp/test.pdf',
       } as Express.Multer.File;
 
       const result = validateUploadedFile(validPdfFile);
@@ -180,12 +175,12 @@ describe('File Upload Routes', () => {
 
     test('should reject files with invalid extensions', () => {
       const { validateUploadedFile } = require('../../middleware/fileUpload');
-      
+
       const invalidFile = {
         originalname: 'resume.txt',
         size: 1000,
         mimetype: 'text/plain',
-        path: '/tmp/test.txt'
+        path: '/tmp/test.txt',
       } as Express.Multer.File;
 
       const result = validateUploadedFile(invalidFile);
@@ -195,12 +190,12 @@ describe('File Upload Routes', () => {
 
     test('should reject empty files', () => {
       const { validateUploadedFile } = require('../../middleware/fileUpload');
-      
+
       const emptyFile = {
         originalname: 'resume.pdf',
         size: 0,
         mimetype: 'application/pdf',
-        path: '/tmp/test.pdf'
+        path: '/tmp/test.pdf',
       } as Express.Multer.File;
 
       const result = validateUploadedFile(emptyFile);

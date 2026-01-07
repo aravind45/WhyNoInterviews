@@ -7,8 +7,8 @@ const options = {
   path: '/api/migrate-target-companies',
   method: 'POST',
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 };
 
 const req = http.request(options, (res) => {

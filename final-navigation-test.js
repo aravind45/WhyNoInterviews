@@ -12,7 +12,7 @@ console.log('   ✓ Home tab structure:', homeTabMatch ? 'CORRECT' : 'MISSING');
 
 // Verify all required tabs exist
 const requiredTabs = ['home', 'analyze', 'search', 'optimizer', 'target-companies', 'networking'];
-const allTabsExist = requiredTabs.every(tab => {
+const allTabsExist = requiredTabs.every((tab) => {
   return htmlContent.includes(`data-tab="${tab}"`);
 });
 console.log('   ✓ All tabs present:', allTabsExist ? 'YES' : 'NO');
@@ -22,8 +22,11 @@ console.log('\n2. Checking CSS rules...');
 const cssContent = fs.readFileSync('src/public/new-ui.css', 'utf8');
 
 // Check for Home tab visibility rules
-const hasHideRule = cssContent.includes('.main-tab[data-tab="home"]') && cssContent.includes('display: none');
-const hasShowRule = cssContent.includes('.new-ui .main-tab[data-tab="home"]') && cssContent.includes('display: block');
+const hasHideRule =
+  cssContent.includes('.main-tab[data-tab="home"]') && cssContent.includes('display: none');
+const hasShowRule =
+  cssContent.includes('.new-ui .main-tab[data-tab="home"]') &&
+  cssContent.includes('display: block');
 
 console.log('   ✓ Hide rule exists:', hasHideRule ? 'YES' : 'NO');
 console.log('   ✓ Show rule exists:', hasShowRule ? 'YES' : 'NO');
@@ -40,7 +43,7 @@ const hasNewUIInit = htmlContent.includes("switchTab('home')");
 console.log('   ✓ New UI initialization:', hasNewUIInit ? 'EXISTS' : 'MISSING');
 
 // Verify tab click handlers
-const hasClickHandlers = htmlContent.includes('addEventListener(\'click\'');
+const hasClickHandlers = htmlContent.includes("addEventListener('click'");
 console.log('   ✓ Click handlers:', hasClickHandlers ? 'EXISTS' : 'MISSING');
 
 // Test 4: Check Home section
@@ -58,7 +61,7 @@ const checks = [
   hasSwitchTab,
   hasNewUIInit,
   hasClickHandlers,
-  hasHomeSection
+  hasHomeSection,
 ];
 
 const passed = checks.filter(Boolean).length;

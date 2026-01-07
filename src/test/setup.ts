@@ -17,7 +17,7 @@ jest.mock('../utils/logger', () => ({
 
 beforeAll(async () => {
   // Silence console logs if needed, or redirect
-  // console.log = jest.fn(); 
+  // console.log = jest.fn();
 
   try {
     // Attempt connection

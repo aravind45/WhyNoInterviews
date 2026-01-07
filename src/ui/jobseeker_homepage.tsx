@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Target, MessageSquare, Users, Sparkles, ArrowRight, CheckCircle, Zap } from 'lucide-react';
+import {
+  Upload,
+  FileText,
+  Target,
+  MessageSquare,
+  Users,
+  Sparkles,
+  ArrowRight,
+  CheckCircle,
+  Zap,
+} from 'lucide-react';
 
 export default function ResumeAnalyzePage() {
   const [resumeFile, setResumeFile] = useState(null);
@@ -41,7 +51,10 @@ export default function ResumeAnalyzePage() {
             </span>
           </div>
           <nav className="flex gap-6 items-center">
-            <a href="#" className="text-slate-700 hover:text-amber-600 transition-colors font-medium">
+            <a
+              href="#"
+              className="text-slate-700 hover:text-amber-600 transition-colors font-medium"
+            >
               🎯 Analyze Resume
             </a>
             <a href="#" className="text-slate-700 hover:text-amber-600 transition-colors">
@@ -74,9 +87,7 @@ export default function ResumeAnalyzePage() {
             <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-xl flex items-center justify-center shadow-md">
               <FileText className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Why No Interviews?
-            </h1>
+            <h1 className="text-3xl font-bold text-slate-900">Why No Interviews?</h1>
           </div>
           <p className="text-lg text-slate-600 ml-15">
             Get instantly honest feedback on why your resume isn't getting callbacks
@@ -88,9 +99,7 @@ export default function ResumeAnalyzePage() {
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             {/* Resume Upload */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-3">
-                Your Resume
-              </label>
+              <label className="block text-sm font-semibold text-slate-700 mb-3">Your Resume</label>
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -99,8 +108,8 @@ export default function ResumeAnalyzePage() {
                   isDragging
                     ? 'border-amber-500 bg-amber-50'
                     : resumeFile
-                    ? 'border-green-400 bg-green-50'
-                    : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50'
+                      ? 'border-green-400 bg-green-50'
+                      : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50'
                 }`}
               >
                 <input
@@ -166,26 +175,26 @@ export default function ResumeAnalyzePage() {
         {/* What You'll Get Section */}
         <div className="bg-gradient-to-br from-amber-500 via-orange-400 to-orange-500 rounded-2xl p-8 text-white shadow-xl">
           <h2 className="text-2xl font-bold mb-6 text-center">What You'll Get After Analysis</h2>
-          
+
           <div className="grid md:grid-cols-4 gap-4">
             <div className="bg-white/20 backdrop-blur rounded-xl p-5 text-center">
               <Target className="w-10 h-10 mx-auto mb-3" />
               <h3 className="font-bold mb-1">Match Score</h3>
               <p className="text-sm text-amber-50">Instant compatibility rating</p>
             </div>
-            
+
             <div className="bg-white/20 backdrop-blur rounded-xl p-5 text-center">
               <FileText className="w-10 h-10 mx-auto mb-3" />
               <h3 className="font-bold mb-1">Cover Letter</h3>
               <p className="text-sm text-amber-50">Tailored to the job</p>
             </div>
-            
+
             <div className="bg-white/20 backdrop-blur rounded-xl p-5 text-center">
               <Users className="w-10 h-10 mx-auto mb-3" />
               <h3 className="font-bold mb-1">Referral Message</h3>
               <p className="text-sm text-amber-50">Network outreach template</p>
             </div>
-            
+
             <div className="bg-white/20 backdrop-blur rounded-xl p-5 text-center">
               <MessageSquare className="w-10 h-10 mx-auto mb-3" />
               <h3 className="font-bold mb-1">Elevator Pitch</h3>

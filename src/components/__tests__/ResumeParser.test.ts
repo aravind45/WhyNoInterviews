@@ -36,7 +36,7 @@ Bachelor of Science in Computer Science
 University of Technology
 
 SKILLS
-JavaScript, Python, React, Node.js`
+JavaScript, Python, React, Node.js`,
     });
   });
 });
@@ -70,9 +70,9 @@ Top Business School
 
 SKILLS
 Product Strategy, Analytics, Leadership`,
-      messages: []
+      messages: [],
     });
-  })
+  }),
 }));
 
 describe('ResumeParser', () => {
@@ -82,7 +82,7 @@ describe('ResumeParser', () => {
   beforeEach(() => {
     parser = new ResumeParser();
     jest.clearAllMocks();
-    
+
     mockFile = {
       originalname: 'test-resume.pdf',
       mimetype: 'application/pdf',
@@ -93,7 +93,7 @@ describe('ResumeParser', () => {
       encoding: '7bit',
       destination: '/tmp',
       buffer: Buffer.from('test'),
-      stream: {} as any
+      stream: {} as any,
     };
 
     // Default mock: file exists
@@ -104,7 +104,7 @@ describe('ResumeParser', () => {
   describe('validateFile', () => {
     test('should validate PDF files successfully', () => {
       const result = parser.validateFile(mockFile);
-      
+
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
@@ -112,9 +112,9 @@ describe('ResumeParser', () => {
     test('should validate DOCX files successfully', () => {
       mockFile.mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       mockFile.originalname = 'test-resume.docx';
-      
+
       const result = parser.validateFile(mockFile);
-      
+
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
@@ -122,45 +122,45 @@ describe('ResumeParser', () => {
     test('should reject unsupported file types', () => {
       mockFile.mimetype = 'text/plain';
       mockFile.originalname = 'test-resume.txt';
-      
+
       const result = parser.validateFile(mockFile);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Unsupported file type: text/plain');
     });
 
     test('should reject empty files', () => {
       mockFile.size = 0;
-      
+
       const result = parser.validateFile(mockFile);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('File is empty');
     });
 
     test('should reject files that are too large', () => {
       mockFile.size = 15 * 1024 * 1024; // 15MB
-      
+
       const result = parser.validateFile(mockFile);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('File too large for processing');
     });
 
     test('should warn about large files', () => {
       mockFile.size = 7 * 1024 * 1024; // 7MB
-      
+
       const result = parser.validateFile(mockFile);
-      
+
       expect(result.isValid).toBe(true);
       expect(result.warnings).toContain('Large file may take longer to process');
     });
 
     test('should reject non-existent files', () => {
       mockFs.existsSync.mockReturnValue(false);
-      
+
       const result = parser.validateFile(mockFile);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('File not found or inaccessible');
     });
@@ -169,14 +169,14 @@ describe('ResumeParser', () => {
   describe('parseResume', () => {
     test('should parse PDF resume successfully', async () => {
       const result = await parser.parseResume(mockFile);
-      
+
       expect(result.rawText).toBeDefined();
       expect(result.rawText.length).toBeGreaterThan(0);
       expect(result.sections).toBeDefined();
       expect(result.metadata).toBeDefined();
       expect(result.extractionConfidence).toBeGreaterThan(0);
       expect(result.extractionConfidence).toBeLessThanOrEqual(100);
-      
+
       // Check metadata
       expect(result.metadata.fileName).toBe('test-resume.pdf');
       expect(result.metadata.fileSize).toBe(1024);
@@ -187,9 +187,9 @@ describe('ResumeParser', () => {
     test('should parse DOCX resume successfully', async () => {
       mockFile.mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       mockFile.originalname = 'test-resume.docx';
-      
+
       const result = await parser.parseResume(mockFile);
-      
+
       expect(result.rawText).toBeDefined();
       expect(result.sections).toBeDefined();
       expect(result.metadata.extractionMethod).toBe('mammoth');
@@ -198,9 +198,9 @@ describe('ResumeParser', () => {
     test('should parse DOC resume successfully', async () => {
       mockFile.mimetype = 'application/msword';
       mockFile.originalname = 'test-resume.doc';
-      
+
       const result = await parser.parseResume(mockFile);
-      
+
       expect(result.rawText).toBeDefined();
       expect(result.sections).toBeDefined();
       expect(result.metadata.extractionMethod).toBe('mammoth');
@@ -208,8 +208,8 @@ describe('ResumeParser', () => {
 
     test('should identify resume sections correctly', async () => {
       const result = await parser.parseResume(mockFile);
-      
-      const sectionTypes = result.sections.map(s => s.type);
+
+      const sectionTypes = result.sections.map((s) => s.type);
       expect(sectionTypes).toContain(SectionType.EXPERIENCE);
       expect(sectionTypes).toContain(SectionType.EDUCATION);
       expect(sectionTypes).toContain(SectionType.SKILLS);
@@ -217,11 +217,11 @@ describe('ResumeParser', () => {
 
     test('should extract bullet points from experience section', async () => {
       const result = await parser.parseResume(mockFile);
-      
-      const experienceSection = result.sections.find(s => s.type === SectionType.EXPERIENCE);
+
+      const experienceSection = result.sections.find((s) => s.type === SectionType.EXPERIENCE);
       expect(experienceSection).toBeDefined();
       expect(experienceSection!.bullets.length).toBeGreaterThan(0);
-      
+
       // Check bullet point structure
       const firstBullet = experienceSection!.bullets[0];
       expect(firstBullet.id).toBeDefined();
@@ -231,26 +231,28 @@ describe('ResumeParser', () => {
 
     test('should identify achievements with quantification', async () => {
       const result = await parser.parseResume(mockFile);
-      
-      const experienceSection = result.sections.find(s => s.type === SectionType.EXPERIENCE);
-      const bulletsWithAchievements = experienceSection!.bullets.filter(b => b.achievements.length > 0);
-      
+
+      const experienceSection = result.sections.find((s) => s.type === SectionType.EXPERIENCE);
+      const bulletsWithAchievements = experienceSection!.bullets.filter(
+        (b) => b.achievements.length > 0,
+      );
+
       expect(bulletsWithAchievements.length).toBeGreaterThan(0);
-      
+
       // Check for quantified achievement (30% improvement)
-      const quantifiedAchievement = bulletsWithAchievements.find(b => 
-        b.achievements.some(a => a.hasQuantification)
+      const quantifiedAchievement = bulletsWithAchievements.find((b) =>
+        b.achievements.some((a) => a.hasQuantification),
       );
       expect(quantifiedAchievement).toBeDefined();
     });
 
     test('should calculate extraction confidence correctly', async () => {
       const result = await parser.parseResume(mockFile);
-      
+
       // Should have reasonable confidence for well-structured resume
       expect(result.extractionConfidence).toBeGreaterThanOrEqual(60);
       expect(result.extractionConfidence).toBeLessThanOrEqual(100);
-      
+
       // Should have sections and content
       expect(result.sections.length).toBeGreaterThan(2);
       expect(result.rawText.length).toBeGreaterThan(100);
@@ -258,32 +260,34 @@ describe('ResumeParser', () => {
 
     test('should handle empty PDF gracefully', async () => {
       mockFs.readFileSync.mockReturnValue(Buffer.from('empty'));
-      
+
       await expect(parser.parseResume(mockFile)).rejects.toThrow('Failed to extract text from PDF');
     });
 
     test('should handle PDF parsing errors', async () => {
       mockFs.readFileSync.mockReturnValue(Buffer.from('error'));
-      
+
       await expect(parser.parseResume(mockFile)).rejects.toThrow('Failed to extract text from PDF');
     });
 
     test('should handle DOCX parsing errors', async () => {
       mockFile.mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       mockFile.path = '/tmp/error.docx';
-      
-      await expect(parser.parseResume(mockFile)).rejects.toThrow('Failed to extract text from DOCX');
+
+      await expect(parser.parseResume(mockFile)).rejects.toThrow(
+        'Failed to extract text from DOCX',
+      );
     });
 
     test('should reject unsupported file types', async () => {
       mockFile.mimetype = 'text/plain';
-      
+
       await expect(parser.parseResume(mockFile)).rejects.toThrow('Unsupported file type');
     });
 
     test('should handle missing files', async () => {
       mockFs.existsSync.mockReturnValue(false);
-      
+
       await expect(parser.parseResume(mockFile)).rejects.toThrow('Resume file not found');
     });
   });
@@ -313,12 +317,12 @@ PROJECTS
 Personal website
 
 CERTIFICATIONS
-AWS Certified`
+AWS Certified`,
       });
 
       const result = await parser.parseResume(mockFile);
-      
-      const sectionTypes = result.sections.map(s => s.type);
+
+      const sectionTypes = result.sections.map((s) => s.type);
       expect(sectionTypes).toContain(SectionType.CONTACT);
       // Note: PROFESSIONAL SUMMARY might be parsed as EXPERIENCE due to pattern matching
       // This is acceptable behavior - we're testing that sections are identified
@@ -333,15 +337,17 @@ AWS Certified`
       const mockPdfParse = require('pdf-parse');
       mockPdfParse.mockResolvedValueOnce({
         text: `John Doe
-Software Engineer`
+Software Engineer`,
       });
 
       const result = await parser.parseResume(mockFile);
-      
+
       // Should still create at least one section
       expect(result.sections.length).toBeGreaterThan(0);
       expect(result.extractionConfidence).toBeLessThan(70); // Lower confidence for minimal content
-      expect(result.metadata.warnings).toContain('Resume appears very short - may be missing content');
+      expect(result.metadata.warnings).toContain(
+        'Resume appears very short - may be missing content',
+      );
     });
   });
 
@@ -355,31 +361,31 @@ Software Engineer`
 • Led team of 10 developers
 • Reduced processing time by 2 hours
 • Served 50K users daily
-• Generated 1.5 million in revenue`
+• Generated 1.5 million in revenue`,
       });
 
       const result = await parser.parseResume(mockFile);
-      
-      const experienceSection = result.sections.find(s => s.type === SectionType.EXPERIENCE);
+
+      const experienceSection = result.sections.find((s) => s.type === SectionType.EXPERIENCE);
       expect(experienceSection).toBeDefined();
-      
-      const achievementBullets = experienceSection!.bullets.filter(b => 
-        b.achievements.some(a => a.hasQuantification)
+
+      const achievementBullets = experienceSection!.bullets.filter((b) =>
+        b.achievements.some((a) => a.hasQuantification),
       );
-      
+
       expect(achievementBullets.length).toBeGreaterThan(0);
-      
+
       // Check for different types of metrics - be more flexible with expectations
       const allMetrics = experienceSection!.bullets
-        .flatMap(b => b.achievements)
-        .flatMap(a => a.metrics);
-      
+        .flatMap((b) => b.achievements)
+        .flatMap((a) => a.metrics);
+
       // At least some metrics should be detected
       expect(allMetrics.length).toBeGreaterThan(0);
-      
+
       // Check that we have some quantified achievements
-      const hasQuantifiedAchievements = experienceSection!.bullets.some(b =>
-        b.achievements.some(a => a.hasQuantification)
+      const hasQuantifiedAchievements = experienceSection!.bullets.some((b) =>
+        b.achievements.some((a) => a.hasQuantification),
       );
       expect(hasQuantifiedAchievements).toBe(true);
     });
@@ -392,22 +398,22 @@ Software Engineer`
 • Implemented security measures
 • Led cross-functional team
 • Optimized database performance
-• Created automated testing suite`
+• Created automated testing suite`,
       });
 
       const result = await parser.parseResume(mockFile);
-      
-      const experienceSection = result.sections.find(s => s.type === SectionType.EXPERIENCE);
-      const achievementBullets = experienceSection!.bullets.filter(b => 
-        b.achievements.some(a => a.actionVerbs.length > 0)
+
+      const experienceSection = result.sections.find((s) => s.type === SectionType.EXPERIENCE);
+      const achievementBullets = experienceSection!.bullets.filter((b) =>
+        b.achievements.some((a) => a.actionVerbs.length > 0),
       );
-      
+
       expect(achievementBullets.length).toBeGreaterThan(3);
-      
+
       const allActionVerbs = experienceSection!.bullets
-        .flatMap(b => b.achievements)
-        .flatMap(a => a.actionVerbs);
-      
+        .flatMap((b) => b.achievements)
+        .flatMap((a) => a.actionVerbs);
+
       expect(allActionVerbs).toContain('developed');
       expect(allActionVerbs).toContain('implemented');
       expect(allActionVerbs).toContain('led');
@@ -420,23 +426,25 @@ Software Engineer`
     test('should handle very short resumes', async () => {
       const mockPdfParse = require('pdf-parse');
       mockPdfParse.mockResolvedValueOnce({
-        text: 'John Doe'
+        text: 'John Doe',
       });
 
       const result = await parser.parseResume(mockFile);
-      
+
       expect(result.extractionConfidence).toBeLessThan(50);
-      expect(result.metadata.warnings).toContain('Resume appears very short - may be missing content');
+      expect(result.metadata.warnings).toContain(
+        'Resume appears very short - may be missing content',
+      );
     });
 
     test('should handle resumes with garbled text', async () => {
       const mockPdfParse = require('pdf-parse');
       mockPdfParse.mockResolvedValueOnce({
-        text: 'John Doe ���������� ♠♣♥♦ ████████ Software Engineer'
+        text: 'John Doe ���������� ♠♣♥♦ ████████ Software Engineer',
       });
 
       const result = await parser.parseResume(mockFile);
-      
+
       expect(result.extractionConfidence).toBeLessThan(90);
       expect(result.metadata.warnings).toContain('Some text may not have been extracted correctly');
     });
@@ -446,11 +454,11 @@ Software Engineer`
       // Create text that should be about 2 pages
       const longText = 'word '.repeat(1000); // ~1000 words
       mockPdfParse.mockResolvedValueOnce({
-        text: longText
+        text: longText,
       });
 
       const result = await parser.parseResume(mockFile);
-      
+
       expect(result.metadata.pageCount).toBeGreaterThan(1);
       expect(result.metadata.pageCount).toBeLessThan(5);
     });

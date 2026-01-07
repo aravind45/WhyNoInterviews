@@ -10,7 +10,7 @@ const frontendFile = fs.readFileSync(path.join(__dirname, 'src/public/index.html
 
 // Test 1: Backend endpoint exists
 console.log('✅ Backend Tests:');
-const hasElevatorPitchEndpoint = backendFile.includes('app.post(\'/api/generate-elevator-pitch\'');
+const hasElevatorPitchEndpoint = backendFile.includes("app.post('/api/generate-elevator-pitch'");
 console.log(`   • Endpoint exists: ${hasElevatorPitchEndpoint}`);
 
 const hasCorrectPayload = backendFile.includes('sessionId, jobDescription, analysisData');
@@ -76,10 +76,18 @@ console.log('   3. Click "Elevator Pitch" button');
 console.log('   4. Verify pitch generates and displays');
 console.log('   5. Test copy and save functionality');
 
-const allTestsPassed = hasElevatorPitchEndpoint && hasCorrectPayload && returnsPitchText && 
-                      hasFrontendFunction && hasCorrectApiCall && hasLoadingPattern && 
-                      hasErrorHandling && hasButton && hasOutputSection && 
-                      hasCopyFunction && hasSaveFunction;
+const allTestsPassed =
+  hasElevatorPitchEndpoint &&
+  hasCorrectPayload &&
+  returnsPitchText &&
+  hasFrontendFunction &&
+  hasCorrectApiCall &&
+  hasLoadingPattern &&
+  hasErrorHandling &&
+  hasButton &&
+  hasOutputSection &&
+  hasCopyFunction &&
+  hasSaveFunction;
 
 console.log(`\n${allTestsPassed ? '✅' : '❌'} All tests ${allTestsPassed ? 'PASSED' : 'FAILED'}!`);
 

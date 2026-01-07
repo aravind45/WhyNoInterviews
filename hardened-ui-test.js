@@ -12,10 +12,10 @@ const flagChecks = [
   { name: 'Flag checks localStorage', pattern: /localStorage\.getItem\('NEW_UI'\)/ },
   { name: 'Flag checks URL param', pattern: /get\('ui'\).*===.*'1'/ },
   { name: 'CSS loading uses global flag', pattern: /window\.isNewUIEnabled.*link/ },
-  { name: 'Body class uses global flag', pattern: /isNewUI.*classList\.add/ }
+  { name: 'Body class uses global flag', pattern: /isNewUI.*classList\.add/ },
 ];
 
-flagChecks.forEach(check => {
+flagChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -26,10 +26,10 @@ const handlerChecks = [
   { name: 'No inline onclick on logo', pattern: /logo.*onclick/, shouldNotExist: true },
   { name: 'addEventListener for logo', pattern: /addEventListener\('click'/ },
   { name: 'Logo click checks global flag', pattern: /window\.isNewUIEnabled.*switchTab/ },
-  { name: 'Cursor style conditional', pattern: /cursor.*pointer.*isNewUIEnabled/ }
+  { name: 'Cursor style conditional', pattern: /cursor.*pointer.*isNewUIEnabled/ },
 ];
 
-handlerChecks.forEach(check => {
+handlerChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   const result = check.shouldNotExist ? !found : found;
   console.log(`   ${result ? '✅' : '❌'} ${check.name}`);
@@ -40,7 +40,7 @@ console.log('\n⚙️  Checking Critical Functions Preserved:');
 const criticalFunctions = [
   'switchTab',
   'showAuthModal',
-  'hideAuthModal', 
+  'hideAuthModal',
   'switchAuthMode',
   'handleLogin',
   'handleSignup',
@@ -51,19 +51,19 @@ const criticalFunctions = [
   'generateElevatorPitch',
   'loadLLMProviders',
   'initAuth',
-  'loadTargetCompanies'
+  'loadTargetCompanies',
 ];
 
 let functionsFound = 0;
-criticalFunctions.forEach(func => {
+criticalFunctions.forEach((func) => {
   const patterns = [
     new RegExp(`function\\s+${func}\\s*\\(`),
     new RegExp(`${func}\\s*=\\s*function`),
     new RegExp(`${func}\\s*=\\s*async\\s+function`),
-    new RegExp(`async\\s+function\\s+${func}`)
+    new RegExp(`async\\s+function\\s+${func}`),
   ];
-  
-  const found = patterns.some(pattern => pattern.test(indexContent));
+
+  const found = patterns.some((pattern) => pattern.test(indexContent));
   if (found) functionsFound++;
   console.log(`   ${found ? '✅' : '❌'} ${func}`);
 });
@@ -74,11 +74,15 @@ const scriptChecks = [
   { name: 'Multiple script blocks', pattern: /<script>/g, count: true },
   { name: 'All scripts closed', pattern: /<\/script>/g, count: true },
   { name: 'Auth modal HTML', pattern: /id="auth-modal"/ },
-  { name: 'All tab sections', pattern: /id="tab-(analyze|search|optimizer|target-companies|networking|home)"/g, count: true },
-  { name: 'File ends properly', pattern: /<\/script>\s*<\/body>\s*<\/html>\s*$/ }
+  {
+    name: 'All tab sections',
+    pattern: /id="tab-(analyze|search|optimizer|target-companies|networking|home)"/g,
+    count: true,
+  },
+  { name: 'File ends properly', pattern: /<\/script>\s*<\/body>\s*<\/html>\s*$/ },
 ];
 
-scriptChecks.forEach(check => {
+scriptChecks.forEach((check) => {
   if (check.count) {
     const matches = indexContent.match(check.pattern);
     const count = matches ? matches.length : 0;
@@ -96,10 +100,10 @@ const newUIChecks = [
   { name: 'Home hero content', pattern: /home-hero/ },
   { name: 'Feature cards', pattern: /home-feature-card/ },
   { name: 'CTAs call switchTab', pattern: /onclick="switchTab\('analyze'\)"/ },
-  { name: 'Clean navigation labels', pattern: /Resume Analysis.*Job Matching.*Resume Optimizer/ }
+  { name: 'Clean navigation labels', pattern: /Resume Analysis.*Job Matching.*Resume Optimizer/ },
 ];
 
-newUIChecks.forEach(check => {
+newUIChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });

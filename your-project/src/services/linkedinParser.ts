@@ -85,7 +85,8 @@ export function parseLinkedInCSV(csvContent: string | Buffer): ParseResult {
           emailAddress: record['Email Address'] || record['email_address'] || record['Email'] || '',
           company: record['Company'] || record['company'] || '',
           position: record['Position'] || record['position'] || record['Title'] || '',
-          connectedOn: record['Connected On'] || record['connected_on'] || record['Connection Date'] || '',
+          connectedOn:
+            record['Connected On'] || record['connected_on'] || record['Connection Date'] || '',
         };
 
         // Skip completely empty rows
@@ -121,7 +122,7 @@ export function parseLinkedInCSV(csvContent: string | Buffer): ParseResult {
     return result;
   } catch (error) {
     throw new Error(
-      `Failed to parse LinkedIn CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to parse LinkedIn CSV: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
   }
 }
@@ -169,13 +170,16 @@ export function validateLinkedInCSV(csvContent: string | Buffer): boolean {
   // Check for CSV header presence
   const firstLine = content.split('\n')[0].toLowerCase();
   const hasLinkedInHeaders =
-    (firstLine.includes('first name') || firstLine.includes('first_name')) ||
-    (firstLine.includes('last name') || firstLine.includes('last_name')) ||
-    (firstLine.includes('email') || firstLine.includes('company'));
+    firstLine.includes('first name') ||
+    firstLine.includes('first_name') ||
+    firstLine.includes('last name') ||
+    firstLine.includes('last_name') ||
+    firstLine.includes('email') ||
+    firstLine.includes('company');
 
   if (!hasLinkedInHeaders) {
     throw new Error(
-      'CSV does not appear to be a LinkedIn Connections export. Expected columns: First Name, Last Name, Email Address, Company, Position, Connected On'
+      'CSV does not appear to be a LinkedIn Connections export. Expected columns: First Name, Last Name, Email Address, Company, Position, Connected On',
     );
   }
 
@@ -192,7 +196,7 @@ export function validateLinkedInCSV(csvContent: string | Buffer): boolean {
  */
 export function suggestICACategory(
   contact: ParsedContact,
-  targetJobTitle?: string
+  targetJobTitle?: string,
 ): 'high_potential' | 'medium_potential' | 'low_potential' | 'uncategorized' {
   // If no position or company, hard to categorize
   if (!contact.position && !contact.company) {

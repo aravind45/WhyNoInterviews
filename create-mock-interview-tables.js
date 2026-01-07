@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 const mockInterviewTables = `
@@ -57,23 +57,22 @@ CREATE TABLE IF NOT EXISTS interview_results (
 `;
 
 async function createTables() {
-    try {
-        console.log('🎯 Creating mock interview tables...');
-        
-        await pool.query(mockInterviewTables);
-        
-        console.log('✅ Mock interview tables created successfully!');
-        console.log('   - interview_sessions');
-        console.log('   - interview_questions');
-        console.log('   - interview_responses');
-        console.log('   - interview_results');
-        
-    } catch (error) {
-        console.error('❌ Error creating tables:', error.message);
-        process.exit(1);
-    } finally {
-        await pool.end();
-    }
+  try {
+    console.log('🎯 Creating mock interview tables...');
+
+    await pool.query(mockInterviewTables);
+
+    console.log('✅ Mock interview tables created successfully!');
+    console.log('   - interview_sessions');
+    console.log('   - interview_questions');
+    console.log('   - interview_responses');
+    console.log('   - interview_results');
+  } catch (error) {
+    console.error('❌ Error creating tables:', error.message);
+    process.exit(1);
+  } finally {
+    await pool.end();
+  }
 }
 
 createTables();

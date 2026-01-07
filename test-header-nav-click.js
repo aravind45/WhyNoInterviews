@@ -8,10 +8,11 @@ console.log('1. Checking event delegation implementation...');
 const htmlContent = fs.readFileSync('src/public/index.html', 'utf8');
 
 // Verify event delegation code exists
-const hasEventDelegation = htmlContent.includes('document.addEventListener("click", (e) => {') &&
-                          htmlContent.includes('e.target.closest(".main-tab")') &&
-                          htmlContent.includes('tabEl.getAttribute("data-tab")') &&
-                          htmlContent.includes('if (typeof switchTab === "function") switchTab(tabName)');
+const hasEventDelegation =
+  htmlContent.includes('document.addEventListener("click", (e) => {') &&
+  htmlContent.includes('e.target.closest(".main-tab")') &&
+  htmlContent.includes('tabEl.getAttribute("data-tab")') &&
+  htmlContent.includes('if (typeof switchTab === "function") switchTab(tabName)');
 
 console.log('   ✓ Event delegation code added:', hasEventDelegation ? 'YES' : 'NO');
 
@@ -23,14 +24,16 @@ const hasSwitchTab = htmlContent.includes('function switchTab(tabName)');
 console.log('   ✓ switchTab function preserved:', hasSwitchTab ? 'YES' : 'NO');
 
 // Verify existing tab handlers still exist
-const hasExistingHandlers = htmlContent.includes("document.querySelectorAll('.main-tab').forEach(tab => {") &&
-                           htmlContent.includes("tab.addEventListener('click', function() {");
+const hasExistingHandlers =
+  htmlContent.includes("document.querySelectorAll('.main-tab').forEach(tab => {") &&
+  htmlContent.includes("tab.addEventListener('click', function() {");
 console.log('   ✓ Existing tab handlers preserved:', hasExistingHandlers ? 'YES' : 'NO');
 
 // Verify no backend/auth changes
-const noBackendChanges = !htmlContent.includes('// MODIFIED:') && 
-                        !htmlContent.includes('// CHANGED:') &&
-                        !htmlContent.includes('// REFACTORED:');
+const noBackendChanges =
+  !htmlContent.includes('// MODIFIED:') &&
+  !htmlContent.includes('// CHANGED:') &&
+  !htmlContent.includes('// REFACTORED:');
 console.log('   ✓ No backend/auth changes:', noBackendChanges ? 'YES' : 'NO');
 
 // Test 3: Check tab structure integrity
@@ -38,13 +41,13 @@ console.log('\n3. Checking tab structure integrity...');
 
 // Verify all required tabs exist with correct data-tab attributes
 const requiredTabs = ['home', 'analyze', 'search', 'optimizer', 'target-companies', 'networking'];
-const allTabsExist = requiredTabs.every(tab => {
+const allTabsExist = requiredTabs.every((tab) => {
   return htmlContent.includes(`data-tab="${tab}"`);
 });
 console.log('   ✓ All tabs have correct data-tab attributes:', allTabsExist ? 'YES' : 'NO');
 
 // Verify section IDs are unchanged
-const allSectionsExist = requiredTabs.every(tab => {
+const allSectionsExist = requiredTabs.every((tab) => {
   return htmlContent.includes(`id="tab-${tab}"`);
 });
 console.log('   ✓ All section IDs preserved:', allSectionsExist ? 'YES' : 'NO');
@@ -53,17 +56,21 @@ console.log('   ✓ All section IDs preserved:', allSectionsExist ? 'YES' : 'NO'
 console.log('\n4. Checking event delegation logic...');
 
 // Verify proper event target handling
-const hasProperTargeting = htmlContent.includes('e.target.closest(".main-tab")') &&
-                          htmlContent.includes('if (!tabEl) return;');
+const hasProperTargeting =
+  htmlContent.includes('e.target.closest(".main-tab")') &&
+  htmlContent.includes('if (!tabEl) return;');
 console.log('   ✓ Proper event target handling:', hasProperTargeting ? 'YES' : 'NO');
 
 // Verify data-tab extraction
-const hasDataTabExtraction = htmlContent.includes('tabEl.getAttribute("data-tab")') &&
-                            htmlContent.includes('if (!tabName) return;');
+const hasDataTabExtraction =
+  htmlContent.includes('tabEl.getAttribute("data-tab")') &&
+  htmlContent.includes('if (!tabName) return;');
 console.log('   ✓ Data-tab extraction logic:', hasDataTabExtraction ? 'YES' : 'NO');
 
 // Verify safe function call
-const hasSafeFunctionCall = htmlContent.includes('if (typeof switchTab === "function") switchTab(tabName)');
+const hasSafeFunctionCall = htmlContent.includes(
+  'if (typeof switchTab === "function") switchTab(tabName)',
+);
 console.log('   ✓ Safe switchTab function call:', hasSafeFunctionCall ? 'YES' : 'NO');
 
 // Summary
@@ -77,7 +84,7 @@ const checks = [
   allSectionsExist,
   hasProperTargeting,
   hasDataTabExtraction,
-  hasSafeFunctionCall
+  hasSafeFunctionCall,
 ];
 
 const passed = checks.filter(Boolean).length;
@@ -101,5 +108,5 @@ console.log('\n🔗 Test URLs:');
 console.log('   • Normal mode: http://localhost:3000');
 console.log('   • New UI mode: http://localhost:3000?ui=1');
 console.log('\n🧪 Manual test in browser console:');
-console.log('   document.querySelector(\'.main-tab\').click()');
+console.log("   document.querySelector('.main-tab').click()");
 console.log('   ^ Should switch tabs if working correctly');

@@ -7,7 +7,7 @@ import {
   Evidence,
   ConfidenceScore,
   ProcessingError,
-  TimeoutError
+  TimeoutError,
 } from '../types';
 
 let claudeClient: Anthropic | null = null;
@@ -53,7 +53,7 @@ export const analyzeResume = async (
     requiredSkills: string[];
     requiredKeywords: string[];
   },
-  jobDescription?: string
+  jobDescription?: string,
 ): Promise<{
   rootCauses: RootCause[];
   recommendations: ActionableRecommendation[];
@@ -75,9 +75,9 @@ export const analyzeResume = async (
   // Build the analysis prompt
   const prompt = buildAnalysisPrompt(
     anonymizedResume,
-    resumeData.sections.map(s => ({ type: s.type, title: s.title })),
+    resumeData.sections.map((s) => ({ type: s.type, title: s.title })),
     targetJob,
-    jobDescription
+    jobDescription,
   );
 
   try {
@@ -90,13 +90,13 @@ export const analyzeResume = async (
         messages: [
           {
             role: 'user',
-            content: prompt
-          }
-        ]
+            content: prompt,
+          },
+        ],
       }),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new TimeoutError('AI analysis timeout')), timeout)
-      )
+        setTimeout(() => reject(new TimeoutError('AI analysis timeout')), timeout),
+      ),
     ]);
 
     const content = response.content[0];
@@ -110,11 +110,10 @@ export const analyzeResume = async (
     logger.info('Claude AI analysis completed', {
       rootCausesCount: analysis.rootCauses.length,
       recommendationsCount: analysis.recommendations.length,
-      confidence: analysis.overallConfidence
+      confidence: analysis.overallConfidence,
     });
 
     return analysis;
-
   } catch (error) {
     if (error instanceof TimeoutError) {
       throw error;
@@ -134,38 +133,29 @@ const anonymizeResume = (text: string): string => {
   // Email addresses
   anonymized = anonymized.replace(
     /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-    '[EMAIL]'
+    '[EMAIL]',
   );
 
   // Phone numbers
-  anonymized = anonymized.replace(
-    /(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
-    '[PHONE]'
-  );
+  anonymized = anonymized.replace(/(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, '[PHONE]');
 
   // Social Security Numbers
-  anonymized = anonymized.replace(
-    /\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g,
-    '[SSN]'
-  );
+  anonymized = anonymized.replace(/\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g, '[SSN]');
 
   // Street addresses (basic)
   anonymized = anonymized.replace(
     /\d+\s+[A-Za-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Way|Court|Ct)[.,]?\s*\n?/gi,
-    '[ADDRESS] '
+    '[ADDRESS] ',
   );
 
   // LinkedIn URLs
   anonymized = anonymized.replace(
     /https?:\/\/(www\.)?linkedin\.com\/in\/[A-Za-z0-9-]+\/?/gi,
-    '[LINKEDIN]'
+    '[LINKEDIN]',
   );
 
   // GitHub URLs
-  anonymized = anonymized.replace(
-    /https?:\/\/(www\.)?github\.com\/[A-Za-z0-9-]+\/?/gi,
-    '[GITHUB]'
-  );
+  anonymized = anonymized.replace(/https?:\/\/(www\.)?github\.com\/[A-Za-z0-9-]+\/?/gi, '[GITHUB]');
 
   return anonymized;
 };
@@ -183,7 +173,7 @@ const buildAnalysisPrompt = (
     requiredSkills: string[];
     requiredKeywords: string[];
   },
-  jobDescription?: string
+  jobDescription?: string,
 ): string => {
   let prompt = `Analyze this resume for the target position: ${targetJob.title} (${targetJob.seniorityLevel} level, ${targetJob.category})
 
@@ -191,7 +181,7 @@ RESUME CONTENT:
 ${resumeText.substring(0, 6000)} ${resumeText.length > 6000 ? '...[truncated]' : ''}
 
 RESUME SECTIONS DETECTED:
-${sections.map(s => `- ${s.title} (${s.type})`).join('\n')}
+${sections.map((s) => `- ${s.title} (${s.type})`).join('\n')}
 
 TARGET ROLE REQUIREMENTS:
 - Required Skills: ${targetJob.requiredSkills.join(', ')}
@@ -269,7 +259,9 @@ Lower confidence if resume has missing sections or unclear information.`;
 /**
  * Parse and validate AI response
  */
-const parseAnalysisResponse = (content: string): {
+const parseAnalysisResponse = (
+  content: string,
+): {
   rootCauses: RootCause[];
   recommendations: ActionableRecommendation[];
   overallConfidence: ConfidenceScore;
@@ -295,9 +287,9 @@ const parseAnalysisResponse = (content: string): {
           description: String(e.description || ''),
           citation: String(e.citation || 'No citation provided'),
           location: e.location,
-          confidence: clamp(Number(e.confidence) || 50, 0, 100)
+          confidence: clamp(Number(e.confidence) || 50, 0, 100),
         })),
-        priority: index + 1
+        priority: index + 1,
       }));
 
     // Validate and transform recommendations
@@ -314,18 +306,19 @@ const parseAnalysisResponse = (content: string): {
         difficulty: validateDifficulty(rec.difficulty),
         timeEstimate: String(rec.timeEstimate || '1-2 hours'),
         relatedRootCause: String(rec.relatedRootCause || ''),
-        priority: index + 1
+        priority: index + 1,
       }));
 
     return {
       rootCauses,
       recommendations,
       overallConfidence: clamp(Number(parsed.overallConfidence) || 50, 0, 100),
-      confidenceExplanation: String(parsed.confidenceExplanation || 'Based on available resume data'),
+      confidenceExplanation: String(
+        parsed.confidenceExplanation || 'Based on available resume data',
+      ),
       isCompetitive: Boolean(parsed.isCompetitive),
-      dataCompleteness: clamp(Number(parsed.dataCompleteness) || 50, 0, 100)
+      dataCompleteness: clamp(Number(parsed.dataCompleteness) || 50, 0, 100),
     };
-
   } catch (error) {
     logger.error('Failed to parse Claude AI response:', error);
     throw new ProcessingError('Failed to process Claude AI analysis results');
@@ -339,26 +332,33 @@ const clamp = (value: number, min: number, max: number): number => {
 
 const validateCategory = (category: string): RootCause['category'] => {
   const valid = [
-    'keyword_mismatch', 'experience_gap', 'skill_deficiency',
-    'formatting_issue', 'ats_compatibility', 'quantification_missing',
-    'relevance_issue', 'career_progression', 'education_mismatch', 'other'
+    'keyword_mismatch',
+    'experience_gap',
+    'skill_deficiency',
+    'formatting_issue',
+    'ats_compatibility',
+    'quantification_missing',
+    'relevance_issue',
+    'career_progression',
+    'education_mismatch',
+    'other',
   ];
-  return valid.includes(category) ? category as RootCause['category'] : 'other';
+  return valid.includes(category) ? (category as RootCause['category']) : 'other';
 };
 
 const validateEvidenceType = (type: string): Evidence['type'] => {
   const valid = ['resume_section', 'missing_keyword', 'formatting', 'market_data', 'comparison'];
-  return valid.includes(type) ? type as Evidence['type'] : 'resume_section';
+  return valid.includes(type) ? (type as Evidence['type']) : 'resume_section';
 };
 
 const validateDifficulty = (difficulty: string): 'easy' | 'medium' | 'hard' => {
   const valid = ['easy', 'medium', 'hard'];
-  return valid.includes(difficulty) ? difficulty as 'easy' | 'medium' | 'hard' : 'medium';
+  return valid.includes(difficulty) ? (difficulty as 'easy' | 'medium' | 'hard') : 'medium';
 };
 
 export default {
   initializeClaude,
   getClaudeClient,
   isClaudeAvailable,
-  analyzeResume
+  analyzeResume,
 };

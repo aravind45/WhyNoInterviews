@@ -34,7 +34,7 @@ export const analyzeResume = async (
     requiredSkills: string[];
     requiredKeywords: string[];
   },
-  jobDescription?: string
+  jobDescription?: string,
 ): Promise<{
   rootCauses: RootCause[];
   recommendations: ActionableRecommendation[];
@@ -52,9 +52,9 @@ export const analyzeResume = async (
   // Build prompt (same structure as Groq)
   const prompt = buildAnalysisPrompt(
     resumeData.rawText,
-    resumeData.sections.map(s => ({ type: s.type, title: s.title })),
+    resumeData.sections.map((s) => ({ type: s.type, title: s.title })),
     targetJob,
-    jobDescription
+    jobDescription,
   );
 
   try {
@@ -64,11 +64,11 @@ export const analyzeResume = async (
       model,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: prompt }
+        { role: 'user', content: prompt },
       ],
       temperature: 0.3,
       max_tokens: 4000,
-      response_format: { type: 'json_object' }
+      response_format: { type: 'json_object' },
     });
 
     const content = response.choices[0]?.message?.content;
@@ -81,9 +81,10 @@ export const analyzeResume = async (
     // Parse and validate the JSON response
     const analysis = parseAnalysisResponse(content);
 
-    logger.info(`OpenAI analysis complete - Competitive: ${analysis.isCompetitive}, Confidence: ${analysis.overallConfidence}%`);
+    logger.info(
+      `OpenAI analysis complete - Competitive: ${analysis.isCompetitive}, Confidence: ${analysis.overallConfidence}%`,
+    );
     return analysis;
-
   } catch (error: any) {
     logger.error('OpenAI API error:', error);
     throw new Error(`OpenAI analysis failed: ${error.message}`);
@@ -103,7 +104,7 @@ const buildAnalysisPrompt = (
     requiredSkills: string[];
     requiredKeywords: string[];
   },
-  jobDescription?: string
+  jobDescription?: string,
 ): string => {
   let prompt = `Analyze this resume for the target position: ${targetJob.title} (${targetJob.seniorityLevel} level, ${targetJob.category})
 
@@ -111,7 +112,7 @@ RESUME CONTENT:
 ${resumeText.substring(0, 6000)} ${resumeText.length > 6000 ? '...[truncated]' : ''}
 
 RESUME SECTIONS DETECTED:
-${sections.map(s => `- ${s.title} (${s.type})`).join('\n')}
+${sections.map((s) => `- ${s.title} (${s.type})`).join('\n')}
 
 TARGET ROLE REQUIREMENTS:
 - Required Skills: ${targetJob.requiredSkills.join(', ')}
@@ -189,7 +190,9 @@ Lower confidence if resume has missing sections or unclear information.`;
 /**
  * Parse and validate AI response
  */
-const parseAnalysisResponse = (responseText: string): {
+const parseAnalysisResponse = (
+  responseText: string,
+): {
   rootCauses: RootCause[];
   recommendations: ActionableRecommendation[];
   overallConfidence: number;
@@ -214,9 +217,9 @@ const parseAnalysisResponse = (responseText: string): {
           description: ev.description || '',
           citation: ev.citation || '',
           location: ev.location,
-          confidence: Number(ev.confidence) || 50
+          confidence: Number(ev.confidence) || 50,
         })),
-        relatedRecommendations: []
+        relatedRecommendations: [],
       })),
       recommendations: (data.recommendations || []).slice(0, 3).map((rec: any, idx: number) => ({
         id: `rec-${idx + 1}`,
@@ -227,12 +230,12 @@ const parseAnalysisResponse = (responseText: string): {
         difficulty: rec.difficulty || 'medium',
         timeEstimate: rec.timeEstimate || 'Unknown',
         relatedRootCause: rec.relatedRootCause || '',
-        priority: idx + 1
+        priority: idx + 1,
       })),
       overallConfidence: Number(data.overallConfidence) || 50,
       confidenceExplanation: data.confidenceExplanation || 'Analysis completed',
       isCompetitive: Boolean(data.isCompetitive),
-      dataCompleteness: Number(data.dataCompleteness) || 50
+      dataCompleteness: Number(data.dataCompleteness) || 50,
     };
   } catch (error: any) {
     logger.error('Failed to parse OpenAI response:', error.message);

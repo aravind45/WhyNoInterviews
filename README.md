@@ -10,6 +10,7 @@
 ## 🚀 Features
 
 ### 1. Resume Analysis & Match Scoring
+
 - **Dual Scoring System**: Compare AI assessment vs. realistic skill-based matching
 - **Comprehensive Analysis**:
   - 6-second recruiter scan simulation
@@ -25,6 +26,7 @@
 - **7-day Result Caching**: Analysis results cached in database for quick retrieval
 
 ### 2. Resume Optimizer (10-Point Audit)
+
 - **Professional Resume Audit** covering:
   - ✅ Target Role Alignment
   - ✅ Summary Section Quality
@@ -41,6 +43,7 @@
 - **Download & Copy**: Export optimized resume as text
 
 ### 3. AI-Powered Cover Letter Generator
+
 - Company research via Tavily API (optional)
 - Tailored to specific job descriptions
 - Uses only factual information from your resume
@@ -49,6 +52,7 @@
 - No fabricated content - fact-based only
 
 ### 4. Interview Preparation
+
 - 20 personalized interview questions with suggested answers
 - Questions to ask the interviewer
 - Tips for each answer based on your experience
@@ -56,6 +60,7 @@
 - Save interview prep for multiple roles
 
 ### 5. Job Search & Tracking
+
 - **Smart Search Links**: Quick access to LinkedIn, Indeed, Glassdoor, Google Jobs, ZipRecruiter, Dice, Wellfound
 - **Real Job API Integration** (optional): Fetch and score real jobs via JSearch API
 - **Profile Extraction**: Auto-extract skills, experience, and target titles from resume
@@ -63,6 +68,7 @@
 - **Job Tracking**: Track application status (SAVED → APPLIED → INTERVIEW → OFFER → REJECTED)
 
 ### 6. Networking & Referrals (ICA - Intelligent Contact Analyzer)
+
 - Find relevant contacts at target companies
 - LinkedIn Sales Navigator search integration
 - Contact management with relevance scoring
@@ -72,16 +78,20 @@
 ## 🎯 Why JobMatch AI?
 
 ### The Problem with Traditional Resume Reviews
+
 Most tools give you inflated match scores that don't reflect reality. They'll say you're a "95% match" when recruiters disagree.
 
 ### Our Solution: Dual Scoring System
+
 - **AI Assessment**: The optimistic view (what you hope for)
 - **Skill-Based Score**: The realistic view (what actually matters)
 
 This transparency helps you understand your true chances and focus on winnable opportunities.
 
 ### Dual-LLM Analysis
+
 Choose between two AI models for resume analysis:
+
 - **Groq (Llama 3.1)**: Lightning-fast analysis, free tier available, great for quick iterations
 - **Claude (Sonnet 4.5)**: Superior analysis quality, better at catching subtle issues, more nuanced recommendations
 
@@ -103,6 +113,7 @@ else:
 ```
 
 ### Verdict Thresholds
+
 - **80%+** = STRONG MATCH ✅
 - **60-79%** = MODERATE MATCH ⚠️
 - **40-59%** = WEAK MATCH ⚠️
@@ -112,6 +123,7 @@ else:
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **Runtime**: Node.js 18+ with TypeScript
 - **Framework**: Express.js
 - **Database**: PostgreSQL (Neon serverless)
@@ -125,12 +137,14 @@ else:
   - JSearch (job listings - optional)
 
 ### Frontend
+
 - **Pure Vanilla JavaScript** (no framework dependencies)
 - **Dark Theme UI** with gradient accents
 - **Responsive Design** (mobile-friendly)
 - **Single HTML File** architecture for simplicity
 
 ### Deployment
+
 - **Platform**: Vercel (serverless)
 - **CI/CD**: Auto-deploy from `main` branch
 - **Database**: Neon PostgreSQL (auto-scaling)
@@ -138,6 +152,7 @@ else:
 ## 📦 Installation
 
 ### Prerequisites
+
 ```bash
 Node.js 18+
 PostgreSQL database
@@ -147,12 +162,14 @@ Groq API key (free at https://console.groq.com)
 ### Quick Start
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/aravind45/WhyNoInterviews.git
 cd WhyNoInterviews
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
@@ -186,6 +203,7 @@ PORT=3000
 4. **Database setup**
 
 The app auto-creates tables on first run:
+
 - `user_sessions` - User authentication
 - `resume_analyses` - Uploaded resumes
 - `diagnosis_results` - Analysis cache (7-day TTL)
@@ -193,6 +211,7 @@ The app auto-creates tables on first run:
 - `ica_sessions` - Contact search sessions
 
 5. **Run development server**
+
 ```bash
 npm run dev
 ```
@@ -200,6 +219,7 @@ npm run dev
 Visit `http://localhost:3000`
 
 6. **Build for production**
+
 ```bash
 npm run build
 npm start
@@ -208,6 +228,7 @@ npm start
 ## 🎮 Usage Guide
 
 ### Analyze Resume
+
 1. Go to **Analyze Resume** tab
 2. Upload resume (PDF, DOC, or DOCX - max 10MB)
 3. Paste job description (min 50 chars)
@@ -219,6 +240,7 @@ npm start
    - Detailed analysis sections
 
 ### Optimize Resume
+
 1. Go to **Resume Optimizer** tab
 2. Upload resume
 3. Paste target job description
@@ -228,12 +250,14 @@ npm start
 7. Download optimized version
 
 ### Generate Cover Letter
+
 1. After analyzing resume, click **Generate Cover Letter** card
 2. AI researches company (if Tavily API configured)
 3. Generates tailored letter using your actual achievements
 4. Copy to clipboard or save for later
 
 ### Prepare for Interviews
+
 1. After analyzing resume, click **Interview Prep** card
 2. AI generates 20 personalized questions
 3. Suggested answers based on your experience
@@ -241,6 +265,7 @@ npm start
 5. Save prep for multiple roles
 
 ### Find Jobs
+
 1. Go to **Find Jobs** tab
 2. Upload resume (profile auto-extracted)
 3. Enter search query and location
@@ -249,6 +274,7 @@ npm start
 6. If JSearch API configured: view scored real jobs
 
 ### Network & Get Referrals
+
 1. Go to **Networking** tab
 2. Upload resume for profile analysis
 3. Click **Find Contacts**
@@ -261,17 +287,20 @@ npm start
 
 **AI Assessment (Purple Box)**
 The LLM's optimistic evaluation considering:
+
 - Overall qualifications
 - Transferable experience
 - Potential fit
 
 **Skill-Based (Green Box)**
 Realistic keyword matching:
+
 - Exact skill matches only
 - Industry-specific terms
 - Technical requirements
 
 ### Example
+
 ```
 AI Assessment: 85%    "Strong overall fit with relevant experience"
 Skill-Based: 40%      "Only 6 of 15 required skills match"
@@ -310,6 +339,7 @@ WhyNoInterviews/
 ## 📝 API Endpoints
 
 ### Core Analysis
+
 ```
 POST /api/analyze-match              - Analyze resume vs job description
 POST /api/generate-specific-cover-letter  - Generate tailored cover letter
@@ -318,6 +348,7 @@ POST /api/optimize-resume            - Run 10-point resume audit
 ```
 
 ### Profile & Jobs
+
 ```
 POST /api/extract-profile            - Extract profile from resume
 POST /api/search-jobs                - Search and score jobs
@@ -327,6 +358,7 @@ POST /api/update-job-status          - Update application status
 ```
 
 ### Networking (ICA)
+
 ```
 POST   /api/ica/upload-resume        - Upload for contact analysis
 POST   /api/ica/find-contacts        - Find relevant contacts
@@ -337,6 +369,7 @@ DELETE /api/ica/contacts             - Clear all contacts
 ```
 
 ### Health
+
 ```
 GET /health                          - Health check
 ```
@@ -344,11 +377,13 @@ GET /health                          - Health check
 ## 🚀 Deployment to Vercel
 
 1. **Install Vercel CLI**
+
 ```bash
 npm i -g vercel
 ```
 
 2. **Deploy**
+
 ```bash
 vercel
 ```
@@ -360,6 +395,7 @@ vercel
    - `JSEARCH_API_KEY` (optional)
 
 4. **Deploy to production**
+
 ```bash
 vercel --prod
 ```
@@ -369,11 +405,13 @@ Database tables will auto-create on first request.
 ## 🐛 Known Issues & Roadmap
 
 ### Current Limitations
+
 - PDF download for optimized resume (downloads as .txt - convertible to PDF via Google Docs)
 - Interview Coaching tab needs reimplementation (was in previous version)
 - Google OAuth needs authorized domains configured
 
 ### Planned Features
+
 - [ ] Export analysis as PDF
 - [ ] Email reports
 - [ ] Application deadline tracking
@@ -421,4 +459,4 @@ MIT License - see LICENSE file for details.
 
 **Built with ❤️ to help job seekers land their dream jobs**
 
-*Stop getting generic advice. Start getting interviews.*
+_Stop getting generic advice. Start getting interviews._

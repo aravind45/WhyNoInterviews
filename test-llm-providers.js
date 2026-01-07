@@ -32,46 +32,48 @@ async function testProvidersEndpoint() {
   return new Promise((resolve, reject) => {
     const url = `${BASE_URL}/api/llm-providers`;
 
-    https.get(url, (res) => {
-      let data = '';
+    https
+      .get(url, (res) => {
+        let data = '';
 
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
 
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
 
-          if (!json.success) {
-            log(`❌ FAILED: API returned success=false`, 'red');
-            log(`   Error: ${json.error}`, 'red');
+            if (!json.success) {
+              log(`❌ FAILED: API returned success=false`, 'red');
+              log(`   Error: ${json.error}`, 'red');
+              resolve(false);
+              return;
+            }
+
+            const providers = json.data.providers;
+            const defaultProvider = json.data.default;
+
+            log(`✅ SUCCESS: Found ${providers.length} provider(s)`, 'green');
+
+            providers.forEach((p) => {
+              const status = p.available ? '✓ Available' : '✗ Unavailable';
+              const isDefault = p.name === defaultProvider ? ' (default)' : '';
+              log(`   - ${p.displayName}: ${status}${isDefault}`, p.available ? 'green' : 'yellow');
+            });
+
+            resolve(true);
+          } catch (error) {
+            log(`❌ FAILED: Invalid JSON response`, 'red');
+            log(`   Response: ${data}`, 'red');
             resolve(false);
-            return;
           }
-
-          const providers = json.data.providers;
-          const defaultProvider = json.data.default;
-
-          log(`✅ SUCCESS: Found ${providers.length} provider(s)`, 'green');
-
-          providers.forEach(p => {
-            const status = p.available ? '✓ Available' : '✗ Unavailable';
-            const isDefault = p.name === defaultProvider ? ' (default)' : '';
-            log(`   - ${p.displayName}: ${status}${isDefault}`, p.available ? 'green' : 'yellow');
-          });
-
-          resolve(true);
-        } catch (error) {
-          log(`❌ FAILED: Invalid JSON response`, 'red');
-          log(`   Response: ${data}`, 'red');
-          resolve(false);
-        }
+        });
+      })
+      .on('error', (error) => {
+        log(`❌ FAILED: ${error.message}`, 'red');
+        resolve(false);
       });
-    }).on('error', (error) => {
-      log(`❌ FAILED: ${error.message}`, 'red');
-      resolve(false);
-    });
   });
 }
 
@@ -82,33 +84,35 @@ async function testHealthEndpoint() {
   return new Promise((resolve, reject) => {
     const url = `${BASE_URL}/health`;
 
-    https.get(url, (res) => {
-      let data = '';
+    https
+      .get(url, (res) => {
+        let data = '';
 
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
 
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
 
-          if (json.status === 'ok') {
-            log(`✅ SUCCESS: Server is healthy`, 'green');
-            resolve(true);
-          } else {
-            log(`❌ FAILED: Unexpected health status: ${json.status}`, 'red');
+            if (json.status === 'ok') {
+              log(`✅ SUCCESS: Server is healthy`, 'green');
+              resolve(true);
+            } else {
+              log(`❌ FAILED: Unexpected health status: ${json.status}`, 'red');
+              resolve(false);
+            }
+          } catch (error) {
+            log(`❌ FAILED: Invalid JSON response`, 'red');
             resolve(false);
           }
-        } catch (error) {
-          log(`❌ FAILED: Invalid JSON response`, 'red');
-          resolve(false);
-        }
+        });
+      })
+      .on('error', (error) => {
+        log(`❌ FAILED: ${error.message}`, 'red');
+        resolve(false);
       });
-    }).on('error', (error) => {
-      log(`❌ FAILED: ${error.message}`, 'red');
-      resolve(false);
-    });
   });
 }
 
@@ -163,7 +167,7 @@ async function testProviderInitialization() {
 
     log(`✅ SUCCESS: Initialized ${providers.length} provider(s)`, 'green');
 
-    providers.forEach(p => {
+    providers.forEach((p) => {
       const status = p.isAvailable() ? '✓ Available' : '✗ Unavailable';
       log(`   - ${p.displayName}: ${status}`, p.isAvailable() ? 'green' : 'yellow');
     });
@@ -231,7 +235,7 @@ async function runTests() {
 }
 
 // Run tests
-runTests().catch(error => {
+runTests().catch((error) => {
   log(`\n💥 Fatal error: ${error.message}`, 'red');
   console.error(error);
   process.exit(1);

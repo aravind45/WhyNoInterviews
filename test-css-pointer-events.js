@@ -3,17 +3,20 @@ console.log('🎯 CSS Pointer Events Test\n');
 
 const fs = require('fs');
 
-console.log('If navigation clicks still don\'t work after event delegation:');
+console.log("If navigation clicks still don't work after event delegation:");
 console.log('\n1. Test in browser console:');
-console.log('   document.querySelector(\'.main-tab\').click()');
-console.log('   ^ If this works but mouse clicks don\'t, CSS is blocking pointer events');
+console.log("   document.querySelector('.main-tab').click()");
+console.log("   ^ If this works but mouse clicks don't, CSS is blocking pointer events");
 
 console.log('\n2. Check CSS for pointer-events issues:');
 const cssContent = fs.readFileSync('src/public/new-ui.css', 'utf8');
 
 // Check if there are any pointer-events: none rules
 const hasPointerEventsNone = cssContent.includes('pointer-events: none');
-console.log('   ✓ CSS has pointer-events: none rules:', hasPointerEventsNone ? 'YES (potential issue)' : 'NO');
+console.log(
+  '   ✓ CSS has pointer-events: none rules:',
+  hasPointerEventsNone ? 'YES (potential issue)' : 'NO',
+);
 
 if (hasPointerEventsNone) {
   console.log('\n⚠️  POTENTIAL ISSUE DETECTED:');
@@ -39,4 +42,4 @@ console.log('   • Verify z-index and positioning');
 console.log('   • Test with different browsers');
 
 console.log('\n✅ Event delegation is implemented correctly.');
-console.log('   If clicks still don\'t work, it\'s likely a CSS issue.');
+console.log("   If clicks still don't work, it's likely a CSS issue.");

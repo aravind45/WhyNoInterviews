@@ -13,5 +13,7 @@ console.log('Client initialized:', !!googleClient);
 console.log('Expected audience:', clientId);
 
 // Note: We can't actually test verification without a real token from Google
-console.log('\nTo debug further, we need to see the actual error from the server logs when OAuth fails.');
+console.log(
+  '\nTo debug further, we need to see the actual error from the server logs when OAuth fails.',
+);
 console.log('The error is likely in the token verification step at auth.ts line 144-147');

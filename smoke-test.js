@@ -16,11 +16,14 @@ const criticalFunctions = [
   'generateCoverLetter',
   'generateReferralMessage',
   'generateElevatorPitch',
-  'loadLLMProviders'
+  'loadLLMProviders',
 ];
 
-criticalFunctions.forEach(func => {
-  const found = indexContent.includes(`function ${func}`) || indexContent.includes(`${func} =`) || indexContent.includes(`${func}(`);
+criticalFunctions.forEach((func) => {
+  const found =
+    indexContent.includes(`function ${func}`) ||
+    indexContent.includes(`${func} =`) ||
+    indexContent.includes(`${func}(`);
   console.log(`   ${found ? '✅' : '❌'} ${func}`);
 });
 
@@ -31,10 +34,10 @@ const newUIElements = [
   { name: 'Feature flag', pattern: /isNewUI.*NEW_UI/ },
   { name: 'CSS loading', pattern: /new-ui\.css/ },
   { name: 'Body class logic', pattern: /classList\.add\('new-ui'\)/ },
-  { name: 'Home CTAs', pattern: /switchTab\('analyze'\)/ }
+  { name: 'Home CTAs', pattern: /switchTab\('analyze'\)/ },
 ];
 
-newUIElements.forEach(element => {
+newUIElements.forEach((element) => {
   const found = element.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${element.name}`);
 });
@@ -43,13 +46,13 @@ newUIElements.forEach(element => {
 console.log('\n🗂️  Checking Existing Tab IDs:');
 const tabIds = [
   'tab-analyze',
-  'tab-search', 
+  'tab-search',
   'tab-optimizer',
   'tab-target-companies',
-  'tab-networking'
+  'tab-networking',
 ];
 
-tabIds.forEach(tabId => {
+tabIds.forEach((tabId) => {
   const found = indexContent.includes(`id="${tabId}"`);
   console.log(`   ${found ? '✅' : '❌'} ${tabId}`);
 });
@@ -61,10 +64,10 @@ const scriptChecks = [
   { name: 'Analysis functions', pattern: /analyzeMatch.*generateCoverLetter/s },
   { name: 'Target companies', pattern: /loadTargetCompanies.*addSelectedSuggestions/s },
   { name: 'Networking/ICA', pattern: /loadICAContacts.*generateReferralMessage/s },
-  { name: 'Script closing tags', pattern: /<\/script>.*<\/body>.*<\/html>/s }
+  { name: 'Script closing tags', pattern: /<\/script>.*<\/body>.*<\/html>/s },
 ];
 
-scriptChecks.forEach(check => {
+scriptChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });

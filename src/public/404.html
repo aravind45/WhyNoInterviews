@@ -1,74 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Page Not Found - JobMatch AI</title>
-    <link rel="stylesheet" href="/new-ui.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/new-ui.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .error-container {
+        max-width: 600px;
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      .error-code {
+        font-size: 8rem;
+        font-weight: 800;
+        color: #f59e0b;
+        line-height: 1;
+        margin-bottom: 24px;
+        text-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+      }
+
+      .error-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 16px;
+      }
+
+      .error-text {
+        font-size: 1.1rem;
+        color: #475569;
+        margin-bottom: 32px;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
 
-        .error-container {
-            max-width: 600px;
-            animation: fadeIn 0.5s ease-out;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-
-        .error-code {
-            font-size: 8rem;
-            font-weight: 800;
-            color: #f59e0b;
-            line-height: 1;
-            margin-bottom: 24px;
-            text-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-        }
-
-        .error-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 16px;
-        }
-
-        .error-text {
-            font-size: 1.1rem;
-            color: #475569;
-            margin-bottom: 32px;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body class="new-ui">
+  <body class="new-ui">
     <div class="error-container">
-        <div class="error-code">404</div>
-        <div class="error-title">Oops! Page Not Found</div>
-        <div class="error-text">The page you're looking for doesn't exist or has been moved. Let's get you back on
-            track.</div>
-        <a href="/" class="btn btn-primary"
-            style="display: inline-block; text-decoration: none; padding: 12px 24px; font-size: 1.1rem;">
-            🏠 Go Back Home
-        </a>
+      <div class="error-code">404</div>
+      <div class="error-title">Oops! Page Not Found</div>
+      <div class="error-text">
+        The page you're looking for doesn't exist or has been moved. Let's get you back on track.
+      </div>
+      <a
+        href="/"
+        class="btn btn-primary"
+        style="display: inline-block; text-decoration: none; padding: 12px 24px; font-size: 1.1rem"
+      >
+        🏠 Go Back Home
+      </a>
     </div>
-</body>
-
+  </body>
 </html>

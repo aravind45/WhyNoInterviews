@@ -3,6 +3,7 @@
 ## Why OpenAI?
 
 Since Claude is experiencing authentication issues, I've added **OpenAI GPT** as a third LLM provider. OpenAI is:
+
 - ✅ Industry standard, very reliable
 - ✅ Easy to set up
 - ✅ Excellent quality for resume analysis
@@ -15,6 +16,7 @@ Since Claude is experiencing authentication issues, I've added **OpenAI GPT** as
 **Go to:** https://platform.openai.com/api-keys
 
 **Steps:**
+
 1. Sign in to your OpenAI account (or create one)
 2. Click **"Create new secret key"**
 3. Give it a name like "WhyNoInterviews"
@@ -22,6 +24,7 @@ Since Claude is experiencing authentication issues, I've added **OpenAI GPT** as
 5. Save it somewhere safe (you won't see it again!)
 
 **Key format:**
+
 ```
 sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
@@ -31,6 +34,7 @@ sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 **Go to:** https://vercel.com/dashboard
 
 **Steps:**
+
 1. Select your **"whynointerviews"** project
 2. Click **"Settings"** → **"Environment Variables"**
 3. Click **"Add New"**
@@ -40,6 +44,7 @@ sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 7. Click **"Save"**
 
 **Optional:** Add model selection (defaults to `gpt-4o-mini`)
+
 - Name: `OPENAI_MODEL`
 - Value: `gpt-4o-mini` (cheaper) or `gpt-4o` (better quality)
 
@@ -72,10 +77,10 @@ sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 OpenAI pricing is very affordable for this use case:
 
-| Model | Input | Output | Cost per Resume |
-|-------|-------|--------|-----------------|
-| gpt-4o-mini | $0.15/1M tokens | $0.60/1M tokens | ~$0.001 |
-| gpt-4o | $2.50/1M tokens | $10.00/1M tokens | ~$0.02 |
+| Model       | Input           | Output           | Cost per Resume |
+| ----------- | --------------- | ---------------- | --------------- |
+| gpt-4o-mini | $0.15/1M tokens | $0.60/1M tokens  | ~$0.001         |
+| gpt-4o      | $2.50/1M tokens | $10.00/1M tokens | ~$0.02          |
 
 **Recommendation:** Start with `gpt-4o-mini` - it's excellent quality and very cheap.
 
@@ -94,6 +99,7 @@ Users can compare results between different AI models!
 ### "GPT-4 (OpenAI)" doesn't appear in dropdown
 
 **Possible causes:**
+
 1. Environment variable not set → Add `OPENAI_API_KEY` in Vercel
 2. Deployment didn't pick up changes → Force redeploy
 3. Browser cache → Hard refresh (Ctrl+Shift+R)
@@ -101,6 +107,7 @@ Users can compare results between different AI models!
 ### Error: "OpenAI analysis failed"
 
 **Check:**
+
 1. API key is valid (test at https://platform.openai.com/playground)
 2. You have credits in your OpenAI account
 3. No rate limits exceeded
@@ -108,12 +115,14 @@ Users can compare results between different AI models!
 ### Check Vercel Logs
 
 Look for:
+
 ```
 ✓ OpenAI client initialized successfully
 LLM providers initialized: Groq, OpenAI
 ```
 
 Or when analyzing:
+
 ```
 Calling OpenAI API with model: gpt-4o-mini
 ✓ Received response from OpenAI
@@ -123,6 +132,7 @@ OpenAI analysis complete - Match: 85%
 ## Advantages Over Claude (Currently)
 
 While Claude has better quality when it works, OpenAI has:
+
 - ✅ More reliable authentication
 - ✅ Better error messages
 - ✅ Easier to set up

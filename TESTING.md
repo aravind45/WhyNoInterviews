@@ -9,6 +9,7 @@ npm run test:providers
 ```
 
 This will test:
+
 - ✅ `/api/llm-providers` endpoint returns both Groq and Claude
 - ✅ Server health check
 - ✅ Provider availability status
@@ -59,6 +60,7 @@ npm run test:providers:local
 ### 4. Compare Results
 
 Upload the same resume twice:
+
 - Once with Groq selected
 - Once with Claude selected
 
@@ -73,6 +75,7 @@ curl https://whynointerviews.vercel.app/api/llm-providers
 ```
 
 Expected response:
+
 ```json
 {
   "success": true,
@@ -101,6 +104,7 @@ curl https://whynointerviews.vercel.app/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "ok"
@@ -114,6 +118,7 @@ Expected response:
 **Symptom**: Provider shows `"available": false` in `/api/llm-providers`
 
 **Solutions**:
+
 1. Check environment variable is set in Vercel:
    - `GROQ_API_KEY` for Groq
    - `ANTHROPIC_API_KEY` for Claude
@@ -125,6 +130,7 @@ Expected response:
 **Symptom**: Error message shows "invalid x-api-key" or "authentication_error"
 
 **Solutions**:
+
 1. Verify API key is complete and correctly copied
 2. Check for extra spaces or quotes in environment variable
 3. Regenerate API key from provider console
@@ -135,6 +141,7 @@ Expected response:
 **Symptom**: Error about missing `llm_provider` column
 
 **Solutions**:
+
 1. The code has backwards compatibility, so this shouldn't happen
 2. If it does, run the migration:
    ```sql
@@ -147,6 +154,7 @@ Expected response:
 **Symptom**: AI Model dropdown doesn't appear on page
 
 **Solutions**:
+
 1. Hard refresh the page (Ctrl+Shift+R or Cmd+Shift+R)
 2. Clear browser cache
 3. Check browser console for JavaScript errors
@@ -156,10 +164,10 @@ Expected response:
 
 ### Expected Response Times
 
-| Provider | Typical Response Time |
-|----------|----------------------|
-| Groq (Llama 3.1) | 2-3 seconds |
-| Claude (Sonnet 4.5) | 5-10 seconds |
+| Provider            | Typical Response Time |
+| ------------------- | --------------------- |
+| Groq (Llama 3.1)    | 2-3 seconds           |
+| Claude (Sonnet 4.5) | 5-10 seconds          |
 
 ### Load Testing
 
@@ -198,10 +206,12 @@ jobs:
 ## Cost Monitoring
 
 ### Groq
+
 - Free tier: ~30 requests/minute
 - Track usage at: https://console.groq.com
 
 ### Claude
+
 - Pay-per-use pricing
 - Approximate cost per analysis: $0.003-0.005
 - Track usage at: https://console.anthropic.com

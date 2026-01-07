@@ -62,8 +62,8 @@ function createNewHeader() {
 // Header event handlers
 function setupNewHeaderEvents() {
   // Navigation click handlers
-  document.querySelectorAll('.new-nav-item, .mobile-nav-item').forEach(item => {
-    item.addEventListener('click', function(e) {
+  document.querySelectorAll('.new-nav-item, .mobile-nav-item').forEach((item) => {
+    item.addEventListener('click', function (e) {
       e.preventDefault();
       const tab = this.getAttribute('data-tab');
       switchToTab(tab);
@@ -89,45 +89,45 @@ function goToHome() {
 
 function switchToTab(tabName) {
   // Remove active from all tabs
-  document.querySelectorAll('.main-tab').forEach(tab => {
+  document.querySelectorAll('.main-tab').forEach((tab) => {
     tab.classList.remove('active');
   });
-  
+
   // Add active to selected tab
   const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
   if (targetTab) {
     targetTab.classList.add('active');
   }
-  
+
   // Hide all sections
-  document.querySelectorAll('.section').forEach(section => {
+  document.querySelectorAll('.section').forEach((section) => {
     section.classList.remove('active');
   });
-  
+
   // Show target section
   const targetSection = document.getElementById(`tab-${tabName}`);
   if (targetSection) {
     targetSection.classList.add('active');
   }
-  
+
   // Hide landing page if showing
   hideLandingPage();
 }
 
 function showLandingPage() {
   // Hide all app sections
-  document.querySelectorAll('.section').forEach(section => {
+  document.querySelectorAll('.section').forEach((section) => {
     section.classList.remove('active');
   });
-  
+
   // Show landing page
   const landingPage = document.getElementById('landing-page');
   if (landingPage) {
     landingPage.style.display = 'block';
   }
-  
+
   // Remove active from all tabs
-  document.querySelectorAll('.main-tab').forEach(tab => {
+  document.querySelectorAll('.main-tab').forEach((tab) => {
     tab.classList.remove('active');
   });
 }

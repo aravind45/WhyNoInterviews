@@ -1,11 +1,7 @@
 import { query } from '../database/connection';
 import { cacheGet, cacheSet } from '../cache/redis';
 import { logger } from '../utils/logger';
-import { 
-  JobTitleNormalizationResult, 
-  CanonicalJobTitle, 
-  ConfidenceScore 
-} from '../types';
+import { JobTitleNormalizationResult, CanonicalJobTitle, ConfidenceScore } from '../types';
 
 // Generic job titles that require specialization (Requirement 2.2)
 const GENERIC_TITLES = [
@@ -18,7 +14,7 @@ const GENERIC_TITLES = [
   'coordinator',
   'associate',
   'lead',
-  'director'
+  'director',
 ];
 
 // Cache TTL for job title lookups
@@ -29,10 +25,10 @@ const CACHE_TTL = 3600; // 1 hour
  * Implements Requirement 2: Job Target Configuration
  */
 export const normalizeJobTitle = async (
-  inputTitle: string
+  inputTitle: string,
 ): Promise<JobTitleNormalizationResult> => {
   const normalizedInput = inputTitle.trim().toLowerCase();
-  
+
   // Check cache first
   const cacheKey = `job_title:${normalizedInput}`;
   const cached = await cacheGet<JobTitleNormalizationResult>(cacheKey);
@@ -40,13 +36,14 @@ export const normalizeJobTitle = async (
     logger.debug('Job title cache hit', { title: inputTitle });
     return cached;
   }
-  
+
   // Check if it's a generic title that needs specialization
-  const isGeneric = GENERIC_TITLES.some(generic => 
-    normalizedInput === generic || 
-    normalizedInput.split(' ').length === 1 && normalizedInput.includes(generic)
+  const isGeneric = GENERIC_TITLES.some(
+    (generic) =>
+      normalizedInput === generic ||
+      (normalizedInput.split(' ').length === 1 && normalizedInput.includes(generic)),
   );
-  
+
   // Try exact match first
   const exactMatch = await findExactMatch(normalizedInput);
   if (exactMatch) {
@@ -55,13 +52,13 @@ export const normalizeJobTitle = async (
       canonicalTitle: exactMatch.title,
       confidence: 100,
       suggestions: [],
-      requiresSpecialization: exactMatch.isGeneric || false
+      requiresSpecialization: exactMatch.isGeneric || false,
     };
-    
+
     await cacheSet(cacheKey, result, CACHE_TTL);
     return result;
   }
-  
+
   // Try variation match
   const variationMatch = await findVariationMatch(normalizedInput);
   if (variationMatch) {
@@ -70,40 +67,40 @@ export const normalizeJobTitle = async (
       canonicalTitle: variationMatch.canonicalTitle,
       confidence: variationMatch.confidence,
       suggestions: [],
-      requiresSpecialization: variationMatch.isGeneric || false
+      requiresSpecialization: variationMatch.isGeneric || false,
     };
-    
+
     await cacheSet(cacheKey, result, CACHE_TTL);
     return result;
   }
-  
+
   // Try fuzzy match
   const fuzzyMatches = await findFuzzyMatches(normalizedInput);
-  
+
   if (fuzzyMatches.length > 0 && fuzzyMatches[0].confidence >= 60) {
     const result: JobTitleNormalizationResult = {
       originalTitle: inputTitle,
       canonicalTitle: fuzzyMatches[0].title,
       confidence: fuzzyMatches[0].confidence,
-      suggestions: fuzzyMatches.slice(1, 4).map(m => m.title),
-      requiresSpecialization: fuzzyMatches[0].isGeneric || isGeneric
+      suggestions: fuzzyMatches.slice(1, 4).map((m) => m.title),
+      requiresSpecialization: fuzzyMatches[0].isGeneric || isGeneric,
     };
-    
+
     await cacheSet(cacheKey, result, CACHE_TTL);
     return result;
   }
-  
+
   // No match found - return suggestions
   const suggestions = await getSuggestions(normalizedInput);
-  
+
   const result: JobTitleNormalizationResult = {
     originalTitle: inputTitle,
     canonicalTitle: null,
     confidence: 0,
     suggestions: suggestions.slice(0, 5),
-    requiresSpecialization: isGeneric
+    requiresSpecialization: isGeneric,
   };
-  
+
   await cacheSet(cacheKey, result, CACHE_TTL);
   return result;
 };
@@ -112,19 +109,19 @@ export const normalizeJobTitle = async (
  * Find exact match in canonical titles
  */
 const findExactMatch = async (
-  normalizedTitle: string
+  normalizedTitle: string,
 ): Promise<{ title: string; isGeneric: boolean } | null> => {
   try {
     const result = await query<{ title: string; is_generic: boolean }>(
       `SELECT title, is_generic FROM canonical_job_titles 
        WHERE LOWER(title) = $1`,
-      [normalizedTitle]
+      [normalizedTitle],
     );
-    
+
     if (result.rows.length > 0) {
       return {
         title: result.rows[0].title,
-        isGeneric: result.rows[0].is_generic
+        isGeneric: result.rows[0].is_generic,
       };
     }
     return null;
@@ -138,13 +135,13 @@ const findExactMatch = async (
  * Find match in job title variations
  */
 const findVariationMatch = async (
-  normalizedTitle: string
+  normalizedTitle: string,
 ): Promise<{ canonicalTitle: string; confidence: number; isGeneric: boolean } | null> => {
   try {
-    const result = await query<{ 
-      title: string; 
-      confidence_score: number; 
-      is_generic: boolean 
+    const result = await query<{
+      title: string;
+      confidence_score: number;
+      is_generic: boolean;
     }>(
       `SELECT c.title, v.confidence_score, c.is_generic
        FROM job_title_variations v
@@ -152,14 +149,14 @@ const findVariationMatch = async (
        WHERE LOWER(v.variation) = $1
        ORDER BY v.confidence_score DESC
        LIMIT 1`,
-      [normalizedTitle]
+      [normalizedTitle],
     );
-    
+
     if (result.rows.length > 0) {
       return {
         canonicalTitle: result.rows[0].title,
         confidence: result.rows[0].confidence_score,
-        isGeneric: result.rows[0].is_generic
+        isGeneric: result.rows[0].is_generic,
       };
     }
     return null;
@@ -173,12 +170,12 @@ const findVariationMatch = async (
  * Find fuzzy matches using trigram similarity
  */
 const findFuzzyMatches = async (
-  normalizedTitle: string
+  normalizedTitle: string,
 ): Promise<Array<{ title: string; confidence: number; isGeneric: boolean }>> => {
   try {
     // First try canonical titles
-    const canonicalResult = await query<{ 
-      title: string; 
+    const canonicalResult = await query<{
+      title: string;
       similarity: number;
       is_generic: boolean;
     }>(
@@ -188,12 +185,12 @@ const findFuzzyMatches = async (
        WHERE SIMILARITY(LOWER(title), $1) > 0.3
        ORDER BY similarity DESC
        LIMIT 5`,
-      [normalizedTitle]
+      [normalizedTitle],
     );
-    
+
     // Also check variations
-    const variationResult = await query<{ 
-      title: string; 
+    const variationResult = await query<{
+      title: string;
       similarity: number;
       is_generic: boolean;
     }>(
@@ -207,27 +204,26 @@ const findFuzzyMatches = async (
        WHERE SIMILARITY(LOWER(v.variation), $1) > 0.3
        ORDER BY similarity DESC
        LIMIT 5`,
-      [normalizedTitle]
+      [normalizedTitle],
     );
-    
+
     // Combine and dedupe results
     const combined = new Map<string, { title: string; confidence: number; isGeneric: boolean }>();
-    
+
     for (const row of [...canonicalResult.rows, ...variationResult.rows]) {
       const existing = combined.get(row.title);
       if (!existing || row.similarity > existing.confidence) {
         combined.set(row.title, {
           title: row.title,
           confidence: Math.round(row.similarity),
-          isGeneric: row.is_generic
+          isGeneric: row.is_generic,
         });
       }
     }
-    
+
     return Array.from(combined.values())
       .sort((a, b) => b.confidence - a.confidence)
       .slice(0, 5);
-      
   } catch (error) {
     // pg_trgm extension might not be available
     logger.warn('Fuzzy matching failed (pg_trgm may not be installed):', error);
@@ -242,7 +238,7 @@ const getSuggestions = async (normalizedTitle: string): Promise<string[]> => {
   try {
     // Try to determine category from keywords
     let category = 'Engineering'; // Default
-    
+
     if (/data|analy|science|ml|ai/i.test(normalizedTitle)) {
       category = 'Data';
     } else if (/product|pm|owner/i.test(normalizedTitle)) {
@@ -252,16 +248,16 @@ const getSuggestions = async (normalizedTitle: string): Promise<string[]> => {
     } else if (/market|sales|growth/i.test(normalizedTitle)) {
       category = 'Marketing';
     }
-    
+
     const result = await query<{ title: string }>(
       `SELECT title FROM canonical_job_titles 
        WHERE category = $1 AND is_generic = false
        ORDER BY title
        LIMIT 10`,
-      [category]
+      [category],
     );
-    
-    return result.rows.map(r => r.title);
+
+    return result.rows.map((r) => r.title);
   } catch (error) {
     logger.error('Error getting suggestions:', error);
     return [];
@@ -271,7 +267,9 @@ const getSuggestions = async (normalizedTitle: string): Promise<string[]> => {
 /**
  * Get role template for a canonical job title
  */
-export const getRoleTemplate = async (canonicalTitle: string): Promise<{
+export const getRoleTemplate = async (
+  canonicalTitle: string,
+): Promise<{
   requiredSkills: string[];
   preferredSkills: string[];
   requiredKeywords: string[];
@@ -295,11 +293,11 @@ export const getRoleTemplate = async (canonicalTitle: string): Promise<{
        FROM role_templates r
        JOIN canonical_job_titles c ON r.canonical_job_id = c.id
        WHERE c.title = $1`,
-      [canonicalTitle]
+      [canonicalTitle],
     );
-    
+
     if (result.rows.length === 0) return null;
-    
+
     const row = result.rows[0];
     return {
       requiredSkills: row.required_skills || [],
@@ -308,9 +306,9 @@ export const getRoleTemplate = async (canonicalTitle: string): Promise<{
       atsKeywords: row.ats_keywords || [],
       experienceRange: {
         min: row.experience_level_min,
-        max: row.experience_level_max
+        max: row.experience_level_max,
       },
-      educationRequirements: row.education_requirements || []
+      educationRequirements: row.education_requirements || [],
     };
   } catch (error) {
     logger.error('Error getting role template:', error);
@@ -321,7 +319,9 @@ export const getRoleTemplate = async (canonicalTitle: string): Promise<{
 /**
  * Get canonical job info
  */
-export const getCanonicalJobInfo = async (canonicalTitle: string): Promise<{
+export const getCanonicalJobInfo = async (
+  canonicalTitle: string,
+): Promise<{
   id: string;
   title: string;
   category: string;
@@ -339,18 +339,18 @@ export const getCanonicalJobInfo = async (canonicalTitle: string): Promise<{
       `SELECT id, title, category, seniority_level, industry
        FROM canonical_job_titles
        WHERE title = $1`,
-      [canonicalTitle]
+      [canonicalTitle],
     );
-    
+
     if (result.rows.length === 0) return null;
-    
+
     const row = result.rows[0];
     return {
       id: row.id,
       title: row.title,
       category: row.category,
       seniorityLevel: row.seniority_level,
-      industry: row.industry
+      industry: row.industry,
     };
   } catch (error) {
     logger.error('Error getting canonical job info:', error);
@@ -361,5 +361,5 @@ export const getCanonicalJobInfo = async (canonicalTitle: string): Promise<{
 export default {
   normalizeJobTitle,
   getRoleTemplate,
-  getCanonicalJobInfo
+  getCanonicalJobInfo,
 };

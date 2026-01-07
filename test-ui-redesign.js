@@ -21,10 +21,10 @@ const checks = [
   { name: 'Auth buttons preserved', pattern: /showAuthModal\('login'\)/ },
   { name: 'CSS loading logic', pattern: /new-ui\.css/ },
   { name: 'Body class logic', pattern: /classList\.add\('new-ui'\)/ },
-  { name: 'Default tab logic', pattern: /switchTab\('home'\)/ }
+  { name: 'Default tab logic', pattern: /switchTab\('home'\)/ },
 ];
 
-checks.forEach(check => {
+checks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -37,10 +37,10 @@ const tabChecks = [
   { name: 'tab-optimizer', pattern: /id="tab-optimizer"/ },
   { name: 'tab-target-companies', pattern: /id="tab-target-companies"/ },
   { name: 'tab-networking', pattern: /id="tab-networking"/ },
-  { name: 'tab-home (new)', pattern: /id="tab-home"/ }
+  { name: 'tab-home (new)', pattern: /id="tab-home"/ },
 ];
 
-tabChecks.forEach(check => {
+tabChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -52,10 +52,10 @@ const navChecks = [
   { name: 'data-tab="search"', pattern: /data-tab="search"/ },
   { name: 'data-tab="optimizer"', pattern: /data-tab="optimizer"/ },
   { name: 'data-tab="target-companies"', pattern: /data-tab="target-companies"/ },
-  { name: 'data-tab="networking"', pattern: /data-tab="networking"/ }
+  { name: 'data-tab="networking"', pattern: /data-tab="networking"/ },
 ];
 
-navChecks.forEach(check => {
+navChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -69,10 +69,10 @@ const cssChecks = [
   { name: 'Header styles', pattern: /\.new-ui header/ },
   { name: 'Home section styles', pattern: /\.home-hero/ },
   { name: 'Feature cards', pattern: /\.home-feature-card/ },
-  { name: 'Responsive design', pattern: /@media.*768px/ }
+  { name: 'Responsive design', pattern: /@media.*768px/ },
 ];
 
-cssChecks.forEach(check => {
+cssChecks.forEach((check) => {
   const found = check.pattern.test(cssContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -83,10 +83,10 @@ const homeChecks = [
   { name: 'CTA to analyze', pattern: /switchTab\('analyze'\)/ },
   { name: 'Feature highlights', pattern: /Match Score.*Cover Letter.*Referral.*Elevator Pitch/s },
   { name: 'Marketing content', pattern: /Land Your Dream Job/ },
-  { name: 'No API calls in home', pattern: /tab-home/ }
+  { name: 'No API calls in home', pattern: /tab-home/ },
 ];
 
-homeChecks.forEach(check => {
+homeChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });

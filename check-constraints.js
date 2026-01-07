@@ -2,13 +2,13 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 async function checkConstraints() {
-    const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
-    });
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  });
 
-    try {
-        const res = await pool.query(`
+  try {
+    const res = await pool.query(`
       SELECT
           tc.constraint_name, 
           tc.table_name, 
@@ -23,14 +23,13 @@ async function checkConstraints() {
             ON ccu.constraint_name = tc.constraint_name
       WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='user_sessions';
     `);
-        console.log('--- user_sessions Foreign Keys ---');
-        console.log(JSON.stringify(res.rows, null, 2));
-
-    } catch (error) {
-        console.error('Error:', error.message);
-    } finally {
-        await pool.end();
-    }
+    console.log('--- user_sessions Foreign Keys ---');
+    console.log(JSON.stringify(res.rows, null, 2));
+  } catch (error) {
+    console.error('Error:', error.message);
+  } finally {
+    await pool.end();
+  }
 }
 
 checkConstraints();

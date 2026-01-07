@@ -28,7 +28,7 @@ export interface LLMProviderService {
       requiredSkills: string[];
       requiredKeywords: string[];
     },
-    jobDescription?: string
+    jobDescription?: string,
   ) => Promise<LLMAnalysisResult>;
   generateText: (prompt: string) => Promise<string>;
 }
@@ -66,7 +66,7 @@ export const getProvider = (provider: LLMProvider): LLMProviderService => {
         analyzeResume: claudeService.analyzeResume,
         generateText: async (prompt: string) => {
           throw new Error('Claude text generation not implemented yet');
-        }
+        },
       };
     case 'openai':
       return {
@@ -76,7 +76,7 @@ export const getProvider = (provider: LLMProvider): LLMProviderService => {
         analyzeResume: openaiService.analyzeResume,
         generateText: async (prompt: string) => {
           throw new Error('OpenAI text generation not implemented yet');
-        }
+        },
       };
     case 'groq':
     default:
@@ -85,7 +85,7 @@ export const getProvider = (provider: LLMProvider): LLMProviderService => {
         displayName: 'Groq (Llama)',
         isAvailable: groqService.isGroqAvailable,
         analyzeResume: groqService.analyzeResume,
-        generateText: groqService.generateText
+        generateText: groqService.generateText,
       };
   }
 };
@@ -135,5 +135,5 @@ export default {
   getProvider,
   getAvailableProviders,
   getDefaultProvider,
-  isValidProvider
+  isValidProvider,
 };

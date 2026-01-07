@@ -19,7 +19,7 @@ async function runMigrations() {
 
   const client = new Client({
     connectionString: databaseUrl,
-    ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false }
+    ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false },
   });
 
   try {
@@ -31,7 +31,7 @@ async function runMigrations() {
     console.log('📋 Running Target Companies schema migration...');
     const schemaSQL = fs.readFileSync(
       path.join(__dirname, 'src/database/target-companies-schema.sql'),
-      'utf8'
+      'utf8',
     );
     await client.query(schemaSQL);
     console.log('✅ Schema created successfully\n');
@@ -40,7 +40,7 @@ async function runMigrations() {
     console.log('📋 Seeding 15 default companies...');
     const seedSQL = fs.readFileSync(
       path.join(__dirname, 'src/database/seed-target-companies.sql'),
-      'utf8'
+      'utf8',
     );
     await client.query(seedSQL);
     console.log('✅ Companies seeded successfully\n');
@@ -57,7 +57,7 @@ async function runMigrations() {
 
     if (tablesResult.rows.length === 4) {
       console.log('✅ All 4 tables created:');
-      tablesResult.rows.forEach(row => console.log(`   - ${row.table_name}`));
+      tablesResult.rows.forEach((row) => console.log(`   - ${row.table_name}`));
     } else {
       console.warn(`⚠️  Only ${tablesResult.rows.length}/4 tables found`);
     }
@@ -73,7 +73,6 @@ async function runMigrations() {
     console.log('2. Start the server: npm start');
     console.log('3. Open the app and click "🏢 Target Companies" tab');
     console.log('4. Click "💡 Browse Suggestions" to see the 15 companies\n');
-
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
     if (error.detail) console.error('Detail:', error.detail);
@@ -86,7 +85,7 @@ async function runMigrations() {
 }
 
 // Run migrations
-runMigrations().catch(error => {
+runMigrations().catch((error) => {
   console.error('Unhandled error:', error);
   process.exit(1);
 });

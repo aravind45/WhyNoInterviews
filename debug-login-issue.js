@@ -62,7 +62,7 @@ try {
     createdAt: Date.now(),
     savedResumes: [],
     savedCoverLetters: [],
-    savedProfile: null
+    savedProfile: null,
   };
   localStorage.setItem('jobmatch_users', JSON.stringify(testUsers));
   console.log('   ✅ Test user created: test@example.com / password123');
@@ -75,7 +75,7 @@ console.log('\n7. Testing login function...');
 if (loginEmail && loginPassword && typeof handleLogin === 'function') {
   loginEmail.value = 'test@example.com';
   loginPassword.value = 'password123';
-  
+
   try {
     const fakeEvent = { preventDefault: () => {} };
     handleLogin(fakeEvent);
@@ -91,10 +91,10 @@ console.log('\n📋 INSTRUCTIONS:');
 console.log('1. Run this script in browser console on http://localhost:3000?ui=1');
 console.log('2. Check for any ❌ errors above');
 console.log('3. Try logging in with: test@example.com / password123');
-console.log('4. If modal doesn\'t open, check for JavaScript errors in console');
+console.log("4. If modal doesn't open, check for JavaScript errors in console");
 
 console.log('\n🔧 QUICK FIXES:');
-console.log('• If modal doesn\'t open: Check for CSS pointer-events blocking clicks');
-console.log('• If form doesn\'t submit: Check for JavaScript errors');
+console.log("• If modal doesn't open: Check for CSS pointer-events blocking clicks");
+console.log("• If form doesn't submit: Check for JavaScript errors");
 console.log('• If login fails: Use the test user created above');
 console.log('• If nothing works: Check browser console for errors');

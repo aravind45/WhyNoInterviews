@@ -7,6 +7,7 @@
 **Go to:** https://vercel.com/dashboard → Your Project → Latest Deployment → Runtime Logs
 
 **Trigger a test:**
+
 1. Visit https://whynointerviews.vercel.app
 2. Go to "Analyze Resume" tab
 3. Select "Claude (Anthropic)" from dropdown
@@ -16,6 +17,7 @@
 **Expected log output patterns:**
 
 #### ✅ Success Pattern:
+
 ```
 📊 Using LLM provider: claude
 🤖 Calling Claude API...
@@ -27,14 +29,17 @@
 #### ❌ Error Patterns:
 
 **Pattern 1: API Key Missing**
+
 ```
 📊 Using LLM provider: claude
 🤖 Calling Claude API...
 ⚠️  ANTHROPIC_API_KEY not set, falling back to Groq
 ```
+
 **Fix:** Set ANTHROPIC_API_KEY in Vercel environment variables
 
 **Pattern 2: Invalid API Key**
+
 ```
 📊 Using LLM provider: claude
 🤖 Calling Claude API...
@@ -45,29 +50,36 @@
    Error details: {"type":"error","error":{"type":"authentication_error",...}}
    Falling back to Groq...
 ```
+
 **Fix:** Verify API key format (should start with `sk-ant-api03-`)
 
 **Pattern 3: Invalid Model**
+
 ```
 ❌ Claude API Error: model_not_found
    HTTP Status: 404
    Error details: {...}
 ```
+
 **Fix:** Update CLAUDE_MODEL env var or use default
 
 **Pattern 4: Rate Limit**
+
 ```
 ❌ Claude API Error: rate_limit_error
    HTTP Status: 429
    Error details: {...}
 ```
+
 **Fix:** Wait or upgrade Anthropic plan
 
 **Pattern 5: SDK Import Error**
+
 ```
 ❌ LLM Error: Cannot find module '@anthropic-ai/sdk'
 ⚠️  Falling back to Groq due to error
 ```
+
 **Fix:** Rebuild deployment (should not happen - SDK is in package.json)
 
 ---
@@ -78,11 +90,11 @@
 
 Settings → Environment Variables → Check these exist:
 
-| Variable | Required | Expected Value |
-|----------|----------|----------------|
-| `ANTHROPIC_API_KEY` | ✅ Yes | `sk-ant-api03-...` (100+ chars) |
-| `CLAUDE_MODEL` | ❌ Optional | `claude-sonnet-4-5-20250929` |
-| `GROQ_API_KEY` | ✅ Yes | For fallback |
+| Variable            | Required    | Expected Value                  |
+| ------------------- | ----------- | ------------------------------- |
+| `ANTHROPIC_API_KEY` | ✅ Yes      | `sk-ant-api03-...` (100+ chars) |
+| `CLAUDE_MODEL`      | ❌ Optional | `claude-sonnet-4-5-20250929`    |
+| `GROQ_API_KEY`      | ✅ Yes      | For fallback                    |
 
 **Important:** After updating env vars, you MUST redeploy!
 
@@ -115,12 +127,14 @@ curl https://api.anthropic.com/v1/messages \
 ## 4. Verify API Key Format
 
 **Correct format:**
+
 - Starts with `sk-ant-api03-`
 - Followed by 100+ alphanumeric characters
 - No spaces, quotes, or line breaks
 - Example: `sk-ant-api03-abcd1234...` (truncated for security)
 
 **Common mistakes:**
+
 - Extra spaces at beginning/end
 - Quotes around the key (`"sk-ant-..."` is wrong)
 - Incomplete key (missing characters)
@@ -133,12 +147,14 @@ curl https://api.anthropic.com/v1/messages \
 **Go to:** https://console.anthropic.com
 
 **Verify:**
+
 1. API key is active (not revoked)
 2. You have credits/billing set up
 3. No usage limits exceeded
 4. Key has correct permissions
 
 **Regenerate key if needed:**
+
 - Go to Settings → API Keys
 - Delete old key
 - Create new key
@@ -150,6 +166,7 @@ curl https://api.anthropic.com/v1/messages \
 ## 6. Common Solutions
 
 ### Solution 1: Fresh API Key
+
 1. Go to https://console.anthropic.com/settings/keys
 2. Create new API key
 3. Copy the ENTIRE key (including `sk-ant-api03-`)
@@ -160,19 +177,24 @@ curl https://api.anthropic.com/v1/messages \
 8. Go to Deployments → Latest → ⋯ → Redeploy
 
 ### Solution 2: Verify Model Name
+
 The model `claude-sonnet-4-5-20250929` is the latest Sonnet 4.5.
 
 If you get "model not found", try:
+
 - `claude-sonnet-4-20250514` (older Sonnet 4)
 - `claude-3-5-sonnet-20241022` (Sonnet 3.5)
 
 Set in Vercel env vars:
+
 ```
 CLAUDE_MODEL=claude-sonnet-4-20250514
 ```
 
 ### Solution 3: Check Billing
+
 If you see quota/billing errors:
+
 1. Go to https://console.anthropic.com/settings/billing
 2. Verify you have credits or valid payment method
 3. Check usage limits
@@ -203,6 +225,7 @@ But the logs will show WHY Claude failed so we can fix it.
 ## Need More Help?
 
 If the logs don't match any pattern above, share:
+
 1. Complete error log output from Vercel
 2. First 20 characters of your API key (e.g., `sk-ant-api03-abcd12...`)
 3. Your Anthropic console usage/billing status

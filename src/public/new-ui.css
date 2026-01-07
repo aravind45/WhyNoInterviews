@@ -1,5 +1,5 @@
 /* Show Home tab only in new UI mode */
-.new-ui .main-tab[data-tab="home"] {
+.new-ui .main-tab[data-tab='home'] {
   display: block;
 }
 
@@ -135,7 +135,6 @@
 
 /* Home Section Styles - Removed conflicting display:block rule */
 /* The home section visibility is now controlled by .section and .section.active rules */
-
 
 /* Home Hero Section */
 .new-ui .home-hero {
@@ -696,28 +695,28 @@
 /* Networking Section - Override dark backgrounds */
 .new-ui #tab-networking .bg-slate-800,
 .new-ui #tab-networking .bg-gray-800,
-.new-ui #tab-networking [style*="background: #1e293b"],
-.new-ui #tab-networking [style*="background:#1e293b"] {
+.new-ui #tab-networking [style*='background: #1e293b'],
+.new-ui #tab-networking [style*='background:#1e293b'] {
   background: white !important;
   border: 1px solid #e5e7eb !important;
 }
 
 /* Override any remaining dark backgrounds in new UI */
-.new-ui [style*="background: #1e293b"],
-.new-ui [style*="background:#1e293b"],
-.new-ui [style*="background: #0a0a0f"],
-.new-ui [style*="background:#0a0a0f"],
-.new-ui [style*="background: #12121a"],
-.new-ui [style*="background:#12121a"],
-.new-ui [style*="background: #1e1e2e"],
-.new-ui [style*="background:#1e1e2e"] {
+.new-ui [style*='background: #1e293b'],
+.new-ui [style*='background:#1e293b'],
+.new-ui [style*='background: #0a0a0f'],
+.new-ui [style*='background:#0a0a0f'],
+.new-ui [style*='background: #12121a'],
+.new-ui [style*='background:#12121a'],
+.new-ui [style*='background: #1e1e2e'],
+.new-ui [style*='background:#1e1e2e'] {
   background: white !important;
 }
 
 /* Override dark text colors */
-.new-ui [style*="color: #e2e8f0"],
-.new-ui [style*="color:#e2e8f0"],
-.new-ui [style*="color: #94a3b8"]:not(label):not(.card-subtitle):not(.text-muted) {
+.new-ui [style*='color: #e2e8f0'],
+.new-ui [style*='color:#e2e8f0'],
+.new-ui [style*='color: #94a3b8']:not(label):not(.card-subtitle):not(.text-muted) {
   color: #1f2937 !important;
 }
 
@@ -745,7 +744,6 @@
   border-left-color: #f59e0b;
   border-left-width: 4px;
 }
-
 
 .new-ui .home-features-subtitle {
   font-size: 1.25rem;

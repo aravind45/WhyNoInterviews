@@ -12,7 +12,7 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || '/tmp/uploads';
 const ALLOWED_MIMETYPES = [
   'application/pdf',
   'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
@@ -37,33 +37,37 @@ const storage = multer.diskStorage({
     const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
     const ext = path.extname(file.originalname).toLowerCase();
     cb(null, `resume-${uniqueSuffix}${ext}`);
-  }
+  },
 });
 
 // File filter
 const fileFilter = (
   req: Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: multer.FileFilterCallback,
 ): void => {
   const ext = path.extname(file.originalname).toLowerCase();
   const mimetype = file.mimetype.toLowerCase();
 
   // Check extension
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    cb(new ValidationError(
-      `Invalid file type. Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`,
-      { allowedExtensions: ALLOWED_EXTENSIONS, receivedExtension: ext }
-    ));
+    cb(
+      new ValidationError(`Invalid file type. Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`, {
+        allowedExtensions: ALLOWED_EXTENSIONS,
+        receivedExtension: ext,
+      }),
+    );
     return;
   }
 
   // Check MIME type
   if (!ALLOWED_MIMETYPES.includes(mimetype)) {
-    cb(new ValidationError(
-      `Invalid file format. Please upload a PDF or Word document.`,
-      { allowedMimetypes: ALLOWED_MIMETYPES, receivedMimetype: mimetype }
-    ));
+    cb(
+      new ValidationError(`Invalid file format. Please upload a PDF or Word document.`, {
+        allowedMimetypes: ALLOWED_MIMETYPES,
+        receivedMimetype: mimetype,
+      }),
+    );
     return;
   }
 
@@ -78,8 +82,8 @@ export const uploadMiddleware = multer({
     fileSize: MAX_FILE_SIZE,
     files: 1, // Only one file per request
     fields: 10, // Max form fields
-    parts: 15 // Max multipart parts
-  }
+    parts: 15, // Max multipart parts
+  },
 });
 
 // File validation result
@@ -101,7 +105,7 @@ export const validateUploadedFile = (file: Express.Multer.File): FileValidationR
   const result: FileValidationResult = {
     isValid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   if (!file) {
@@ -127,7 +131,9 @@ export const validateUploadedFile = (file: Express.Multer.File): FileValidationR
   // Size validation
   if (file.size > MAX_FILE_SIZE) {
     result.isValid = false;
-    result.errors.push(`File size (${formatBytes(file.size)}) exceeds maximum (${formatBytes(MAX_FILE_SIZE)})`);
+    result.errors.push(
+      `File size (${formatBytes(file.size)}) exceeds maximum (${formatBytes(MAX_FILE_SIZE)})`,
+    );
   }
 
   // Size warnings
@@ -155,7 +161,7 @@ export const validateUploadedFile = (file: Express.Multer.File): FileValidationR
       size: file.size,
       mimetype: file.mimetype,
       extension: ext,
-      path: file.path
+      path: file.path,
     };
   }
 
@@ -192,13 +198,13 @@ const formatBytes = (bytes: number): string => {
 // Cleanup old files periodically
 export const cleanupOldFiles = async (maxAgeMs: number = 3600000): Promise<number> => {
   let cleaned = 0;
-  
+
   try {
     if (!fs.existsSync(UPLOAD_DIR)) return 0;
-    
+
     const files = await fs.promises.readdir(UPLOAD_DIR);
     const now = Date.now();
-    
+
     for (const file of files) {
       const filePath = path.join(UPLOAD_DIR, file);
       try {
@@ -211,14 +217,14 @@ export const cleanupOldFiles = async (maxAgeMs: number = 3600000): Promise<numbe
         logger.error('Error checking file age:', { filePath, error });
       }
     }
-    
+
     if (cleaned > 0) {
       logger.info(`Cleaned up ${cleaned} old upload files`);
     }
   } catch (error) {
     logger.error('Error during file cleanup:', error);
   }
-  
+
   return cleaned;
 };
 
@@ -227,5 +233,5 @@ export default {
   validateUploadedFile,
   cleanupTempFile,
   calculateFileHash,
-  cleanupOldFiles
+  cleanupOldFiles,
 };

@@ -3,16 +3,19 @@
 ## Current Status
 
 ### ✅ Groq (Working)
+
 - API Key: Set ✅
 - Model: llama-3.3-70b-versatile ✅
 - Status: **Working**
 
 ### ❌ OpenAI GPT (Not Working)
+
 - API Key: **NOT SET** ❌
 - Model: Would use gpt-4o-mini
 - Status: **Missing API Key**
 
 ### ❌ Claude (Not Working)
+
 - API Key: Set but **INVALID** ❌
 - Model: claude-sonnet-4-5-20250929
 - Error: `401 authentication_error - invalid x-api-key`
@@ -23,6 +26,7 @@
 ## Fix OpenAI GPT
 
 ### Step 1: Get OpenAI API Key
+
 1. Go to: https://platform.openai.com/api-keys
 2. Sign in (or create account)
 3. Click **"Create new secret key"**
@@ -30,6 +34,7 @@
 5. **Copy the full key** (starts with `sk-proj-` or `sk-`)
 
 ### Step 2: Add to Vercel
+
 1. Go to: https://vercel.com/dashboard
 2. Open your **whynointerviews** project
 3. Settings → Environment Variables
@@ -40,6 +45,7 @@
 8. Click **Save**
 
 ### Step 3: Redeploy
+
 - Go to Deployments
 - Latest deployment → ⋯ → **Redeploy**
 
@@ -55,11 +61,13 @@ The Claude API key you added is being rejected by Anthropic's API. This could me
 4. **Typo in key** - Missing characters when copying
 
 ### Step 1: Delete Old Key in Anthropic
+
 1. Go to: https://console.anthropic.com/settings/keys
 2. Find your current API key
 3. Click **Delete** (if it exists)
 
 ### Step 2: Create Fresh API Key
+
 1. Still on https://console.anthropic.com/settings/keys
 2. Click **"Create Key"**
 3. Name: `WhyNoInterviews Production`
@@ -67,11 +75,13 @@ The Claude API key you added is being rejected by Anthropic's API. This could me
 5. Key format: `sk-ant-api03-xxxxxxxxxx...`
 
 ### Step 3: Verify Billing
+
 1. Go to: https://console.anthropic.com/settings/billing
 2. **Add payment method** if not already set
 3. Verify you have credits or valid billing
 
 ### Step 4: Update in Vercel
+
 1. Vercel Dashboard → whynointerviews → Settings → Environment Variables
 2. Find `ANTHROPIC_API_KEY`
 3. Click ⋯ → **Edit**
@@ -79,6 +89,7 @@ The Claude API key you added is being rejected by Anthropic's API. This could me
 5. Click **Save**
 
 ### Step 5: Redeploy
+
 - Deployments → Latest → ⋯ → **Redeploy**
 
 ---
@@ -108,18 +119,21 @@ You mentioned "huge difference in score how LLM score high". This is expected be
 ### Recommendation for Best Results
 
 **For Most Accurate Analysis:**
+
 1. Use **Claude Sonnet 4.5** (once fixed)
    - Most thorough
    - Most realistic scoring
    - Best at identifying issues
 
 **For Balanced View:**
+
 1. Use **GPT-4o** (upgrade from gpt-4o-mini)
    - Good quality
    - Reasonable scoring
    - Fast and reliable
 
 **For Speed/Free:**
+
 1. Use **Llama 3.3 70B** (current)
    - Free on Groq
    - Much better than 8B

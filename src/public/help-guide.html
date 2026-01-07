@@ -1,652 +1,720 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JobMatch AI - User Guide</title>
     <style>
-        @media print {
-            body {
-                font-size: 11pt;
-            }
-
-            .page-break {
-                page-break-before: always;
-            }
-
-            .no-print {
-                display: none !important;
-            }
-
-            img {
-                max-width: 100%;
-                height: auto;
-            }
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+      @media print {
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-            color: #1e293b;
-            line-height: 1.6;
-            padding: 40px;
-            max-width: 900px;
-            margin: 0 auto;
+          font-size: 11pt;
         }
 
-        /* Print Button */
-        .print-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-            transition: transform 0.2s;
+        .page-break {
+          page-break-before: always;
         }
 
-        .print-btn:hover {
-            transform: translateY(-2px);
+        .no-print {
+          display: none !important;
         }
 
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 48px;
-            padding-bottom: 32px;
-            border-bottom: 2px solid #e2e8f0;
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #ffffff;
+        color: #1e293b;
+        line-height: 1.6;
+        padding: 40px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      /* Print Button */
+      .print-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        transition: transform 0.2s;
+      }
+
+      .print-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        margin-bottom: 48px;
+        padding-bottom: 32px;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 8px;
+      }
+
+      .header .subtitle {
+        font-size: 1.1rem;
+        color: #64748b;
+      }
+
+      .header .version {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-top: 8px;
+      }
+
+      /* Table of Contents */
+      .toc {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 40px;
+      }
+
+      .toc h2 {
+        font-size: 1.3rem;
+        margin-bottom: 16px;
+        color: #374151;
+      }
+
+      .toc ul {
+        list-style: none;
+      }
+
+      .toc li {
+        padding: 8px 0;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .toc li:last-child {
+        border-bottom: none;
+      }
+
+      .toc a {
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .toc a:hover {
+        text-decoration: underline;
+      }
+
+      /* Sections */
+      section {
+        margin-bottom: 48px;
+      }
+
+      h2 {
+        font-size: 1.8rem;
+        color: #1e293b;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #6366f1;
+      }
+
+      h3 {
+        font-size: 1.3rem;
+        color: #374151;
+        margin: 24px 0 12px;
+      }
+
+      p {
+        margin-bottom: 16px;
+        color: #475569;
+      }
+
+      /* Screenshots */
+      .screenshot {
+        margin: 24px 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .screenshot img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .screenshot-caption {
+        background: #f8fafc;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        color: #64748b;
+        text-align: center;
+        font-style: italic;
+      }
+
+      /* Feature Box */
+      .feature-box {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 10px;
+        padding: 20px;
+        margin: 16px 0;
+      }
+
+      .feature-box h4 {
+        color: #6366f1;
+        margin-bottom: 8px;
+      }
+
+      /* Steps */
+      .steps {
+        counter-reset: step-counter;
+      }
+
+      .step {
+        position: relative;
+        padding-left: 48px;
+        margin-bottom: 20px;
+      }
+
+      .step::before {
+        counter-increment: step-counter;
+        content: counter(step-counter);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+      }
+
+      .step h4 {
+        margin-bottom: 8px;
+        color: #1e293b;
+      }
+
+      .step p {
+        margin: 0;
+      }
+
+      /* Tips */
+      .tip {
+        background: #ecfdf5;
+        border-left: 4px solid #10b981;
+        padding: 16px;
+        margin: 16px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .tip strong {
+        color: #059669;
+      }
+
+      .warning {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+        padding: 16px;
+        margin: 16px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .warning strong {
+        color: #d97706;
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        padding-top: 32px;
+        border-top: 1px solid #e2e8f0;
+        color: #94a3b8;
+        font-size: 0.9rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        body {
+          padding: 20px;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
+          font-size: 1.8rem;
         }
 
-        .header .subtitle {
-            font-size: 1.1rem;
-            color: #64748b;
+        .print-btn {
+          padding: 8px 16px;
+          font-size: 0.9rem;
         }
-
-        .header .version {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            margin-top: 8px;
-        }
-
-        /* Table of Contents */
-        .toc {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 40px;
-        }
-
-        .toc h2 {
-            font-size: 1.3rem;
-            margin-bottom: 16px;
-            color: #374151;
-        }
-
-        .toc ul {
-            list-style: none;
-        }
-
-        .toc li {
-            padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .toc li:last-child {
-            border-bottom: none;
-        }
-
-        .toc a {
-            color: #6366f1;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .toc a:hover {
-            text-decoration: underline;
-        }
-
-        /* Sections */
-        section {
-            margin-bottom: 48px;
-        }
-
-        h2 {
-            font-size: 1.8rem;
-            color: #1e293b;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #6366f1;
-        }
-
-        h3 {
-            font-size: 1.3rem;
-            color: #374151;
-            margin: 24px 0 12px;
-        }
-
-        p {
-            margin-bottom: 16px;
-            color: #475569;
-        }
-
-        /* Screenshots */
-        .screenshot {
-            margin: 24px 0;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .screenshot img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .screenshot-caption {
-            background: #f8fafc;
-            padding: 12px 16px;
-            font-size: 0.9rem;
-            color: #64748b;
-            text-align: center;
-            font-style: italic;
-        }
-
-        /* Feature Box */
-        .feature-box {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 16px 0;
-        }
-
-        .feature-box h4 {
-            color: #6366f1;
-            margin-bottom: 8px;
-        }
-
-        /* Steps */
-        .steps {
-            counter-reset: step-counter;
-        }
-
-        .step {
-            position: relative;
-            padding-left: 48px;
-            margin-bottom: 20px;
-        }
-
-        .step::before {
-            counter-increment: step-counter;
-            content: counter(step-counter);
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-        }
-
-        .step h4 {
-            margin-bottom: 8px;
-            color: #1e293b;
-        }
-
-        .step p {
-            margin: 0;
-        }
-
-        /* Tips */
-        .tip {
-            background: #ecfdf5;
-            border-left: 4px solid #10b981;
-            padding: 16px;
-            margin: 16px 0;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .tip strong {
-            color: #059669;
-        }
-
-        .warning {
-            background: #fffbeb;
-            border-left: 4px solid #f59e0b;
-            padding: 16px;
-            margin: 16px 0;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .warning strong {
-            color: #d97706;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding-top: 32px;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-            font-size: 0.9rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            body {
-                padding: 20px;
-            }
-
-            .header h1 {
-                font-size: 1.8rem;
-            }
-
-            .print-btn {
-                padding: 8px 16px;
-                font-size: 0.9rem;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <button class="print-btn no-print" onclick="window.print()">📄 Save as PDF</button>
 
     <div class="header">
-        <h1>📊 JobMatch AI</h1>
-        <p class="subtitle">Complete User Guide</p>
-        <p class="version">Version 1.0 | January 2026</p>
+      <h1>📊 JobMatch AI</h1>
+      <p class="subtitle">Complete User Guide</p>
+      <p class="version">Version 1.0 | January 2026</p>
     </div>
 
     <nav class="toc no-print">
-        <h2>📑 Table of Contents</h2>
-        <ul>
-            <li><a href="#getting-started">1. Getting Started</a></li>
-            <li><a href="#resume-analysis">2. Resume Analysis</a></li>
-            <li><a href="#resume-optimizer">3. Resume Optimizer</a></li>
-            <li><a href="#job-matching">4. Job Matching</a></li>
-            <li><a href="#mock-interview">5. Mock Interview</a></li>
-            <li><a href="#interview-dashboard">6. Interview Dashboard</a></li>
-            <li><a href="#job-search">7. Job Search & Target Companies</a></li>
-            <li><a href="#support">8. Getting Help</a></li>
-        </ul>
+      <h2>📑 Table of Contents</h2>
+      <ul>
+        <li><a href="#getting-started">1. Getting Started</a></li>
+        <li><a href="#resume-analysis">2. Resume Analysis</a></li>
+        <li><a href="#resume-optimizer">3. Resume Optimizer</a></li>
+        <li><a href="#job-matching">4. Job Matching</a></li>
+        <li><a href="#mock-interview">5. Mock Interview</a></li>
+        <li><a href="#interview-dashboard">6. Interview Dashboard</a></li>
+        <li><a href="#job-search">7. Job Search & Target Companies</a></li>
+        <li><a href="#support">8. Getting Help</a></li>
+      </ul>
     </nav>
 
     <!-- Section 1: Getting Started -->
     <section id="getting-started">
-        <h2>1. Getting Started</h2>
-        <p>Welcome to JobMatch AI – your AI-powered career companion! This guide will walk you through all the features
-            available to help you land your dream job.</p>
+      <h2>1. Getting Started</h2>
+      <p>
+        Welcome to JobMatch AI – your AI-powered career companion! This guide will walk you through
+        all the features available to help you land your dream job.
+      </p>
 
-        <div class="screenshot">
-            <img src="/help-images/homepage.png" alt="JobMatch AI Home Page">
-            <div class="screenshot-caption">The JobMatch AI home page with resume upload and job description input</div>
+      <div class="screenshot">
+        <img src="/help-images/homepage.png" alt="JobMatch AI Home Page" />
+        <div class="screenshot-caption">
+          The JobMatch AI home page with resume upload and job description input
         </div>
+      </div>
 
-        <h3>Creating an Account</h3>
-        <div class="steps">
-            <div class="step">
-                <h4>Sign In Options</h4>
-                <p>Click the "Sign In" button in the header. You can sign in using Google OAuth for quick access, or
-                    create a traditional account with email and password.</p>
-            </div>
-            <div class="step">
-                <h4>Session Persistence</h4>
-                <p>Once signed in, your analysis history, interview transcripts, and target companies are saved to your
-                    account and accessible from any device.</p>
-            </div>
+      <h3>Creating an Account</h3>
+      <div class="steps">
+        <div class="step">
+          <h4>Sign In Options</h4>
+          <p>
+            Click the "Sign In" button in the header. You can sign in using Google OAuth for quick
+            access, or create a traditional account with email and password.
+          </p>
         </div>
+        <div class="step">
+          <h4>Session Persistence</h4>
+          <p>
+            Once signed in, your analysis history, interview transcripts, and target companies are
+            saved to your account and accessible from any device.
+          </p>
+        </div>
+      </div>
 
-        <div class="tip">
-            <strong>💡 Tip:</strong> Google Sign-In is the fastest way to get started – one click and you're in!
-        </div>
+      <div class="tip">
+        <strong>💡 Tip:</strong> Google Sign-In is the fastest way to get started – one click and
+        you're in!
+      </div>
     </section>
 
     <!-- Section 2: Resume Analysis -->
     <section id="resume-analysis" class="page-break">
-        <h2>2. Resume Analysis</h2>
-        <p>Get instant AI-powered feedback on how well your resume matches a job description.</p>
+      <h2>2. Resume Analysis</h2>
+      <p>Get instant AI-powered feedback on how well your resume matches a job description.</p>
 
-        <h3>How to Analyze Your Resume</h3>
-        <div class="steps">
-            <div class="step">
-                <h4>Upload Your Resume</h4>
-                <p>Click the upload zone on the home page and select your resume file (PDF, DOC, or DOCX format). Your
-                    resume will be securely processed.</p>
-            </div>
+      <h3>How to Analyze Your Resume</h3>
+      <div class="steps">
+        <div class="step">
+          <h4>Upload Your Resume</h4>
+          <p>
+            Click the upload zone on the home page and select your resume file (PDF, DOC, or DOCX
+            format). Your resume will be securely processed.
+          </p>
         </div>
+      </div>
 
-        <div class="screenshot">
-            <img src="/help-images/resume-upload.png" alt="Resume Upload Zone">
-            <div class="screenshot-caption">Drag and drop your resume or click to browse files</div>
-        </div>
+      <div class="screenshot">
+        <img src="/help-images/resume-upload.png" alt="Resume Upload Zone" />
+        <div class="screenshot-caption">Drag and drop your resume or click to browse files</div>
+      </div>
 
-        <div class="steps">
-            <div class="step">
-                <h4>Paste the Job Description</h4>
-                <p>Copy the job description from any job posting and paste it into the text area provided. Include all
-                    requirements and qualifications for the best analysis.</p>
-            </div>
+      <div class="steps">
+        <div class="step">
+          <h4>Paste the Job Description</h4>
+          <p>
+            Copy the job description from any job posting and paste it into the text area provided.
+            Include all requirements and qualifications for the best analysis.
+          </p>
         </div>
+      </div>
 
-        <div class="screenshot">
-            <img src="/help-images/job-description.png" alt="Job Description Input">
-            <div class="screenshot-caption">Paste the complete job description for accurate matching</div>
+      <div class="screenshot">
+        <img src="/help-images/job-description.png" alt="Job Description Input" />
+        <div class="screenshot-caption">
+          Paste the complete job description for accurate matching
         </div>
+      </div>
 
-        <div class="steps">
-            <div class="step">
-                <h4>Click "Analyze Match"</h4>
-                <p>Our AI will compare your resume against the job requirements and generate a comprehensive analysis
-                    within seconds.</p>
-            </div>
+      <div class="steps">
+        <div class="step">
+          <h4>Click "Analyze Match"</h4>
+          <p>
+            Our AI will compare your resume against the job requirements and generate a
+            comprehensive analysis within seconds.
+          </p>
         </div>
+      </div>
 
-        <div class="screenshot">
-            <img src="/help-images/analysis-results.png" alt="Analysis Results">
-            <div class="screenshot-caption">View your match score and detailed analysis results</div>
-        </div>
+      <div class="screenshot">
+        <img src="/help-images/analysis-results.png" alt="Analysis Results" />
+        <div class="screenshot-caption">View your match score and detailed analysis results</div>
+      </div>
 
-        <h3>Understanding Your Results</h3>
-        <div class="feature-box">
-            <h4>📈 Match Score</h4>
-            <p>Your overall compatibility percentage with the job. Scores above 75% indicate a strong match!</p>
-        </div>
+      <h3>Understanding Your Results</h3>
+      <div class="feature-box">
+        <h4>📈 Match Score</h4>
+        <p>
+          Your overall compatibility percentage with the job. Scores above 75% indicate a strong
+          match!
+        </p>
+      </div>
 
-        <div class="feature-box">
-            <h4>✅ Strengths</h4>
-            <p>Skills and experiences from your resume that align well with the job requirements.</p>
-        </div>
+      <div class="feature-box">
+        <h4>✅ Strengths</h4>
+        <p>Skills and experiences from your resume that align well with the job requirements.</p>
+      </div>
 
-        <div class="feature-box">
-            <h4>🔧 Improvements</h4>
-            <p>Specific suggestions to enhance your resume and increase your match score.</p>
-        </div>
+      <div class="feature-box">
+        <h4>🔧 Improvements</h4>
+        <p>Specific suggestions to enhance your resume and increase your match score.</p>
+      </div>
 
-        <div class="feature-box">
-            <h4>🏷️ Keyword Analysis</h4>
-            <p>See which important keywords from the job posting are present or missing in your resume.</p>
-        </div>
+      <div class="feature-box">
+        <h4>🏷️ Keyword Analysis</h4>
+        <p>
+          See which important keywords from the job posting are present or missing in your resume.
+        </p>
+      </div>
 
-        <div class="tip">
-            <strong>💡 Tip:</strong> Use the AI-generated cover letter feature to create a customized cover letter
-            based on your analysis!
-        </div>
+      <div class="tip">
+        <strong>💡 Tip:</strong> Use the AI-generated cover letter feature to create a customized
+        cover letter based on your analysis!
+      </div>
     </section>
 
     <!-- Section 3: Resume Optimizer -->
     <section id="resume-optimizer" class="page-break">
-        <h2>3. Resume Optimizer</h2>
-        <p>Enhance your resume with AI-powered suggestions to better match job requirements.</p>
+      <h2>3. Resume Optimizer</h2>
+      <p>Enhance your resume with AI-powered suggestions to better match job requirements.</p>
 
-        <div class="screenshot">
-            <img src="/help-images/resume-optimizer.png" alt="Resume Optimizer">
-            <div class="screenshot-caption">AI-powered resume optimization with targeted suggestions</div>
+      <div class="screenshot">
+        <img src="/help-images/resume-optimizer.png" alt="Resume Optimizer" />
+        <div class="screenshot-caption">
+          AI-powered resume optimization with targeted suggestions
         </div>
+      </div>
 
-        <h3>How It Works</h3>
-        <div class="steps">
-            <div class="step">
-                <h4>Upload Your Resume</h4>
-                <p>Upload your current resume to get started with the optimization process.</p>
-            </div>
-            <div class="step">
-                <h4>AI Analysis</h4>
-                <p>Our AI analyzes your resume and identifies areas for improvement based on industry best practices.
-                </p>
-            </div>
-            <div class="step">
-                <h4>Get Recommendations</h4>
-                <p>Receive specific suggestions for improving wording, adding keywords, and enhancing impact statements.
-                </p>
-            </div>
+      <h3>How It Works</h3>
+      <div class="steps">
+        <div class="step">
+          <h4>Upload Your Resume</h4>
+          <p>Upload your current resume to get started with the optimization process.</p>
         </div>
+        <div class="step">
+          <h4>AI Analysis</h4>
+          <p>
+            Our AI analyzes your resume and identifies areas for improvement based on industry best
+            practices.
+          </p>
+        </div>
+        <div class="step">
+          <h4>Get Recommendations</h4>
+          <p>
+            Receive specific suggestions for improving wording, adding keywords, and enhancing
+            impact statements.
+          </p>
+        </div>
+      </div>
 
-        <div class="feature-box">
-            <h4>📝 Keyword Optimization</h4>
-            <p>Identify missing keywords from job descriptions and learn where to add them naturally.</p>
-        </div>
+      <div class="feature-box">
+        <h4>📝 Keyword Optimization</h4>
+        <p>
+          Identify missing keywords from job descriptions and learn where to add them naturally.
+        </p>
+      </div>
 
-        <div class="feature-box">
-            <h4>✨ Impact Statements</h4>
-            <p>Transform passive descriptions into powerful, quantified achievements that catch recruiters' attention.
-            </p>
-        </div>
+      <div class="feature-box">
+        <h4>✨ Impact Statements</h4>
+        <p>
+          Transform passive descriptions into powerful, quantified achievements that catch
+          recruiters' attention.
+        </p>
+      </div>
     </section>
 
     <!-- Section 4: Job Matching -->
     <section id="job-matching" class="page-break">
-        <h2>4. Job Matching</h2>
-        <p>Find jobs that match your skills and experience with AI-powered recommendations.</p>
+      <h2>4. Job Matching</h2>
+      <p>Find jobs that match your skills and experience with AI-powered recommendations.</p>
 
-        <div class="screenshot">
-            <img src="/help-images/job-matching.png" alt="Job Matching">
-            <div class="screenshot-caption">AI-curated job listings matched to your profile</div>
-        </div>
+      <div class="screenshot">
+        <img src="/help-images/job-matching.png" alt="Job Matching" />
+        <div class="screenshot-caption">AI-curated job listings matched to your profile</div>
+      </div>
 
-        <h3>Features</h3>
-        <div class="feature-box">
-            <h4>🎯 Match Score</h4>
-            <p>See how well your resume matches each job listing with a percentage-based compatibility score.</p>
-        </div>
+      <h3>Features</h3>
+      <div class="feature-box">
+        <h4>🎯 Match Score</h4>
+        <p>
+          See how well your resume matches each job listing with a percentage-based compatibility
+          score.
+        </p>
+      </div>
 
-        <div class="feature-box">
-            <h4>📊 Skills Gap Analysis</h4>
-            <p>Understand which skills you're missing for your target roles and prioritize your learning.</p>
-        </div>
+      <div class="feature-box">
+        <h4>📊 Skills Gap Analysis</h4>
+        <p>
+          Understand which skills you're missing for your target roles and prioritize your learning.
+        </p>
+      </div>
 
-        <div class="feature-box">
-            <h4>🔔 Personalized Suggestions</h4>
-            <p>Get job recommendations tailored to your experience level, preferred location, and career goals.</p>
-        </div>
+      <div class="feature-box">
+        <h4>🔔 Personalized Suggestions</h4>
+        <p>
+          Get job recommendations tailored to your experience level, preferred location, and career
+          goals.
+        </p>
+      </div>
 
-        <div class="tip">
-            <strong>💡 Tip:</strong> Upload your resume first to get the most accurate job matching results!
-        </div>
+      <div class="tip">
+        <strong>💡 Tip:</strong> Upload your resume first to get the most accurate job matching
+        results!
+      </div>
     </section>
 
     <!-- Section 5: Mock Interview -->
     <section id="mock-interview" class="page-break">
-        <h2>5. Mock Interview</h2>
-        <p>Practice your interview skills with AI-powered mock interviews and receive professional feedback.</p>
+      <h2>5. Mock Interview</h2>
+      <p>
+        Practice your interview skills with AI-powered mock interviews and receive professional
+        feedback.
+      </p>
 
-        <div class="screenshot">
-            <img src="/help-images/mock-interview-setup.png" alt="Mock Interview Setup">
-            <div class="screenshot-caption">Configure your mock interview with role, experience level, and duration
-            </div>
+      <div class="screenshot">
+        <img src="/help-images/mock-interview-setup.png" alt="Mock Interview Setup" />
+        <div class="screenshot-caption">
+          Configure your mock interview with role, experience level, and duration
         </div>
+      </div>
 
-        <h3>Starting an Interview</h3>
-        <div class="steps">
-            <div class="step">
-                <h4>Navigate to Mock Interview</h4>
-                <p>Click "Mock Interview" in the navigation bar to access the interview practice feature.</p>
-            </div>
-            <div class="step">
-                <h4>Configure Your Session</h4>
-                <p>Select your target role (e.g., Software Engineer, Product Manager), experience level (Entry,
-                    Mid-level, Senior), and interview duration.</p>
-            </div>
-            <div class="step">
-                <h4>Start Interview</h4>
-                <p>Click "Start Interview" to begin. The AI interviewer will ask you questions relevant to your role
-                    and experience level.</p>
-            </div>
-            <div class="step">
-                <h4>Answer Questions</h4>
-                <p>Type your responses in the text area provided. Take your time – there's no strict time limit per
-                    question.</p>
-            </div>
+      <h3>Starting an Interview</h3>
+      <div class="steps">
+        <div class="step">
+          <h4>Navigate to Mock Interview</h4>
+          <p>
+            Click "Mock Interview" in the navigation bar to access the interview practice feature.
+          </p>
         </div>
-
-        <h3>Receiving Feedback</h3>
-        <p>After completing all questions, you'll receive comprehensive feedback including:</p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li><strong>Overall Score:</strong> Your performance rating out of 100</li>
-            <li><strong>Strengths:</strong> What you did well in your responses</li>
-            <li><strong>Improvements:</strong> Areas where you can enhance your answers</li>
-            <li><strong>Professional Assessment:</strong> Detailed rubric-based evaluation</li>
-        </ul>
-
-        <div class="warning">
-            <strong>⚠️ Note:</strong> Your interview sessions are automatically saved. You can review them anytime from
-            the Interview Dashboard.
+        <div class="step">
+          <h4>Configure Your Session</h4>
+          <p>
+            Select your target role (e.g., Software Engineer, Product Manager), experience level
+            (Entry, Mid-level, Senior), and interview duration.
+          </p>
         </div>
+        <div class="step">
+          <h4>Start Interview</h4>
+          <p>
+            Click "Start Interview" to begin. The AI interviewer will ask you questions relevant to
+            your role and experience level.
+          </p>
+        </div>
+        <div class="step">
+          <h4>Answer Questions</h4>
+          <p>
+            Type your responses in the text area provided. Take your time – there's no strict time
+            limit per question.
+          </p>
+        </div>
+      </div>
+
+      <h3>Receiving Feedback</h3>
+      <p>After completing all questions, you'll receive comprehensive feedback including:</p>
+      <ul style="padding-left: 24px; margin-bottom: 16px">
+        <li><strong>Overall Score:</strong> Your performance rating out of 100</li>
+        <li><strong>Strengths:</strong> What you did well in your responses</li>
+        <li><strong>Improvements:</strong> Areas where you can enhance your answers</li>
+        <li><strong>Professional Assessment:</strong> Detailed rubric-based evaluation</li>
+      </ul>
+
+      <div class="warning">
+        <strong>⚠️ Note:</strong> Your interview sessions are automatically saved. You can review
+        them anytime from the Interview Dashboard.
+      </div>
     </section>
 
     <!-- Section 6: Interview Dashboard -->
     <section id="interview-dashboard" class="page-break">
-        <h2>6. Interview Dashboard</h2>
-        <p>Track your interview practice progress and review past sessions.</p>
+      <h2>6. Interview Dashboard</h2>
+      <p>Track your interview practice progress and review past sessions.</p>
 
-        <div class="screenshot">
-            <img src="/help-images/interview-dashboard.png" alt="Interview Dashboard">
-            <div class="screenshot-caption">View your interview history and track your progress over time</div>
+      <div class="screenshot">
+        <img src="/help-images/interview-dashboard.png" alt="Interview Dashboard" />
+        <div class="screenshot-caption">
+          View your interview history and track your progress over time
         </div>
+      </div>
 
-        <div class="screenshot">
-            <img src="/help-images/interview-transcripts.png" alt="Interview Transcripts">
-            <div class="screenshot-caption">Review detailed transcripts with your answers and AI feedback</div>
+      <div class="screenshot">
+        <img src="/help-images/interview-transcripts.png" alt="Interview Transcripts" />
+        <div class="screenshot-caption">
+          Review detailed transcripts with your answers and AI feedback
         </div>
+      </div>
 
-        <h3>Dashboard Features</h3>
-        <div class="feature-box">
-            <h4>📊 Progress Statistics</h4>
-            <p>View your total interviews completed, average score, and improvement trends over time.</p>
-        </div>
+      <h3>Dashboard Features</h3>
+      <div class="feature-box">
+        <h4>📊 Progress Statistics</h4>
+        <p>
+          View your total interviews completed, average score, and improvement trends over time.
+        </p>
+      </div>
 
-        <div class="feature-box">
-            <h4>📋 Interview History</h4>
-            <p>Access all your past mock interviews with dates, scores, and roles practiced.</p>
-        </div>
+      <div class="feature-box">
+        <h4>📋 Interview History</h4>
+        <p>Access all your past mock interviews with dates, scores, and roles practiced.</p>
+      </div>
 
-        <div class="feature-box">
-            <h4>📝 Detailed Transcripts</h4>
-            <p>Click on any interview to view the full transcript with your responses and AI feedback.</p>
-        </div>
+      <div class="feature-box">
+        <h4>📝 Detailed Transcripts</h4>
+        <p>
+          Click on any interview to view the full transcript with your responses and AI feedback.
+        </p>
+      </div>
 
-        <h3>Using Transcripts</h3>
-        <p>Interview transcripts allow you to:</p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li>Review your exact answers and identify patterns</li>
-            <li>Study the feedback to improve future responses</li>
-            <li>Print or save transcripts for offline review</li>
-        </ul>
+      <h3>Using Transcripts</h3>
+      <p>Interview transcripts allow you to:</p>
+      <ul style="padding-left: 24px; margin-bottom: 16px">
+        <li>Review your exact answers and identify patterns</li>
+        <li>Study the feedback to improve future responses</li>
+        <li>Print or save transcripts for offline review</li>
+      </ul>
     </section>
 
     <!-- Section 7: Job Search -->
     <section id="job-search" class="page-break">
-        <h2>7. Job Search & Target Companies</h2>
-        <p>Organize your job search and track companies you're interested in.</p>
+      <h2>7. Job Search & Target Companies</h2>
+      <p>Organize your job search and track companies you're interested in.</p>
 
-        <h3>Job Search Feature</h3>
-        <p>Access curated job listings based on your resume and preferences. Each listing shows:</p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li>Match percentage based on your resume</li>
-            <li>Job title, company, and location</li>
-            <li>Quick apply recommendations</li>
-            <li>Direct links to apply</li>
-        </ul>
+      <h3>Job Search Feature</h3>
+      <p>Access curated job listings based on your resume and preferences. Each listing shows:</p>
+      <ul style="padding-left: 24px; margin-bottom: 16px">
+        <li>Match percentage based on your resume</li>
+        <li>Job title, company, and location</li>
+        <li>Quick apply recommendations</li>
+        <li>Direct links to apply</li>
+      </ul>
 
-        <h3>Target Companies</h3>
-        <p>Save and track companies you're interested in working for:</p>
+      <h3>Target Companies</h3>
+      <p>Save and track companies you're interested in working for:</p>
 
-        <div class="screenshot">
-            <img src="/help-images/target-companies.png" alt="Target Companies">
-            <div class="screenshot-caption">Manage your target companies and track application progress</div>
+      <div class="screenshot">
+        <img src="/help-images/target-companies.png" alt="Target Companies" />
+        <div class="screenshot-caption">
+          Manage your target companies and track application progress
         </div>
+      </div>
 
-        <div class="steps">
-            <div class="step">
-                <h4>Add Companies</h4>
-                <p>Search for companies and add them to your target list. Include notes about why you're interested.</p>
-            </div>
-            <div class="step">
-                <h4>Track Progress</h4>
-                <p>Update the status as you apply (Saved, Applied, Interviewing, Offer, Rejected).</p>
-            </div>
-            <div class="step">
-                <h4>Stay Organized</h4>
-                <p>Use the dashboard view to see all your target companies at a glance.</p>
-            </div>
+      <div class="steps">
+        <div class="step">
+          <h4>Add Companies</h4>
+          <p>
+            Search for companies and add them to your target list. Include notes about why you're
+            interested.
+          </p>
         </div>
+        <div class="step">
+          <h4>Track Progress</h4>
+          <p>Update the status as you apply (Saved, Applied, Interviewing, Offer, Rejected).</p>
+        </div>
+        <div class="step">
+          <h4>Stay Organized</h4>
+          <p>Use the dashboard view to see all your target companies at a glance.</p>
+        </div>
+      </div>
     </section>
 
     <!-- Section 8: Support -->
     <section id="support" class="page-break">
-        <h2>8. Getting Help</h2>
+      <h2>8. Getting Help</h2>
 
-        <h3>Frequently Asked Questions</h3>
+      <h3>Frequently Asked Questions</h3>
 
-        <div class="feature-box">
-            <h4>What file formats are supported for resume upload?</h4>
-            <p>We support PDF, DOC, and DOCX formats. PDF is recommended for best results.</p>
-        </div>
+      <div class="feature-box">
+        <h4>What file formats are supported for resume upload?</h4>
+        <p>We support PDF, DOC, and DOCX formats. PDF is recommended for best results.</p>
+      </div>
 
-        <div class="feature-box">
-            <h4>Is my data secure?</h4>
-            <p>Yes! Your resumes and interview data are encrypted and never shared with third parties. You can delete
-                your data at any time from your account settings.</p>
-        </div>
+      <div class="feature-box">
+        <h4>Is my data secure?</h4>
+        <p>
+          Yes! Your resumes and interview data are encrypted and never shared with third parties.
+          You can delete your data at any time from your account settings.
+        </p>
+      </div>
 
-        <div class="feature-box">
-            <h4>How accurate is the AI analysis?</h4>
-            <p>Our AI uses advanced language models to provide detailed, accurate analysis. While no AI is perfect, our
-                system has been trained on millions of job postings and resumes.</p>
-        </div>
+      <div class="feature-box">
+        <h4>How accurate is the AI analysis?</h4>
+        <p>
+          Our AI uses advanced language models to provide detailed, accurate analysis. While no AI
+          is perfect, our system has been trained on millions of job postings and resumes.
+        </p>
+      </div>
 
-        <div class="feature-box">
-            <h4>Can I use JobMatch AI on mobile?</h4>
-            <p>Yes! The application is fully responsive and works great on phones and tablets.</p>
-        </div>
+      <div class="feature-box">
+        <h4>Can I use JobMatch AI on mobile?</h4>
+        <p>Yes! The application is fully responsive and works great on phones and tablets.</p>
+      </div>
 
-        <h3>Contact Support</h3>
-        <p>Need additional help? We're here for you:</p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li><strong>Email:</strong> support@jobmatch.ai</li>
-            <li><strong>Help Center:</strong> Visit our online FAQ</li>
-        </ul>
+      <h3>Contact Support</h3>
+      <p>Need additional help? We're here for you:</p>
+      <ul style="padding-left: 24px; margin-bottom: 16px">
+        <li><strong>Email:</strong> support@jobmatch.ai</li>
+        <li><strong>Help Center:</strong> Visit our online FAQ</li>
+      </ul>
 
-        <div class="tip">
-            <strong>💡 Tip:</strong> For the best experience, use the latest version of Chrome, Firefox, Safari, or
-            Edge.
-        </div>
+      <div class="tip">
+        <strong>💡 Tip:</strong> For the best experience, use the latest version of Chrome, Firefox,
+        Safari, or Edge.
+      </div>
     </section>
 
     <footer>
-        <p>© 2026 JobMatch AI. All rights reserved.</p>
-        <p>Made with ❤️ to help you succeed in your career journey.</p>
+      <p>© 2026 JobMatch AI. All rights reserved.</p>
+      <p>Made with ❤️ to help you succeed in your career journey.</p>
     </footer>
-</body>
-
+  </body>
 </html>

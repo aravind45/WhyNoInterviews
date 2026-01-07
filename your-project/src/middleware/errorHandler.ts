@@ -4,20 +4,15 @@ import { AppError, ValidationError, ProcessingError, TimeoutError } from '../typ
 import { ZodError } from 'zod';
 
 export const createError = (
-  message: string, 
-  statusCode: number = 500, 
+  message: string,
+  statusCode: number = 500,
   code?: string,
-  details?: Record<string, any>
+  details?: Record<string, any>,
 ): AppError => {
   return new AppError(message, statusCode, code, details);
 };
 
-export const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
   // Log the error
   logger.error('Error handled:', {
     name: err.name,
@@ -25,7 +20,7 @@ export const errorHandler = (
     stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined,
     path: req.path,
     method: req.method,
-    ip: req.ip
+    ip: req.ip,
   });
 
   // Handle Zod validation errors
@@ -34,10 +29,10 @@ export const errorHandler = (
       success: false,
       error: 'Validation failed',
       code: 'VALIDATION_ERROR',
-      details: err.errors.map(e => ({
+      details: err.errors.map((e) => ({
         field: e.path.join('.'),
-        message: e.message
-      }))
+        message: e.message,
+      })),
     });
     return;
   }
@@ -48,7 +43,7 @@ export const errorHandler = (
       success: false,
       error: err.message,
       code: err.code,
-      details: err.details
+      details: err.details,
     });
     return;
   }
@@ -79,7 +74,7 @@ export const errorHandler = (
     res.status(statusCode).json({
       success: false,
       error: message,
-      code: 'FILE_UPLOAD_ERROR'
+      code: 'FILE_UPLOAD_ERROR',
     });
     return;
   }
@@ -89,7 +84,7 @@ export const errorHandler = (
     res.status(503).json({
       success: false,
       error: 'Database operation failed. Please try again.',
-      code: 'DATABASE_ERROR'
+      code: 'DATABASE_ERROR',
     });
     return;
   }
@@ -99,7 +94,7 @@ export const errorHandler = (
     res.status(408).json({
       success: false,
       error: 'Request timeout. Please try again with a smaller file.',
-      code: 'TIMEOUT_ERROR'
+      code: 'TIMEOUT_ERROR',
     });
     return;
   }
@@ -107,16 +102,14 @@ export const errorHandler = (
   // Default error response
   res.status(500).json({
     success: false,
-    error: process.env.NODE_ENV === 'production' 
-      ? 'An unexpected error occurred' 
-      : err.message,
-    code: 'INTERNAL_ERROR'
+    error: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message,
+    code: 'INTERNAL_ERROR',
   });
 };
 
 // Async handler wrapper to catch async errors
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>,
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
@@ -128,7 +121,7 @@ export const notFoundHandler = (req: Request, res: Response): void => {
   res.status(404).json({
     success: false,
     error: `Route ${req.method} ${req.path} not found`,
-    code: 'NOT_FOUND'
+    code: 'NOT_FOUND',
   });
 };
 

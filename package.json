@@ -12,7 +12,11 @@
     "test:coverage": "jest --coverage",
     "test:regression": "jest --config jest.config.ts",
     "test:providers": "node test-llm-providers.js",
-    "test:providers:local": "TEST_URL=http://localhost:3000 node test-llm-providers.js"
+    "test:providers:local": "TEST_URL=http://localhost:3000 node test-llm-providers.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -44,7 +48,13 @@
     "@types/pg": "^8.10.9",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^9.0.7",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.2.0",
+    "prettier": "^3.7.4",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.1",

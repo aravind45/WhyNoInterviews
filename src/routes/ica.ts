@@ -7,11 +7,7 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  parseLinkedInCSV,
-  suggestICACategory,
-  ParsedContact,
-} from '../services/linkedinParser';
+import { parseLinkedInCSV, suggestICACategory, ParsedContact } from '../services/linkedinParser';
 import { getPool } from '../database/connection';
 
 const router = Router();
@@ -27,7 +23,7 @@ async function getSessionUuid(sessionToken: string): Promise<string | null> {
   // First try to find existing session
   let result = await pool.query(
     'SELECT id FROM user_sessions WHERE session_id = $1 AND is_active = true AND expires_at > NOW()',
-    [sessionToken]
+    [sessionToken],
   );
 
   // If session doesn't exist, create it
@@ -37,7 +33,7 @@ async function getSessionUuid(sessionToken: string): Promise<string | null> {
       `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at, is_active)
        VALUES ($1, '127.0.0.1', 'Auto-created', NOW() + INTERVAL '7 days', true)
        RETURNING id`,
-      [sessionToken]
+      [sessionToken],
     );
   }
 
@@ -48,14 +44,14 @@ async function getSessionUuid(sessionToken: string): Promise<string | null> {
   // Check if this session has any contacts
   const contactCount = await pool.query(
     'SELECT COUNT(*) as count FROM linkedin_contacts WHERE session_id = $1',
-    [sessionUuid]
+    [sessionUuid],
   );
 
   // If no contacts in this session, find ANY session with contacts and use that
   if (parseInt(contactCount.rows[0].count) === 0) {
     console.log(`Session ${sessionToken} has no contacts, looking for session with data...`);
     const fallbackSession = await pool.query(
-      `SELECT DISTINCT session_id FROM linkedin_contacts LIMIT 1`
+      `SELECT DISTINCT session_id FROM linkedin_contacts LIMIT 1`,
     );
 
     if (fallbackSession.rows.length > 0) {
@@ -110,7 +106,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
       successfulRows: parseResult.successfulRows,
       failedRows: parseResult.failedRows,
       contactsLength: parseResult.contacts.length,
-      errors: parseResult.errors
+      errors: parseResult.errors,
     });
 
     if (parseResult.contacts.length === 0) {
@@ -121,8 +117,8 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
           totalRows: parseResult.totalRows,
           successfulRows: parseResult.successfulRows,
           failedRows: parseResult.failedRows,
-          errors: parseResult.errors
-        }
+          errors: parseResult.errors,
+        },
       });
     }
 
@@ -132,7 +128,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
       `INSERT INTO contact_import_batches
        (id, session_id, filename, total_contacts, successful_imports, failed_imports)
        VALUES ($1, $2, $3, $4, 0, 0)`,
-      [batchId, sessionUuid, req.file.originalname, parseResult.totalRows]
+      [batchId, sessionUuid, req.file.originalname, parseResult.totalRows],
     );
 
     // Get user's target job title if available (for better categorization)
@@ -141,7 +137,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
        WHERE session_id = $1
        ORDER BY created_at DESC
        LIMIT 1`,
-      [sessionUuid]
+      [sessionUuid],
     );
     const targetJobTitle = analysisResult.rows[0]?.target_job_title;
 
@@ -173,7 +169,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
             contact.linkedinUrl,
             suggestedCategory,
             batchId,
-          ]
+          ],
         );
 
         successfulImports++;
@@ -203,7 +199,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
         duplicateContacts,
         JSON.stringify(importErrors),
         batchId,
-      ]
+      ],
     );
 
     res.json({
@@ -224,7 +220,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
     return res.status(500).json({
       success: false,
       error: `Failed to process LinkedIn CSV: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      details: error instanceof Error ? error.stack : undefined
+      details: error instanceof Error ? error.stack : undefined,
     });
   }
 });
@@ -287,7 +283,7 @@ router.get('/contacts/:sessionId', async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Failed to fetch contacts: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to fetch contacts: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 });
@@ -298,14 +294,21 @@ router.get('/contacts/:sessionId', async (req: Request, res: Response) => {
  */
 router.patch('/contacts/:sessionId/:contactId', async (req: Request, res: Response) => {
   const { sessionId, contactId } = req.params;
-  const { icaCategory, categoryReason, notes, lastContacted, contactFrequency, relationshipStrength } = req.body;
+  const {
+    icaCategory,
+    categoryReason,
+    notes,
+    lastContacted,
+    contactFrequency,
+    relationshipStrength,
+  } = req.body;
 
   try {
     const pool = getPool();
     // Verify contact belongs to session
     const contactResult = await pool.query(
       'SELECT id FROM linkedin_contacts WHERE id = $1 AND session_id = $2',
-      [contactId, sessionId]
+      [contactId, sessionId],
     );
 
     if (contactResult.rows.length === 0) {
@@ -370,7 +373,7 @@ router.patch('/contacts/:sessionId/:contactId', async (req: Request, res: Respon
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Failed to update contact: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to update contact: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 });
@@ -386,7 +389,7 @@ router.delete('/contacts/:sessionId/:contactId', async (req: Request, res: Respo
     const pool = getPool();
     const result = await pool.query(
       'DELETE FROM linkedin_contacts WHERE id = $1 AND session_id = $2 RETURNING id',
-      [contactId, sessionId]
+      [contactId, sessionId],
     );
 
     if (result.rows.length === 0) {
@@ -400,7 +403,7 @@ router.delete('/contacts/:sessionId/:contactId', async (req: Request, res: Respo
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Failed to delete contact: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to delete contact: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 });
@@ -419,10 +422,7 @@ router.get('/stats/:sessionId', async (req: Request, res: Response) => {
     }
 
     const pool = getPool();
-    const result = await pool.query(
-      'SELECT * FROM ica_stats WHERE session_id = $1',
-      [sessionUuid]
-    );
+    const result = await pool.query('SELECT * FROM ica_stats WHERE session_id = $1', [sessionUuid]);
 
     if (result.rows.length === 0) {
       res.json({
@@ -459,7 +459,7 @@ router.get('/stats/:sessionId', async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Failed to fetch ICA stats: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to fetch ICA stats: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 });
@@ -500,19 +500,19 @@ router.get('/referrals/:sessionId', async (req: Request, res: Response) => {
            ELSE 4
          END,
          first_name ASC`,
-      [sessionUuid, `%${company}%`]
+      [sessionUuid, `%${company}%`],
     );
 
     res.json({
       success: true,
       contacts: result.rows,
       count: result.rows.length,
-      company: company
+      company: company,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Failed to find referral contacts: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to find referral contacts: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 });
@@ -530,7 +530,7 @@ router.post('/interactions/:sessionId/:contactId', async (req: Request, res: Res
     // Verify contact belongs to session
     const contactResult = await pool.query(
       'SELECT id FROM linkedin_contacts WHERE id = $1 AND session_id = $2',
-      [contactId, sessionId]
+      [contactId, sessionId],
     );
 
     if (contactResult.rows.length === 0) {
@@ -543,14 +543,14 @@ router.post('/interactions/:sessionId/:contactId', async (req: Request, res: Res
        (contact_id, interaction_type, interaction_date, notes, outcome)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [contactId, interactionType, interactionDate || new Date(), notes, outcome]
+      [contactId, interactionType, interactionDate || new Date(), notes, outcome],
     );
 
     // Update last_contacted date on the contact
-    await pool.query(
-      'UPDATE linkedin_contacts SET last_contacted = $1 WHERE id = $2',
-      [interactionDate || new Date(), contactId]
-    );
+    await pool.query('UPDATE linkedin_contacts SET last_contacted = $1 WHERE id = $2', [
+      interactionDate || new Date(),
+      contactId,
+    ]);
 
     res.json({
       success: true,
@@ -559,7 +559,7 @@ router.post('/interactions/:sessionId/:contactId', async (req: Request, res: Res
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Failed to log interaction: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to log interaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 });
@@ -576,7 +576,7 @@ router.get('/interactions/:sessionId/:contactId', async (req: Request, res: Resp
     // Verify contact belongs to session
     const contactResult = await pool.query(
       'SELECT id FROM linkedin_contacts WHERE id = $1 AND session_id = $2',
-      [contactId, sessionId]
+      [contactId, sessionId],
     );
 
     if (contactResult.rows.length === 0) {
@@ -587,7 +587,7 @@ router.get('/interactions/:sessionId/:contactId', async (req: Request, res: Resp
       `SELECT * FROM contact_interactions
        WHERE contact_id = $1
        ORDER BY interaction_date DESC, created_at DESC`,
-      [contactId]
+      [contactId],
     );
 
     res.json({
@@ -597,7 +597,7 @@ router.get('/interactions/:sessionId/:contactId', async (req: Request, res: Resp
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Failed to fetch interactions: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Failed to fetch interactions: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 });

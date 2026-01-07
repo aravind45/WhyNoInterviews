@@ -16,7 +16,7 @@ console.log('✓ Home tab structure correct:', hasCorrectHomeTab);
 
 // Verify other tabs have correct data-tab attributes
 const requiredTabs = ['analyze', 'search', 'optimizer', 'target-companies', 'networking'];
-const tabsCorrect = requiredTabs.every(tab => {
+const tabsCorrect = requiredTabs.every((tab) => {
   const regex = new RegExp(`data-tab="${tab}"`);
   return regex.test(htmlContent);
 });
@@ -32,7 +32,7 @@ const hasInitHandler = htmlContent.includes("document.addEventListener('DOMConte
 console.log('✓ DOMContentLoaded handler exists:', hasInitHandler);
 
 // Verify new UI initialization
-const hasNewUIInit = htmlContent.includes('switchTab(\'home\')');
+const hasNewUIInit = htmlContent.includes("switchTab('home')");
 console.log('✓ New UI initialization exists:', hasNewUIInit);
 
 // Check CSS file for Home tab visibility rules
@@ -40,11 +40,13 @@ const cssPath = path.join(__dirname, 'src/public/new-ui.css');
 const cssContent = fs.readFileSync(cssPath, 'utf8');
 
 // Verify Home tab is hidden by default
-const hasHideRule = cssContent.includes('main-tab[data-tab="home"]') && cssContent.includes('display: none');
+const hasHideRule =
+  cssContent.includes('main-tab[data-tab="home"]') && cssContent.includes('display: none');
 console.log('✓ Home tab hidden by default:', hasHideRule);
 
 // Verify Home tab is shown in new UI
-const hasShowRule = cssContent.includes('new-ui .main-tab[data-tab="home"]') && cssContent.includes('display: block');
+const hasShowRule =
+  cssContent.includes('new-ui .main-tab[data-tab="home"]') && cssContent.includes('display: block');
 console.log('✓ Home tab shown in new UI:', hasShowRule);
 
 // Verify Home section exists
@@ -60,7 +62,7 @@ const allChecks = [
   hasNewUIInit,
   hasHideRule,
   hasShowRule,
-  hasHomeSection
+  hasHomeSection,
 ];
 
 const passedChecks = allChecks.filter(Boolean).length;

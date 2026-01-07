@@ -7,15 +7,15 @@ console.log('🧪 Testing New UI Implementation...\n');
 // Test 1: Check if all required files exist
 const requiredFiles = [
   'src/utils/featureFlags.js',
-  'src/components/AppHeader.js', 
+  'src/components/AppHeader.js',
   'src/components/LandingPage.js',
   'src/styles/newUI.css',
-  'ROUTE_MAP.md'
+  'ROUTE_MAP.md',
 ];
 
 console.log('📁 Checking required files:');
 let allFilesExist = true;
-requiredFiles.forEach(file => {
+requiredFiles.forEach((file) => {
   const exists = fs.existsSync(file);
   console.log(`   ${exists ? '✅' : '❌'} ${file}`);
   if (!exists) allFilesExist = false;
@@ -30,10 +30,10 @@ const checks = [
   { name: 'New UI containers', pattern: /new-ui-container/ },
   { name: 'Old UI container wrapper', pattern: /old-ui-container/ },
   { name: 'Component loading', pattern: /setupNewHeader|setupLandingPage/ },
-  { name: 'CSS loading logic', pattern: /newUI\.css/ }
+  { name: 'CSS loading logic', pattern: /newUI\.css/ },
 ];
 
-checks.forEach(check => {
+checks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -45,14 +45,18 @@ const headerContent = fs.readFileSync('src/components/AppHeader.js', 'utf8');
 const landingContent = fs.readFileSync('src/components/LandingPage.js', 'utf8');
 
 const componentChecks = [
-  { name: 'Header has navigation items', pattern: /data-tab="analyze"|data-tab="optimizer"/, content: headerContent },
+  {
+    name: 'Header has navigation items',
+    pattern: /data-tab="analyze"|data-tab="optimizer"/,
+    content: headerContent,
+  },
   { name: 'Header has auth buttons', pattern: /showAuthModal/, content: headerContent },
   { name: 'Landing has hero section', pattern: /hero-section/, content: landingContent },
   { name: 'Landing has CTA buttons', pattern: /switchToTab/, content: landingContent },
-  { name: 'Landing has features grid', pattern: /features-grid/, content: landingContent }
+  { name: 'Landing has features grid', pattern: /features-grid/, content: landingContent },
 ];
 
-componentChecks.forEach(check => {
+componentChecks.forEach((check) => {
   const found = check.pattern.test(check.content);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -67,10 +71,10 @@ const cssChecks = [
   { name: 'Navigation styles', pattern: /\.new-nav/ },
   { name: 'Landing page styles', pattern: /\.landing-page/ },
   { name: 'Responsive design', pattern: /@media.*768px/ },
-  { name: 'Professional color scheme', pattern: /#f59e0b|#eab308/ }
+  { name: 'Professional color scheme', pattern: /#f59e0b|#eab308/ },
 ];
 
-cssChecks.forEach(check => {
+cssChecks.forEach((check) => {
   const found = check.pattern.test(cssContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });
@@ -83,10 +87,10 @@ const routeChecks = [
   { name: 'Optimizer route mapping', pattern: /tab-optimizer/ },
   { name: 'Search route mapping', pattern: /tab-search/ },
   { name: 'Target companies route mapping', pattern: /tab-target-companies/ },
-  { name: 'Networking route mapping', pattern: /tab-networking/ }
+  { name: 'Networking route mapping', pattern: /tab-networking/ },
 ];
 
-routeChecks.forEach(check => {
+routeChecks.forEach((check) => {
   const found = check.pattern.test(indexContent);
   console.log(`   ${found ? '✅' : '❌'} ${check.name}`);
 });

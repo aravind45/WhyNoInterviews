@@ -1,7 +1,9 @@
 # Mock Interview Feature - Detailed Implementation Plan
 
 ## 🎯 Feature Overview
+
 AI-powered mock interview system that:
+
 - Generates role-specific interview questions using Llama
 - Records candidate responses via webcam
 - Analyzes video responses using HuggingFace SmolVLM
@@ -10,6 +12,7 @@ AI-powered mock interview system that:
 ## 🏗️ Architecture Overview
 
 ### Frontend Components
+
 ```
 Mock Interview Tab
 ├── Interview Setup
@@ -30,6 +33,7 @@ Mock Interview Tab
 ```
 
 ### Backend Services
+
 ```
 Mock Interview API
 ├── Question Generation (/api/generate-interview-questions)
@@ -44,6 +48,7 @@ Mock Interview API
 ### Phase 1: Core Infrastructure (Week 1)
 
 #### 1.1 Database Schema
+
 ```sql
 -- Interview Sessions
 CREATE TABLE interview_sessions (
@@ -97,6 +102,7 @@ CREATE TABLE interview_results (
 ```
 
 #### 1.2 Frontend UI Structure
+
 ```html
 <!-- Add to main navigation -->
 <div class="main-tab" data-tab="mock-interview">Mock Interview</div>
@@ -107,12 +113,12 @@ CREATE TABLE interview_results (
   <div id="interview-setup" class="card">
     <!-- Setup form -->
   </div>
-  
+
   <!-- Interview Session -->
   <div id="interview-session" class="card" style="display: none;">
     <!-- Recording interface -->
   </div>
-  
+
   <!-- Results -->
   <div id="interview-results" class="card" style="display: none;">
     <!-- Feedback display -->
@@ -123,6 +129,7 @@ CREATE TABLE interview_results (
 ### Phase 2: Question Generation (Week 1-2)
 
 #### 2.1 Llama Integration for Question Generation
+
 ```typescript
 // Backend: Question Generation Service
 interface QuestionGenerationRequest {
@@ -135,10 +142,11 @@ interface QuestionGenerationRequest {
 }
 
 app.post('/api/generate-interview-questions', async (req, res) => {
-  const { jobRole, interviewType, experienceLevel, duration, resumeData, jobDescription } = req.body;
-  
+  const { jobRole, interviewType, experienceLevel, duration, resumeData, jobDescription } =
+    req.body;
+
   const questionCount = Math.floor(duration / 3); // ~3 minutes per question
-  
+
   const prompt = `Generate ${questionCount} ${interviewType} interview questions for a ${experienceLevel} ${jobRole} position.
   
   Job Description: ${jobDescription || 'General role'}
@@ -163,52 +171,54 @@ app.post('/api/generate-interview-questions', async (req, res) => {
       }
     ]
   }`;
-  
+
   // Call Llama via Groq
   const completion = await groq.chat.completions.create({
     model: GROQ_MODEL,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
-    max_tokens: 2000
+    max_tokens: 2000,
   });
-  
+
   // Parse and store questions
   // Return to frontend
 });
 ```
 
 #### 2.2 Question Types & Templates
+
 ```typescript
 const questionTemplates = {
   technical: {
     entry: [
-      "Explain the difference between {concept1} and {concept2}",
-      "How would you approach solving {technical_problem}?",
-      "Walk me through your process for {technical_task}"
+      'Explain the difference between {concept1} and {concept2}',
+      'How would you approach solving {technical_problem}?',
+      'Walk me through your process for {technical_task}',
     ],
     mid: [
-      "Design a system for {system_requirement}",
-      "How would you optimize {performance_scenario}?",
-      "Explain a challenging technical problem you solved"
+      'Design a system for {system_requirement}',
+      'How would you optimize {performance_scenario}?',
+      'Explain a challenging technical problem you solved',
     ],
     senior: [
-      "How would you architect {complex_system}?",
-      "Describe your approach to technical leadership",
-      "How do you make technology decisions for a team?"
-    ]
+      'How would you architect {complex_system}?',
+      'Describe your approach to technical leadership',
+      'How do you make technology decisions for a team?',
+    ],
   },
   behavioral: [
-    "Tell me about a time when you had to work under pressure",
-    "Describe a situation where you had to learn something new quickly",
-    "How do you handle conflicts with team members?",
-    "Give an example of when you took initiative"
-  ]
+    'Tell me about a time when you had to work under pressure',
+    'Describe a situation where you had to learn something new quickly',
+    'How do you handle conflicts with team members?',
+    'Give an example of when you took initiative',
+  ],
 };
 ```
 
 ### Phase 3: Video Recording & Processing (Week 2-3)
 
 #### 3.1 Frontend Video Recording
+
 ```javascript
 // Video Recording Component
 class InterviewRecorder {
@@ -217,66 +227,67 @@ class InterviewRecorder {
     this.recordedChunks = [];
     this.stream = null;
   }
-  
+
   async initializeCamera() {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 1280, height: 720 },
-        audio: true
+        audio: true,
       });
-      
+
       const videoElement = document.getElementById('interview-video');
       videoElement.srcObject = this.stream;
-      
+
       return true;
     } catch (error) {
       console.error('Camera initialization failed:', error);
       return false;
     }
   }
-  
+
   startRecording() {
     this.recordedChunks = [];
     this.mediaRecorder = new MediaRecorder(this.stream);
-    
+
     this.mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         this.recordedChunks.push(event.data);
       }
     };
-    
+
     this.mediaRecorder.onstop = () => {
       this.processRecording();
     };
-    
+
     this.mediaRecorder.start();
   }
-  
+
   stopRecording() {
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       this.mediaRecorder.stop();
     }
   }
-  
+
   async processRecording() {
     const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
     const formData = new FormData();
     formData.append('video', blob, `response_${Date.now()}.webm`);
     formData.append('sessionId', currentSessionId);
     formData.append('questionId', currentQuestionId);
-    
+
     // Upload to backend for processing
     const response = await fetch('/api/upload-interview-response', {
       method: 'POST',
-      body: formData
+      body: formData,
     });
-    
+
     return response.json();
   }
 }
 ```
 
 #### 3.2 Video Upload & Storage
+
 ```typescript
 // Backend: Video Upload Handler
 import multer from 'multer';
@@ -289,25 +300,25 @@ const videoStorage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueName = `${req.body.sessionId}_${req.body.questionId}_${Date.now()}.webm`;
     cb(null, uniqueName);
-  }
+  },
 });
 
-const videoUpload = multer({ 
+const videoUpload = multer({
   storage: videoStorage,
-  limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
 });
 
 app.post('/api/upload-interview-response', videoUpload.single('video'), async (req, res) => {
   try {
     const { sessionId, questionId } = req.body;
     const videoPath = req.file.path;
-    
+
     // Store video reference in database
     await storeVideoResponse(sessionId, questionId, videoPath);
-    
+
     // Queue for analysis
     await queueVideoAnalysis(sessionId, questionId, videoPath);
-    
+
     res.json({ success: true, videoId: req.file.filename });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -318,6 +329,7 @@ app.post('/api/upload-interview-response', videoUpload.single('video'), async (r
 ### Phase 4: AI Analysis Integration (Week 3-4)
 
 #### 4.1 HuggingFace SmolVLM Integration
+
 ```typescript
 // Video Analysis Service
 import { HfInference } from '@huggingface/inference';
@@ -340,27 +352,30 @@ interface VideoAnalysisResult {
   };
 }
 
-async function analyzeInterviewVideo(videoPath: string, questionText: string): Promise<VideoAnalysisResult> {
+async function analyzeInterviewVideo(
+  videoPath: string,
+  questionText: string,
+): Promise<VideoAnalysisResult> {
   try {
     // 1. Extract frames for visual analysis
     const frames = await extractVideoFrames(videoPath, 5); // 5 frames
-    
+
     // 2. Analyze each frame with SmolVLM
     const visualAnalyses = await Promise.all(
-      frames.map(frame => analyzeFrameWithSmolVLM(frame, questionText))
+      frames.map((frame) => analyzeFrameWithSmolVLM(frame, questionText)),
     );
-    
+
     // 3. Extract audio for speech analysis
     const audioPath = await extractAudio(videoPath);
     const transcript = await transcribeAudio(audioPath);
-    
+
     // 4. Combine analyses
     const result: VideoAnalysisResult = {
       transcript,
       visualAnalysis: aggregateVisualAnalysis(visualAnalyses),
-      audioAnalysis: await analyzeAudio(audioPath, transcript)
+      audioAnalysis: await analyzeAudio(audioPath, transcript),
     };
-    
+
     return result;
   } catch (error) {
     console.error('Video analysis failed:', error);
@@ -384,20 +399,21 @@ async function analyzeFrameWithSmolVLM(frameBuffer: Buffer, questionText: string
     "confidence": 0-100,
     "notes": "brief observation"
   }`;
-  
+
   const response = await hf.visualQuestionAnswering({
     model: 'HuggingFaceTB/SmolVLM-Instruct',
     inputs: {
       image: frameBuffer,
-      question: prompt
-    }
+      question: prompt,
+    },
   });
-  
+
   return JSON.parse(response.answer);
 }
 ```
 
 #### 4.2 Speech-to-Text & Audio Analysis
+
 ```typescript
 // Audio Processing
 import ffmpeg from 'fluent-ffmpeg';
@@ -405,7 +421,7 @@ import speech from '@google-cloud/speech'; // or OpenAI Whisper
 
 async function extractAudio(videoPath: string): Promise<string> {
   const audioPath = videoPath.replace('.webm', '.wav');
-  
+
   return new Promise((resolve, reject) => {
     ffmpeg(videoPath)
       .output(audioPath)
@@ -421,13 +437,13 @@ async function extractAudio(videoPath: string): Promise<string> {
 async function transcribeAudio(audioPath: string): Promise<string> {
   // Using OpenAI Whisper via Groq (if available) or Google Speech-to-Text
   const audioBuffer = fs.readFileSync(audioPath);
-  
+
   // Option 1: OpenAI Whisper
   const transcription = await openai.audio.transcriptions.create({
     file: audioBuffer,
     model: 'whisper-1',
   });
-  
+
   return transcription.text;
 }
 
@@ -436,17 +452,17 @@ async function analyzeAudio(audioPath: string, transcript: string) {
   const words = transcript.split(' ');
   const duration = await getAudioDuration(audioPath);
   const wordsPerMinute = (words.length / duration) * 60;
-  
+
   // Count filler words
   const fillerWords = ['um', 'uh', 'like', 'you know', 'so'].reduce((count, filler) => {
     return count + (transcript.toLowerCase().match(new RegExp(filler, 'g')) || []).length;
   }, 0);
-  
+
   return {
     clarity: calculateClarity(transcript),
     pace: wordsPerMinute,
     fillerWords,
-    volume: await analyzeVolume(audioPath)
+    volume: await analyzeVolume(audioPath),
   };
 }
 ```
@@ -454,6 +470,7 @@ async function analyzeAudio(audioPath: string, transcript: string) {
 ### Phase 5: Feedback Generation (Week 4)
 
 #### 4.1 Comprehensive Feedback System
+
 ```typescript
 // Feedback Generation Service
 interface InterviewFeedback {
@@ -479,25 +496,25 @@ async function generateInterviewFeedback(sessionId: string): Promise<InterviewFe
   // Get all responses for the session
   const responses = await getSessionResponses(sessionId);
   const questions = await getSessionQuestions(sessionId);
-  
+
   // Analyze each response
   const questionFeedbacks = await Promise.all(
     responses.map(async (response, index) => {
       const question = questions[index];
       return await generateQuestionFeedback(response, question);
-    })
+    }),
   );
-  
+
   // Generate overall feedback using Llama
   const overallFeedback = await generateOverallFeedback(questionFeedbacks, responses);
-  
+
   return {
     overallScore: calculateOverallScore(questionFeedbacks),
     categoryScores: calculateCategoryScores(questionFeedbacks),
     strengths: extractStrengths(questionFeedbacks),
     improvements: extractImprovements(questionFeedbacks),
     detailedFeedback: questionFeedbacks,
-    nextSteps: overallFeedback.nextSteps
+    nextSteps: overallFeedback.nextSteps,
   };
 }
 
@@ -536,7 +553,7 @@ Return JSON format:
     model: GROQ_MODEL,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.3,
-    max_tokens: 1000
+    max_tokens: 1000,
   });
 
   return JSON.parse(completion.choices[0].message.content);
@@ -546,6 +563,7 @@ Return JSON format:
 ### Phase 6: Frontend Results Interface (Week 4-5)
 
 #### 6.1 Results Dashboard
+
 ```html
 <!-- Interview Results Section -->
 <div id="interview-results" class="card">
@@ -553,7 +571,7 @@ Return JSON format:
     <h2 class="card-title">🎯 Interview Performance Analysis</h2>
     <p class="card-subtitle">Comprehensive feedback and improvement suggestions</p>
   </div>
-  
+
   <!-- Overall Score -->
   <div class="score-hero">
     <div class="score-ring">
@@ -562,7 +580,7 @@ Return JSON format:
     </div>
     <div class="verdict-badge">Strong Performance</div>
   </div>
-  
+
   <!-- Category Scores -->
   <div class="grid-4">
     <div class="stat-card">
@@ -582,12 +600,12 @@ Return JSON format:
       <div class="stat-label">Body Language</div>
     </div>
   </div>
-  
+
   <!-- Detailed Feedback -->
   <div id="detailed-feedback">
     <!-- Question-by-question feedback -->
   </div>
-  
+
   <!-- Action Items -->
   <div class="card">
     <h3>🎯 Next Steps</h3>
@@ -599,6 +617,7 @@ Return JSON format:
 ```
 
 #### 6.2 Video Playback with Annotations
+
 ```javascript
 // Video Review Component
 class InterviewVideoReview {
@@ -607,17 +626,17 @@ class InterviewVideoReview {
     this.responses = [];
     this.currentVideo = 0;
   }
-  
+
   async loadSession() {
     const response = await fetch(`/api/interview-session/${this.sessionId}`);
     const data = await response.json();
     this.responses = data.responses;
     this.renderVideoReview();
   }
-  
+
   renderVideoReview() {
     const container = document.getElementById('video-review-container');
-    
+
     this.responses.forEach((response, index) => {
       const videoCard = document.createElement('div');
       videoCard.className = 'video-review-card';
@@ -639,7 +658,7 @@ class InterviewVideoReview {
       container.appendChild(videoCard);
     });
   }
-  
+
   renderAnnotations(analysis) {
     return `
       <div class="annotation eye-contact">
@@ -659,6 +678,7 @@ class InterviewVideoReview {
 ## 🔧 Technical Requirements
 
 ### Dependencies to Add
+
 ```json
 {
   "dependencies": {
@@ -671,6 +691,7 @@ class InterviewVideoReview {
 ```
 
 ### Environment Variables
+
 ```env
 HUGGINGFACE_API_KEY=your_hf_api_key
 GOOGLE_CLOUD_PROJECT_ID=your_project_id
@@ -678,6 +699,7 @@ GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
 ```
 
 ### File Storage Structure
+
 ```
 /tmp/interview-videos/
 ├── session_123/
@@ -692,16 +714,19 @@ GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
 ## 📊 Success Metrics
 
 ### User Experience Metrics
+
 - Session completion rate > 80%
 - Average session duration matches expected time
 - User satisfaction score > 4.0/5.0
 
 ### Technical Performance Metrics
+
 - Video upload success rate > 95%
 - Analysis completion time < 5 minutes per session
 - Feedback accuracy (validated through user feedback)
 
 ### Business Metrics
+
 - Feature adoption rate
 - User retention after using mock interview
 - Correlation with job application success

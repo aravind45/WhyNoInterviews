@@ -2,7 +2,8 @@ const { Client } = require('pg');
 
 async function addPgTrgmExtension() {
   const client = new Client({
-    connectionString: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/database'
+    connectionString:
+      process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/database',
   });
 
   try {
@@ -16,7 +17,6 @@ async function addPgTrgmExtension() {
     // Test the extension
     const result = await client.query("SELECT similarity('hello', 'helo');");
     console.log('✅ Extension test successful:', result.rows[0]);
-
   } catch (error) {
     console.error('❌ Error:', error.message);
   } finally {

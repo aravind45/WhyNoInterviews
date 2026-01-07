@@ -3,9 +3,9 @@ import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function clearDatabase() {
-    const pool = getPool();
-    // Truncate user-generated data tables
-    await pool.query(`
+  const pool = getPool();
+  // Truncate user-generated data tables
+  await pool.query(`
     TRUNCATE TABLE 
       users, 
       user_sessions, 
@@ -26,27 +26,27 @@ export async function clearDatabase() {
 }
 
 export async function createTestUser(email = 'test@example.com', password = 'Password123') {
-    const pool = getPool();
-    const hash = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-        `INSERT INTO users (email, password_hash, full_name, is_verified) 
+  const pool = getPool();
+  const hash = await bcrypt.hash(password, 10);
+  const result = await pool.query(
+    `INSERT INTO users (email, password_hash, full_name, is_verified) 
      VALUES ($1, $2, 'Test User', true) 
      RETURNING *`,
-        [email, hash]
-    );
-    return result.rows[0];
+    [email, hash],
+  );
+  return result.rows[0];
 }
 
 export async function createTestSession(userId: string) {
-    const pool = getPool();
-    const sessionId = uuidv4();
-    const sessionToken = 'sess_' + sessionId;
+  const pool = getPool();
+  const sessionId = uuidv4();
+  const sessionToken = 'sess_' + sessionId;
 
-    const result = await pool.query(
-        `INSERT INTO user_sessions (session_token, user_id, expires_at)
+  const result = await pool.query(
+    `INSERT INTO user_sessions (session_token, user_id, expires_at)
          VALUES ($1, $2, NOW() + INTERVAL '1 day')
          RETURNING id, session_token`,
-        [sessionToken, userId]
-    );
-    return result.rows[0];
+    [sessionToken, userId],
+  );
+  return result.rows[0];
 }

@@ -21,14 +21,21 @@ const ATS_PLATFORMS = {
   successfactors: 'successfactors.com',
   ashby: 'ashbyhq.com',
   rippling: 'rippling.com',
-  deel: 'jobs.ashbyhq.com'
+  deel: 'jobs.ashbyhq.com',
 };
 
 // Location keywords for different work types
 const LOCATION_KEYWORDS = {
-  remote: ['remote', 'worldwide', 'work from anywhere', 'work from home', 'distributed', 'anywhere'],
+  remote: [
+    'remote',
+    'worldwide',
+    'work from anywhere',
+    'work from home',
+    'distributed',
+    'anywhere',
+  ],
   hybrid: ['hybrid', 'flexible', 'partial remote'],
-  onsite: [] // Will use actual city/location
+  onsite: [], // Will use actual city/location
 };
 
 export interface JobSearchConfig {
@@ -53,37 +60,46 @@ export interface GeneratedSearch {
  * Generate Boolean search string for job search
  */
 export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch => {
-  const { jobTitle, location, locationType, experienceLevel, platforms, excludeKeywords, includeKeywords } = config;
-  
+  const {
+    jobTitle,
+    location,
+    locationType,
+    experienceLevel,
+    platforms,
+    excludeKeywords,
+    includeKeywords,
+  } = config;
+
   // Build site: operators for ATS platforms
-  const selectedPlatforms = platforms && platforms.length > 0 
-    ? platforms 
-    : Object.keys(ATS_PLATFORMS);
-  
+  const selectedPlatforms =
+    platforms && platforms.length > 0 ? platforms : Object.keys(ATS_PLATFORMS);
+
   const siteOperators = selectedPlatforms
-    .map(p => `site:${ATS_PLATFORMS[p as keyof typeof ATS_PLATFORMS] || p}`)
+    .map((p) => `site:${ATS_PLATFORMS[p as keyof typeof ATS_PLATFORMS] || p}`)
     .join(' OR ');
-  
+
   // Build job title part
   const titlePart = `("${jobTitle}")`;
-  
+
   // Build location part
   let locationPart = '';
   if (locationType === 'remote') {
-    const remoteKeywords = LOCATION_KEYWORDS.remote.map(k => `"${k}"`).join(' OR ');
+    const remoteKeywords = LOCATION_KEYWORDS.remote.map((k) => `"${k}"`).join(' OR ');
     locationPart = `(${remoteKeywords})`;
   } else if (locationType === 'hybrid') {
-    const hybridKeywords = [...LOCATION_KEYWORDS.hybrid, ...LOCATION_KEYWORDS.remote].map(k => `"${k}"`).join(' OR ');
+    const hybridKeywords = [...LOCATION_KEYWORDS.hybrid, ...LOCATION_KEYWORDS.remote]
+      .map((k) => `"${k}"`)
+      .join(' OR ');
     locationPart = `(${hybridKeywords})`;
   } else if (locationType === 'onsite' && location) {
     locationPart = `("${location}")`;
   } else if (locationType === 'any') {
     if (location && location.toLowerCase() !== 'anywhere') {
-      const allKeywords = [...LOCATION_KEYWORDS.remote, location].map(k => `"${k}"`).join(' OR ');
+      const allKeywords = [...LOCATION_KEYWORDS.remote, location].map((k) => `"${k}"`).join(' OR ');
       locationPart = `(${allKeywords})`;
     }
   }
-  
+
   // Build experience level part
   let experiencePart = '';
   if (experienceLevel) {
@@ -92,27 +108,27 @@ export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch 
       mid: ['mid level', 'mid-level', '2-5 years', '3-5 years'],
       senior: ['senior', 'sr.', 'sr', '5+ years', '5-8 years'],
       lead: ['lead', 'principal', 'staff', '8+ years'],
-      executive: ['director', 'vp', 'vice president', 'head of', 'c-level', 'chief']
+      executive: ['director', 'vp', 'vice president', 'head of', 'c-level', 'chief'],
     };
-    
+
     if (expKeywords[experienceLevel]) {
-      experiencePart = `(${expKeywords[experienceLevel].map(k => `"${k}"`).join(' OR ')})`;
+      experiencePart = `(${expKeywords[experienceLevel].map((k) => `"${k}"`).join(' OR ')})`;
     }
   }
-  
+
   // Build exclusions
   let excludePart = '';
   if (excludeKeywords && excludeKeywords.length > 0) {
-    excludePart = excludeKeywords.map(k => `-"${k}"`).join(' ');
+    excludePart = excludeKeywords.map((k) => `-"${k}"`).join(' ');
   }
-  
+
   // Build inclusions
   let includePart = '';
   if (includeKeywords && includeKeywords.length > 0) {
-    includePart = includeKeywords.map(k => `"${k}"`).join(' OR ');
+    includePart = includeKeywords.map((k) => `"${k}"`).join(' OR ');
     includePart = `(${includePart})`;
   }
-  
+
   // Combine all parts
   const parts = [
     `(${siteOperators})`,
@@ -120,21 +136,21 @@ export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch 
     locationPart,
     experiencePart,
     includePart,
-    excludePart
-  ].filter(p => p.length > 0);
-  
+    excludePart,
+  ].filter((p) => p.length > 0);
+
   const booleanString = parts.join(' ');
-  
+
   // Generate Google search URLs
   const baseUrl = 'https://www.google.com/search?q=';
   const encodedQuery = encodeURIComponent(booleanString);
-  
+
   return {
     booleanString,
     searchUrl: `${baseUrl}${encodedQuery}`,
     searchUrlLast24h: `${baseUrl}${encodedQuery}&tbs=qdr:d`,
     searchUrlLastWeek: `${baseUrl}${encodedQuery}&tbs=qdr:w`,
-    platforms: selectedPlatforms
+    platforms: selectedPlatforms,
   };
 };
 
@@ -144,10 +160,10 @@ export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch 
 export const saveJobSearch = async (
   sessionId: string,
   diagnosisId: string | null,
-  config: JobSearchConfig
+  config: JobSearchConfig,
 ): Promise<{ id: string; search: GeneratedSearch }> => {
   const search = generateBooleanSearch(config);
-  
+
   const result = await query(
     `INSERT INTO job_searches (
       session_id, diagnosis_id, job_title, location, location_type,
@@ -162,18 +178,18 @@ export const saveJobSearch = async (
       config.locationType,
       config.experienceLevel || null,
       search.booleanString,
-      search.searchUrlLast24h
-    ]
+      search.searchUrlLast24h,
+    ],
   );
-  
-  logger.info('Job search saved', { 
-    searchId: result.rows[0].id, 
-    jobTitle: config.jobTitle 
+
+  logger.info('Job search saved', {
+    searchId: result.rows[0].id,
+    jobTitle: config.jobTitle,
   });
-  
+
   return {
     id: result.rows[0].id,
-    search
+    search,
   };
 };
 
@@ -188,10 +204,10 @@ export const getJobSearches = async (sessionId: string): Promise<any[]> => {
      FROM job_searches js
      WHERE js.session_id = $1 AND js.is_active = true
      ORDER BY js.created_at DESC`,
-    [sessionId]
+    [sessionId],
   );
-  
-  return result.rows.map(row => ({
+
+  return result.rows.map((row) => ({
     id: row.id,
     jobTitle: row.job_title,
     location: row.location,
@@ -204,7 +220,7 @@ export const getJobSearches = async (sessionId: string): Promise<any[]> => {
     lastRunAt: row.last_run_at,
     listingsCount: parseInt(row.listings_count),
     newListingsCount: parseInt(row.new_listings_count),
-    createdAt: row.created_at
+    createdAt: row.created_at,
   }));
 };
 
@@ -214,7 +230,7 @@ export const getJobSearches = async (sessionId: string): Promise<any[]> => {
 export const deleteJobSearch = async (searchId: string, sessionId: string): Promise<boolean> => {
   const result = await query(
     `UPDATE job_searches SET is_active = false WHERE id = $1 AND session_id = $2`,
-    [searchId, sessionId]
+    [searchId, sessionId],
   );
   return result.rowCount > 0;
 };
@@ -232,7 +248,15 @@ export interface JobApplication {
   location?: string;
   jobUrl?: string;
   atsPlatform?: string;
-  status: 'saved' | 'applied' | 'screening' | 'interviewing' | 'offer' | 'rejected' | 'withdrawn' | 'ghosted';
+  status:
+    | 'saved'
+    | 'applied'
+    | 'screening'
+    | 'interviewing'
+    | 'offer'
+    | 'rejected'
+    | 'withdrawn'
+    | 'ghosted';
   appliedDate: string;
   responseDate?: string;
   notes?: string;
@@ -266,16 +290,16 @@ export const addJobApplication = async (app: JobApplication): Promise<string> =>
       app.notes || null,
       app.resumeVersion || null,
       app.coverLetterUsed || false,
-      app.referralSource || null
-    ]
+      app.referralSource || null,
+    ],
   );
-  
-  logger.info('Job application added', { 
-    applicationId: result.rows[0].id, 
+
+  logger.info('Job application added', {
+    applicationId: result.rows[0].id,
     company: app.company,
-    status: app.status
+    status: app.status,
   });
-  
+
   return result.rows[0].id;
 };
 
@@ -286,27 +310,27 @@ export const updateApplicationStatus = async (
   applicationId: string,
   sessionId: string,
   status: JobApplication['status'],
-  notes?: string
+  notes?: string,
 ): Promise<boolean> => {
   const updates: string[] = ['status = $3', 'updated_at = NOW()'];
   const values: any[] = [applicationId, sessionId, status];
-  
+
   if (status === 'interviewing' || status === 'offer' || status === 'rejected') {
     updates.push(`response_date = COALESCE(response_date, CURRENT_DATE)`);
   }
-  
+
   if (notes !== undefined) {
     values.push(notes);
     updates.push(`notes = $${values.length}`);
   }
-  
+
   const result = await query(
     `UPDATE job_applications 
      SET ${updates.join(', ')}
      WHERE id = $1 AND session_id = $2`,
-    values
+    values,
   );
-  
+
   return result.rowCount > 0;
 };
 
@@ -315,34 +339,34 @@ export const updateApplicationStatus = async (
  */
 export const getApplications = async (
   sessionId: string,
-  filters?: { status?: string; fromDate?: string; toDate?: string }
+  filters?: { status?: string; fromDate?: string; toDate?: string },
 ): Promise<any[]> => {
   let whereClause = 'session_id = $1';
   const values: any[] = [sessionId];
-  
+
   if (filters?.status) {
     values.push(filters.status);
     whereClause += ` AND status = $${values.length}`;
   }
-  
+
   if (filters?.fromDate) {
     values.push(filters.fromDate);
     whereClause += ` AND applied_date >= $${values.length}`;
   }
-  
+
   if (filters?.toDate) {
     values.push(filters.toDate);
     whereClause += ` AND applied_date <= $${values.length}`;
   }
-  
+
   const result = await query(
     `SELECT * FROM job_applications 
      WHERE ${whereClause}
      ORDER BY applied_date DESC, created_at DESC`,
-    values
+    values,
   );
-  
-  return result.rows.map(row => ({
+
+  return result.rows.map((row) => ({
     id: row.id,
     jobTitle: row.job_title,
     company: row.company,
@@ -358,7 +382,7 @@ export const getApplications = async (
     referralSource: row.referral_source,
     salaryOffered: row.salary_offered,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   }));
 };
 
@@ -366,11 +390,8 @@ export const getApplications = async (
  * Get application statistics
  */
 export const getApplicationStats = async (sessionId: string): Promise<any> => {
-  const result = await query(
-    `SELECT * FROM application_stats WHERE session_id = $1`,
-    [sessionId]
-  );
-  
+  const result = await query(`SELECT * FROM application_stats WHERE session_id = $1`, [sessionId]);
+
   if (result.rows.length === 0) {
     return {
       totalApplications: 0,
@@ -382,10 +403,10 @@ export const getApplicationStats = async (sessionId: string): Promise<any> => {
       ghosted: 0,
       appliedLast7Days: 0,
       appliedLast30Days: 0,
-      interviewRate: 0
+      interviewRate: 0,
     };
   }
-  
+
   const row = result.rows[0];
   return {
     totalApplications: parseInt(row.total_applications),
@@ -399,18 +420,21 @@ export const getApplicationStats = async (sessionId: string): Promise<any> => {
     appliedLast30Days: parseInt(row.applied_last_30_days),
     interviewRate: parseFloat(row.interview_rate) || 0,
     firstApplication: row.first_application,
-    lastApplication: row.last_application
+    lastApplication: row.last_application,
   };
 };
 
 /**
  * Delete a job application
  */
-export const deleteApplication = async (applicationId: string, sessionId: string): Promise<boolean> => {
-  const result = await query(
-    `DELETE FROM job_applications WHERE id = $1 AND session_id = $2`,
-    [applicationId, sessionId]
-  );
+export const deleteApplication = async (
+  applicationId: string,
+  sessionId: string,
+): Promise<boolean> => {
+  const result = await query(`DELETE FROM job_applications WHERE id = $1 AND session_id = $2`, [
+    applicationId,
+    sessionId,
+  ]);
   return result.rowCount > 0;
 };
 
@@ -421,13 +445,13 @@ export const getQuickSearchUrls = (jobTitle: string): Record<string, string> => 
   const remoteSearch = generateBooleanSearch({
     jobTitle,
     location: 'remote',
-    locationType: 'remote'
+    locationType: 'remote',
   });
-  
+
   return {
     last24Hours: remoteSearch.searchUrlLast24h,
     lastWeek: remoteSearch.searchUrlLastWeek,
-    allTime: remoteSearch.searchUrl
+    allTime: remoteSearch.searchUrl,
   };
 };
 
@@ -442,5 +466,5 @@ export default {
   getApplicationStats,
   deleteApplication,
   getQuickSearchUrls,
-  ATS_PLATFORMS
+  ATS_PLATFORMS,
 };

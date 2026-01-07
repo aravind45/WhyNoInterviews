@@ -6,7 +6,7 @@ let pool: Pool | null = null;
 export const connectDatabase = async (): Promise<void> => {
   try {
     const connectionString = process.env.DATABASE_URL;
-    
+
     if (!connectionString) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
@@ -16,7 +16,7 @@ export const connectDatabase = async (): Promise<void> => {
 
     pool = new Pool({
       connectionString,
-      ssl: (isProduction || isNeonDb) ? { rejectUnauthorized: false } : false,
+      ssl: isProduction || isNeonDb ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
@@ -30,7 +30,7 @@ export const connectDatabase = async (): Promise<void> => {
     logger.info('PostgreSQL connected successfully', {
       database: result.rows[0].db,
       serverTime: result.rows[0].now,
-      ssl: isProduction || isNeonDb
+      ssl: isProduction || isNeonDb,
     });
   } catch (error) {
     logger.error('Failed to connect to PostgreSQL:', error);
@@ -45,7 +45,10 @@ export const getPool = (): Pool => {
   return pool;
 };
 
-export const query = async <T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
+export const query = async <T extends QueryResultRow = any>(
+  text: string,
+  params?: any[],
+): Promise<QueryResult<T>> => {
   if (!pool) {
     throw new Error('Database pool not initialized');
   }
@@ -73,11 +76,9 @@ export const getClient = async (): Promise<PoolClient> => {
   return pool.connect();
 };
 
-export const transaction = async <T>(
-  callback: (client: PoolClient) => Promise<T>
-): Promise<T> => {
+export const transaction = async <T>(callback: (client: PoolClient) => Promise<T>): Promise<T> => {
   const client = await getClient();
-  
+
   try {
     await client.query('BEGIN');
     const result = await callback(client);
@@ -105,5 +106,5 @@ export default {
   query,
   getClient,
   transaction,
-  closeDatabase
+  closeDatabase,
 };

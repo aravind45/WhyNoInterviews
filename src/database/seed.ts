@@ -33,7 +33,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'Developer', confidence: 70 },
       { variation: 'Software Dev', confidence: 85 },
       { variation: 'Application Developer', confidence: 80 },
-      { variation: 'Coder', confidence: 60 }
+      { variation: 'Coder', confidence: 60 },
     ],
     requiredSkills: ['Programming', 'Problem Solving', 'Software Development', 'Version Control'],
     preferredSkills: ['Agile', 'Git', 'Testing', 'Code Review', 'CI/CD'],
@@ -41,7 +41,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['software engineer', 'development', 'programming', 'agile', 'scrum'],
     experienceLevelMin: 2,
     experienceLevelMax: 5,
-    educationRequirements: ['Computer Science', 'Software Engineering', 'Related Field']
+    educationRequirements: ['Computer Science', 'Software Engineering', 'Related Field'],
   },
   {
     title: 'Senior Software Engineer',
@@ -55,15 +55,20 @@ const seedData: SeedJobTitle[] = [
       { variation: 'Sr. Software Engineer', confidence: 95 },
       { variation: 'Sr Software Developer', confidence: 90 },
       { variation: 'Lead Developer', confidence: 80 },
-      { variation: 'Staff Engineer', confidence: 75 }
+      { variation: 'Staff Engineer', confidence: 75 },
     ],
     requiredSkills: ['Programming', 'System Design', 'Architecture', 'Leadership', 'Mentoring'],
-    preferredSkills: ['Technical Leadership', 'Performance Optimization', 'Team Leadership', 'Code Review'],
+    preferredSkills: [
+      'Technical Leadership',
+      'Performance Optimization',
+      'Team Leadership',
+      'Code Review',
+    ],
     requiredKeywords: ['senior', 'software', 'engineering', 'architecture', 'leadership'],
     atsKeywords: ['senior software engineer', 'technical lead', 'system design', 'mentoring'],
     experienceLevelMin: 5,
     experienceLevelMax: 10,
-    educationRequirements: ['Computer Science', 'Software Engineering']
+    educationRequirements: ['Computer Science', 'Software Engineering'],
   },
   {
     title: 'Frontend Developer',
@@ -77,7 +82,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'Web Developer', confidence: 75 },
       { variation: 'JavaScript Developer', confidence: 80 },
       { variation: 'React Developer', confidence: 85 },
-      { variation: 'Frontend Engineer', confidence: 95 }
+      { variation: 'Frontend Engineer', confidence: 95 },
     ],
     requiredSkills: ['HTML', 'CSS', 'JavaScript', 'React', 'Responsive Design'],
     preferredSkills: ['TypeScript', 'Vue', 'Angular', 'Webpack', 'SASS', 'Testing'],
@@ -85,7 +90,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['frontend developer', 'react', 'javascript', 'css', 'responsive'],
     experienceLevelMin: 2,
     experienceLevelMax: 5,
-    educationRequirements: ['Computer Science', 'Web Development', 'Related Field']
+    educationRequirements: ['Computer Science', 'Web Development', 'Related Field'],
   },
   {
     title: 'Backend Developer',
@@ -98,7 +103,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'Server Developer', confidence: 80 },
       { variation: 'API Developer', confidence: 85 },
       { variation: 'Backend Engineer', confidence: 95 },
-      { variation: 'Server-side Developer', confidence: 85 }
+      { variation: 'Server-side Developer', confidence: 85 },
     ],
     requiredSkills: ['Server Programming', 'Database Design', 'API Development', 'SQL'],
     preferredSkills: ['Microservices', 'Docker', 'Cloud Platforms', 'DevOps', 'NoSQL'],
@@ -106,7 +111,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['backend developer', 'api', 'database', 'microservices', 'cloud'],
     experienceLevelMin: 2,
     experienceLevelMax: 5,
-    educationRequirements: ['Computer Science', 'Software Engineering']
+    educationRequirements: ['Computer Science', 'Software Engineering'],
   },
   {
     title: 'Full Stack Developer',
@@ -118,7 +123,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'Full-Stack Developer', confidence: 95 },
       { variation: 'Fullstack Developer', confidence: 95 },
       { variation: 'Full Stack Engineer', confidence: 95 },
-      { variation: 'Web Application Developer', confidence: 80 }
+      { variation: 'Web Application Developer', confidence: 80 },
     ],
     requiredSkills: ['Frontend Development', 'Backend Development', 'Database', 'API Design'],
     preferredSkills: ['DevOps', 'Cloud', 'Testing', 'CI/CD'],
@@ -126,7 +131,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['full stack', 'react', 'node', 'database', 'api'],
     experienceLevelMin: 3,
     experienceLevelMax: 7,
-    educationRequirements: ['Computer Science', 'Software Engineering']
+    educationRequirements: ['Computer Science', 'Software Engineering'],
   },
   // Data & Analytics
   {
@@ -139,7 +144,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'ML Engineer', confidence: 80 },
       { variation: 'Machine Learning Engineer', confidence: 85 },
       { variation: 'Data Science Engineer', confidence: 90 },
-      { variation: 'Applied Scientist', confidence: 75 }
+      { variation: 'Applied Scientist', confidence: 75 },
     ],
     requiredSkills: ['Python', 'Statistics', 'Machine Learning', 'Data Analysis', 'SQL'],
     preferredSkills: ['TensorFlow', 'PyTorch', 'R', 'Jupyter', 'Deep Learning', 'NLP'],
@@ -147,7 +152,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['data scientist', 'machine learning', 'python', 'statistics', 'modeling'],
     experienceLevelMin: 2,
     experienceLevelMax: 6,
-    educationRequirements: ['Computer Science', 'Statistics', 'Mathematics', 'PhD preferred']
+    educationRequirements: ['Computer Science', 'Statistics', 'Mathematics', 'PhD preferred'],
   },
   {
     title: 'Data Analyst',
@@ -159,7 +164,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'Business Analyst', confidence: 75 },
       { variation: 'Analytics Specialist', confidence: 85 },
       { variation: 'Data Analytics Specialist', confidence: 90 },
-      { variation: 'Reporting Analyst', confidence: 70 }
+      { variation: 'Reporting Analyst', confidence: 70 },
     ],
     requiredSkills: ['SQL', 'Excel', 'Data Visualization', 'Statistical Analysis'],
     preferredSkills: ['Python', 'Tableau', 'Power BI', 'R', 'A/B Testing'],
@@ -167,7 +172,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['data analyst', 'sql', 'tableau', 'excel', 'reporting'],
     experienceLevelMin: 1,
     experienceLevelMax: 4,
-    educationRequirements: ['Statistics', 'Mathematics', 'Business', 'Economics']
+    educationRequirements: ['Statistics', 'Mathematics', 'Business', 'Economics'],
   },
   {
     title: 'Data Engineer',
@@ -178,7 +183,7 @@ const seedData: SeedJobTitle[] = [
     variations: [
       { variation: 'ETL Developer', confidence: 80 },
       { variation: 'Data Pipeline Engineer', confidence: 90 },
-      { variation: 'Big Data Engineer', confidence: 85 }
+      { variation: 'Big Data Engineer', confidence: 85 },
     ],
     requiredSkills: ['Python', 'SQL', 'ETL', 'Data Warehousing', 'Big Data'],
     preferredSkills: ['Spark', 'Airflow', 'Kafka', 'AWS', 'Snowflake'],
@@ -186,7 +191,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['data engineer', 'etl', 'spark', 'airflow', 'data pipeline'],
     experienceLevelMin: 2,
     experienceLevelMax: 6,
-    educationRequirements: ['Computer Science', 'Data Engineering']
+    educationRequirements: ['Computer Science', 'Data Engineering'],
   },
   // Product & Design
   {
@@ -199,15 +204,20 @@ const seedData: SeedJobTitle[] = [
       { variation: 'PM', confidence: 90 },
       { variation: 'Product Owner', confidence: 85 },
       { variation: 'Product Lead', confidence: 80 },
-      { variation: 'Technical Product Manager', confidence: 85 }
+      { variation: 'Technical Product Manager', confidence: 85 },
     ],
-    requiredSkills: ['Product Strategy', 'Roadmap Planning', 'Stakeholder Management', 'User Research'],
+    requiredSkills: [
+      'Product Strategy',
+      'Roadmap Planning',
+      'Stakeholder Management',
+      'User Research',
+    ],
     preferredSkills: ['Agile', 'Analytics', 'A/B Testing', 'SQL', 'Data Analysis'],
     requiredKeywords: ['product management', 'strategy', 'roadmap', 'stakeholder', 'requirements'],
     atsKeywords: ['product manager', 'roadmap', 'agile', 'stakeholder', 'requirements'],
     experienceLevelMin: 3,
     experienceLevelMax: 7,
-    educationRequirements: ['Business', 'Computer Science', 'MBA preferred']
+    educationRequirements: ['Business', 'Computer Science', 'MBA preferred'],
   },
   {
     title: 'UX Designer',
@@ -219,7 +229,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'User Experience Designer', confidence: 95 },
       { variation: 'UX/UI Designer', confidence: 90 },
       { variation: 'Product Designer', confidence: 85 },
-      { variation: 'Interaction Designer', confidence: 80 }
+      { variation: 'Interaction Designer', confidence: 80 },
     ],
     requiredSkills: ['User Research', 'Wireframing', 'Prototyping', 'Usability Testing'],
     preferredSkills: ['Figma', 'Sketch', 'Adobe XD', 'Design Systems', 'HTML/CSS'],
@@ -227,7 +237,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['ux designer', 'figma', 'user research', 'prototype', 'wireframe'],
     experienceLevelMin: 2,
     experienceLevelMax: 5,
-    educationRequirements: ['Design', 'HCI', 'Psychology', 'Related Field']
+    educationRequirements: ['Design', 'HCI', 'Psychology', 'Related Field'],
   },
   // DevOps & Infrastructure
   {
@@ -240,7 +250,7 @@ const seedData: SeedJobTitle[] = [
       { variation: 'Site Reliability Engineer', confidence: 85 },
       { variation: 'SRE', confidence: 85 },
       { variation: 'Platform Engineer', confidence: 80 },
-      { variation: 'Infrastructure Engineer', confidence: 80 }
+      { variation: 'Infrastructure Engineer', confidence: 80 },
     ],
     requiredSkills: ['CI/CD', 'Cloud Platforms', 'Containerization', 'Infrastructure as Code'],
     preferredSkills: ['Kubernetes', 'Terraform', 'AWS', 'Docker', 'Monitoring'],
@@ -248,7 +258,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['devops engineer', 'kubernetes', 'aws', 'terraform', 'docker'],
     experienceLevelMin: 3,
     experienceLevelMax: 7,
-    educationRequirements: ['Computer Science', 'IT', 'Systems Engineering']
+    educationRequirements: ['Computer Science', 'IT', 'Systems Engineering'],
   },
   // Generic titles that need specialization
   {
@@ -257,16 +267,14 @@ const seedData: SeedJobTitle[] = [
     seniorityLevel: 'Mid',
     industry: 'General',
     isGeneric: true,
-    variations: [
-      { variation: 'Mgr', confidence: 90 }
-    ],
+    variations: [{ variation: 'Mgr', confidence: 90 }],
     requiredSkills: ['Leadership', 'Communication', 'Team Management'],
     preferredSkills: ['Project Management', 'Budgeting', 'Strategic Planning'],
     requiredKeywords: ['management', 'leadership', 'team'],
     atsKeywords: ['manager', 'leadership', 'team management'],
     experienceLevelMin: 3,
     experienceLevelMax: 10,
-    educationRequirements: ['Business', 'Related Field']
+    educationRequirements: ['Business', 'Related Field'],
   },
   {
     title: 'Developer',
@@ -274,16 +282,14 @@ const seedData: SeedJobTitle[] = [
     seniorityLevel: 'Mid',
     industry: 'Technology',
     isGeneric: true,
-    variations: [
-      { variation: 'Dev', confidence: 90 }
-    ],
+    variations: [{ variation: 'Dev', confidence: 90 }],
     requiredSkills: ['Programming', 'Problem Solving'],
     preferredSkills: ['Version Control', 'Testing'],
     requiredKeywords: ['development', 'programming'],
     atsKeywords: ['developer', 'programming', 'software'],
     experienceLevelMin: 1,
     experienceLevelMax: 5,
-    educationRequirements: ['Computer Science', 'Related Field']
+    educationRequirements: ['Computer Science', 'Related Field'],
   },
   {
     title: 'Engineer',
@@ -298,7 +304,7 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['engineer', 'technical'],
     experienceLevelMin: 1,
     experienceLevelMax: 5,
-    educationRequirements: ['Engineering', 'Related Field']
+    educationRequirements: ['Engineering', 'Related Field'],
   },
   {
     title: 'Analyst',
@@ -313,13 +319,14 @@ const seedData: SeedJobTitle[] = [
     atsKeywords: ['analyst', 'analysis', 'reporting'],
     experienceLevelMin: 1,
     experienceLevelMax: 5,
-    educationRequirements: ['Business', 'Related Field']
-  }
+    educationRequirements: ['Business', 'Related Field'],
+  },
 ];
 
 const seedJobTitle = async (client: PoolClient, jobData: SeedJobTitle): Promise<void> => {
   // Insert canonical job title
-  const jobResult = await client.query(`
+  const jobResult = await client.query(
+    `
     INSERT INTO canonical_job_titles (title, category, seniority_level, industry, is_generic)
     VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT (title) DO UPDATE SET
@@ -329,22 +336,28 @@ const seedJobTitle = async (client: PoolClient, jobData: SeedJobTitle): Promise<
       is_generic = EXCLUDED.is_generic,
       updated_at = NOW()
     RETURNING id
-  `, [jobData.title, jobData.category, jobData.seniorityLevel, jobData.industry, jobData.isGeneric]);
+  `,
+    [jobData.title, jobData.category, jobData.seniorityLevel, jobData.industry, jobData.isGeneric],
+  );
 
   const canonicalId = jobResult.rows[0].id;
 
   // Insert variations
   for (const variation of jobData.variations) {
-    await client.query(`
+    await client.query(
+      `
       INSERT INTO job_title_variations (canonical_id, variation, confidence_score)
       VALUES ($1, $2, $3)
       ON CONFLICT (canonical_id, variation) DO UPDATE SET
         confidence_score = EXCLUDED.confidence_score
-    `, [canonicalId, variation.variation, variation.confidence]);
+    `,
+      [canonicalId, variation.variation, variation.confidence],
+    );
   }
 
   // Insert role template
-  await client.query(`
+  await client.query(
+    `
     INSERT INTO role_templates (
       canonical_job_id, required_skills, preferred_skills, required_keywords,
       ats_keywords, experience_level_min, experience_level_max, education_requirements
@@ -359,24 +372,26 @@ const seedJobTitle = async (client: PoolClient, jobData: SeedJobTitle): Promise<
       experience_level_max = EXCLUDED.experience_level_max,
       education_requirements = EXCLUDED.education_requirements,
       updated_at = NOW()
-  `, [
-    canonicalId,
-    jobData.requiredSkills,
-    jobData.preferredSkills,
-    jobData.requiredKeywords,
-    jobData.atsKeywords,
-    jobData.experienceLevelMin,
-    jobData.experienceLevelMax || null,
-    jobData.educationRequirements
-  ]);
+  `,
+    [
+      canonicalId,
+      jobData.requiredSkills,
+      jobData.preferredSkills,
+      jobData.requiredKeywords,
+      jobData.atsKeywords,
+      jobData.experienceLevelMin,
+      jobData.experienceLevelMax || null,
+      jobData.educationRequirements,
+    ],
+  );
 };
 
 export const seedDatabase = async (): Promise<{ seeded: number }> => {
   let seeded = 0;
-  
+
   await transaction(async (client) => {
     logger.info('Starting database seeding...');
-    
+
     for (const jobData of seedData) {
       try {
         await seedJobTitle(client, jobData);
@@ -387,10 +402,10 @@ export const seedDatabase = async (): Promise<{ seeded: number }> => {
         throw error;
       }
     }
-    
+
     logger.info(`Database seeding completed: ${seeded} job titles`);
   });
-  
+
   return { seeded };
 };
 

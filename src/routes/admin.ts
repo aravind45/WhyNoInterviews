@@ -38,8 +38,8 @@ router.get('/stats', async (req: Request, res: Response) => {
         totalUsers: parseInt(usersRes.rows[0]?.count || '0'),
         totalAnalyses: parseInt(analysesRes.rows[0]?.count || '0'),
         last24hAnalyses: parseInt(recentRes.rows[0]?.count || '0'),
-        recentUsers: recentUsers.rows
-      }
+        recentUsers: recentUsers.rows,
+      },
     });
   } catch (error: any) {
     logger.error('Admin stats error:', error);
@@ -105,12 +105,15 @@ router.post('/config', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Key and value required' });
     }
 
-    await query(`
+    await query(
+      `
             INSERT INTO system_settings (key, value, updated_at)
             VALUES ($1, $2, NOW())
             ON CONFLICT (key) 
             DO UPDATE SET value = $2, updated_at = NOW()
-        `, [key, String(value)]);
+        `,
+      [key, String(value)],
+    );
 
     res.json({ success: true, message: 'Config updated' });
   } catch (error: any) {

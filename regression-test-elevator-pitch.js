@@ -6,11 +6,11 @@ console.log('🔍 Running Regression Test for Elevator Pitch Enhancement...\n');
 // Test checklist
 const tests = [
   'Navigation tabs still switch correctly',
-  'Login/Signup still works', 
+  'Login/Signup still works',
   'Resume Analyze still triggers and returns results',
   'Cover Letter generation still works',
   'Referral message generation still works',
-  'Elevator Pitch generation still works and now follows 4-question framework'
+  'Elevator Pitch generation still works and now follows 4-question framework',
 ];
 
 console.log('📋 VERIFICATION CHECKLIST:');
@@ -45,7 +45,9 @@ console.log('4. How can I help the company? - Specific value for this role');
 console.log('');
 
 console.log('📝 EXAMPLE OUTPUT (75-120 words):');
-console.log('"I\'m a Senior Software Engineer with 5+ years building scalable web applications. I solve complex technical challenges by architecting robust systems that reduce downtime and improve user experience - like when I led a team that decreased page load times by 40% and increased user retention by 25%. What sets me apart is my combination of deep technical expertise and business acumen, allowing me to translate requirements into efficient solutions. For this role at TechCorp, I can leverage my experience with React and Node.js to help accelerate your product development while maintaining the high-quality standards your users expect."');
+console.log(
+  '"I\'m a Senior Software Engineer with 5+ years building scalable web applications. I solve complex technical challenges by architecting robust systems that reduce downtime and improve user experience - like when I led a team that decreased page load times by 40% and increased user retention by 25%. What sets me apart is my combination of deep technical expertise and business acumen, allowing me to translate requirements into efficient solutions. For this role at TechCorp, I can leverage my experience with React and Node.js to help accelerate your product development while maintaining the high-quality standards your users expect."',
+);
 console.log('');
 
 console.log('⚠️  CRITICAL: Test all functionality manually in browser');

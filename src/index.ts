@@ -28,7 +28,7 @@ const app = express();
 
 // Initialize database connection
 if (process.env.NODE_ENV !== 'test') {
-  connectDatabase().catch(err => {
+  connectDatabase().catch((err) => {
     console.error('Failed to connect to database:', err);
   });
 
@@ -71,7 +71,6 @@ import mockInterviewRouter from './routes/mockInterview';
 import configRouter from './routes/config';
 app.use('/api', mockInterviewRouter); // Routes in file are like /interview-session
 app.use('/api', configRouter); // Config endpoint
-
 
 const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -128,7 +127,7 @@ ${resumeText.substring(0, 6000)}
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
-      max_tokens: 1500
+      max_tokens: 1500,
     });
 
     const responseText = completion.choices[0]?.message?.content || '';
@@ -148,80 +147,88 @@ ${resumeText.substring(0, 6000)}
 // ============================================================
 
 logger.info('✅ Registering analyze-match route');
-app.post('/api/analyze-match', paywallMiddleware, checkLifetimeLimit, upload.single('resume'), async (req, res) => {
-  let filePath = '';
+app.post(
+  '/api/analyze-match',
+  paywallMiddleware,
+  checkLifetimeLimit,
+  upload.single('resume'),
+  async (req, res) => {
+    let filePath = '';
 
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: 'Resume file is required' });
-    }
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'Resume file is required' });
+      }
 
-    const jobDescription = req.body.jobDescription;
-    if (!jobDescription || jobDescription.length < 50) {
-      return res.status(400).json({ success: false, error: 'Job description is required (minimum 50 characters)' });
-    }
+      const jobDescription = req.body.jobDescription;
+      if (!jobDescription || jobDescription.length < 50) {
+        return res
+          .status(400)
+          .json({ success: false, error: 'Job description is required (minimum 50 characters)' });
+      }
 
-    filePath = req.file.path;
-    const resumeText = await parseResume(filePath, req.file.mimetype);
+      filePath = req.file.path;
+      const resumeText = await parseResume(filePath, req.file.mimetype);
 
-    if (!resumeText || resumeText.trim().length < 50) {
-      return res.status(400).json({ success: false, error: 'Could not extract text from resume' });
-    }
+      if (!resumeText || resumeText.trim().length < 50) {
+        return res
+          .status(400)
+          .json({ success: false, error: 'Could not extract text from resume' });
+      }
 
-    const sessionToken = req.body.sessionId || 'sess_' + Math.random().toString(36).substring(2);
-    const pool = getPool();
+      const sessionToken = req.body.sessionId || 'sess_' + Math.random().toString(36).substring(2);
+      const pool = getPool();
 
-    // Get or create session UUID
-    let sessionResult = await pool.query(
-      'SELECT id FROM user_sessions WHERE session_id = $1',
-      [sessionToken]
-    );
+      // Get or create session UUID
+      let sessionResult = await pool.query('SELECT id FROM user_sessions WHERE session_id = $1', [
+        sessionToken,
+      ]);
 
-    let sessionUuid;
-    if (sessionResult.rows.length === 0) {
-      const newSession = await pool.query(
-        `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at, is_active)
+      let sessionUuid;
+      if (sessionResult.rows.length === 0) {
+        const newSession = await pool.query(
+          `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at, is_active)
          VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', true)
          RETURNING id`,
-        [sessionToken, req.ip || '127.0.0.1', req.get('user-agent') || 'Unknown']
-      );
-      sessionUuid = newSession.rows[0].id;
-    } else {
-      sessionUuid = sessionResult.rows[0].id;
-    }
+          [sessionToken, req.ip || '127.0.0.1', req.get('user-agent') || 'Unknown'],
+        );
+        sessionUuid = newSession.rows[0].id;
+      } else {
+        sessionUuid = sessionResult.rows[0].id;
+      }
 
-    // Calculate file hash for deduplication and caching
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-    const jobHash = crypto.createHash('sha256').update(jobDescription).digest('hex');
+      // Calculate file hash for deduplication and caching
+      const fileBuffer = fs.readFileSync(req.file.path);
+      const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+      const jobHash = crypto.createHash('sha256').update(jobDescription).digest('hex');
 
-    // Check if we already analyzed this exact resume + job combo
-    const cacheCheck = await pool.query(
-      `SELECT dr.* FROM diagnosis_results dr
+      // Check if we already analyzed this exact resume + job combo
+      const cacheCheck = await pool.query(
+        `SELECT dr.* FROM diagnosis_results dr
        JOIN resume_analyses ra ON dr.analysis_id = ra.id
        WHERE ra.session_id = $1 AND ra.file_hash = $2
        AND ra.job_description = $3
        AND ra.created_at > NOW() - INTERVAL '7 days'
        ORDER BY ra.created_at DESC LIMIT 1`,
-      [sessionUuid, fileHash, jobDescription]
-    );
+        [sessionUuid, fileHash, jobDescription],
+      );
 
-    if (cacheCheck.rows.length > 0) {
-      console.log('✅ Returning cached analysis');
-      const cached = cacheCheck.rows[0];
-      return res.json({
-        success: true,
-        data: JSON.parse(cached.confidence_explanation),
-        sessionId: sessionToken,
-        cached: true
-      });
-    }
+      if (cacheCheck.rows.length > 0) {
+        console.log('✅ Returning cached analysis');
+        const cached = cacheCheck.rows[0];
+        return res.json({
+          success: true,
+          data: JSON.parse(cached.confidence_explanation),
+          sessionId: sessionToken,
+          cached: true,
+        });
+      }
 
-    // Store for in-memory session (backward compatibility)
-    sessions[sessionToken] = sessions[sessionToken] || {};
-    sessions[sessionToken].resumeText = resumeText;
+      // Store for in-memory session (backward compatibility)
+      sessions[sessionToken] = sessions[sessionToken] || {};
+      sessions[sessionToken].resumeText = resumeText;
 
-    const prompt = `You are an expert career coach and hiring manager who has reviewed 10,000+ resumes. You are famous for your "Empathetic Realism"—you tell candidates the brutal truth about why they aren't getting interviews, but you do it because you want them to win. You provide the exact blueprint they need to fix their resume and stand out.
+      const prompt = `You are an expert career coach and hiring manager who has reviewed 10,000+ resumes. You are famous for your "Empathetic Realism"—you tell candidates the brutal truth about why they aren't getting interviews, but you do it because you want them to win. You provide the exact blueprint they need to fix their resume and stand out.
 
 RESUME:
 ${resumeText.substring(0, 5000)}
@@ -311,222 +318,206 @@ Return ONLY this JSON:
   }
 }`;
 
-    // Get LLM provider from request or use default
-    let selectedProvider = 'groq'; // Default fallback
-    let modelUsed = GROQ_MODEL;
-    let responseText = '';
+      // Get LLM provider from request or use default
+      let selectedProvider = 'groq'; // Default fallback
+      let modelUsed = GROQ_MODEL;
+      let responseText = '';
 
-    try {
-      const { getProvider, getDefaultProvider } = require('./services/llmProvider');
-      selectedProvider = req.body.llmProvider || getDefaultProvider();
+      try {
+        const { getProvider, getDefaultProvider } = require('./services/llmProvider');
+        selectedProvider = req.body.llmProvider || getDefaultProvider();
 
-      console.log(`📊 Using LLM provider: ${selectedProvider}`);
+        console.log(`📊 Using LLM provider: ${selectedProvider}`);
 
-      if (selectedProvider === 'claude') {
-        // Use Claude
-        console.log('🤖 Calling Claude API...');
+        if (selectedProvider === 'claude') {
+          // Use Claude
+          console.log('🤖 Calling Claude API...');
 
-        if (!process.env.ANTHROPIC_API_KEY) {
-          console.warn('⚠️  ANTHROPIC_API_KEY not set, falling back to Groq');
-          selectedProvider = 'groq';
-        } else {
-          try {
-            // Import Anthropic SDK (CommonJS syntax)
-            const Anthropic = require('@anthropic-ai/sdk');
-
-            const apiKey = process.env.ANTHROPIC_API_KEY;
-            console.log('✓ Anthropic SDK loaded');
-            console.log(`✓ API Key format check: starts with 'sk-ant-' = ${apiKey.startsWith('sk-ant-')}, length = ${apiKey.length}`);
-
-            const claude = new Anthropic({ apiKey });
-            const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
-
-            console.log(`✓ Calling Claude with model: ${claudeModel}`);
-
-            const response = await claude.messages.create({
-              model: claudeModel,
-              max_tokens: 4000,
-              temperature: 0.3,
-              messages: [{ role: 'user', content: prompt }]
-            });
-
-            const content = response.content[0];
-            responseText = content.type === 'text' ? content.text : '';
-            modelUsed = claudeModel;
-            console.log('✅ Claude response received');
-          } catch (claudeError: any) {
-            console.error('❌ Claude API Error:', claudeError.message);
-            if (claudeError.status) {
-              console.error(`   HTTP Status: ${claudeError.status}`);
-            }
-            if (claudeError.error) {
-              console.error(`   Error details:`, JSON.stringify(claudeError.error));
-            }
-            console.log('   Falling back to Groq...');
-            // Fall back to Groq
+          if (!process.env.ANTHROPIC_API_KEY) {
+            console.warn('⚠️  ANTHROPIC_API_KEY not set, falling back to Groq');
             selectedProvider = 'groq';
+          } else {
+            try {
+              // Import Anthropic SDK (CommonJS syntax)
+              const Anthropic = require('@anthropic-ai/sdk');
+
+              const apiKey = process.env.ANTHROPIC_API_KEY;
+              console.log('✓ Anthropic SDK loaded');
+              console.log(
+                `✓ API Key format check: starts with 'sk-ant-' = ${apiKey.startsWith('sk-ant-')}, length = ${apiKey.length}`,
+              );
+
+              const claude = new Anthropic({ apiKey });
+              const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
+
+              console.log(`✓ Calling Claude with model: ${claudeModel}`);
+
+              const response = await claude.messages.create({
+                model: claudeModel,
+                max_tokens: 4000,
+                temperature: 0.3,
+                messages: [{ role: 'user', content: prompt }],
+              });
+
+              const content = response.content[0];
+              responseText = content.type === 'text' ? content.text : '';
+              modelUsed = claudeModel;
+              console.log('✅ Claude response received');
+            } catch (claudeError: any) {
+              console.error('❌ Claude API Error:', claudeError.message);
+              if (claudeError.status) {
+                console.error(`   HTTP Status: ${claudeError.status}`);
+              }
+              if (claudeError.error) {
+                console.error(`   Error details:`, JSON.stringify(claudeError.error));
+              }
+              console.log('   Falling back to Groq...');
+              // Fall back to Groq
+              selectedProvider = 'groq';
+            }
           }
         }
-      }
 
-      if (selectedProvider === 'openai') {
-        // Use OpenAI
-        console.log('🤖 Calling OpenAI API...');
+        if (selectedProvider === 'openai') {
+          // Use OpenAI
+          console.log('🤖 Calling OpenAI API...');
 
-        if (!process.env.OPENAI_API_KEY) {
-          console.warn('⚠️  OPENAI_API_KEY not set, falling back to Groq');
-          selectedProvider = 'groq';
-        } else {
-          try {
-            const OpenAI = require('openai');
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-            const openaiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-
-            console.log('✓ OpenAI SDK loaded');
-            console.log(`✓ Calling OpenAI with model: ${openaiModel}`);
-
-            const response = await openai.chat.completions.create({
-              model: openaiModel,
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0.3,
-              max_tokens: 4000,
-              response_format: { type: 'json_object' }
-            });
-
-            responseText = response.choices[0]?.message?.content || '';
-            modelUsed = openaiModel;
-            console.log('✅ OpenAI response received');
-          } catch (openaiError: any) {
-            console.error('❌ OpenAI API Error:', openaiError.message);
-            if (openaiError.status) {
-              console.error(`   HTTP Status: ${openaiError.status}`);
-            }
-            if (openaiError.error) {
-              console.error(`   Error details:`, JSON.stringify(openaiError.error));
-            }
-            console.log('   Falling back to Groq...');
+          if (!process.env.OPENAI_API_KEY) {
+            console.warn('⚠️  OPENAI_API_KEY not set, falling back to Groq');
             selectedProvider = 'groq';
+          } else {
+            try {
+              const OpenAI = require('openai');
+              const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+              const openaiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+              console.log('✓ OpenAI SDK loaded');
+              console.log(`✓ Calling OpenAI with model: ${openaiModel}`);
+
+              const response = await openai.chat.completions.create({
+                model: openaiModel,
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.3,
+                max_tokens: 4000,
+                response_format: { type: 'json_object' },
+              });
+
+              responseText = response.choices[0]?.message?.content || '';
+              modelUsed = openaiModel;
+              console.log('✅ OpenAI response received');
+            } catch (openaiError: any) {
+              console.error('❌ OpenAI API Error:', openaiError.message);
+              if (openaiError.status) {
+                console.error(`   HTTP Status: ${openaiError.status}`);
+              }
+              if (openaiError.error) {
+                console.error(`   Error details:`, JSON.stringify(openaiError.error));
+              }
+              console.log('   Falling back to Groq...');
+              selectedProvider = 'groq';
+            }
           }
         }
-      }
 
-      if (selectedProvider === 'groq') {
-        // Use Groq (default or fallback)
-        console.log('🤖 Calling Groq API...');
-        console.log(`✓ Using Groq model: ${GROQ_MODEL}`);
+        if (selectedProvider === 'groq') {
+          // Use Groq (default or fallback)
+          console.log('🤖 Calling Groq API...');
+          console.log(`✓ Using Groq model: ${GROQ_MODEL}`);
 
+          const completion = await groq.chat.completions.create({
+            model: GROQ_MODEL,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+            max_tokens: 3000,
+          });
+
+          responseText = completion.choices[0]?.message?.content || '';
+          modelUsed = GROQ_MODEL;
+          selectedProvider = 'groq';
+          console.log('✅ Groq response received');
+        }
+      } catch (llmError: any) {
+        console.error('❌ LLM Error:', llmError.message);
+        // Fallback to Groq if there's any error with provider selection
+        console.log('⚠️  Falling back to Groq due to error');
         const completion = await groq.chat.completions.create({
           model: GROQ_MODEL,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3,
-          max_tokens: 3000
+          max_tokens: 3000,
         });
 
         responseText = completion.choices[0]?.message?.content || '';
         modelUsed = GROQ_MODEL;
         selectedProvider = 'groq';
-        console.log('✅ Groq response received');
       }
-    } catch (llmError: any) {
-      console.error('❌ LLM Error:', llmError.message);
-      // Fallback to Groq if there's any error with provider selection
-      console.log('⚠️  Falling back to Groq due to error');
-      const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 3000
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+      if (!jsonMatch) {
+        throw new Error('Failed to analyze');
+      }
+
+      const analysis = JSON.parse(jsonMatch[0]);
+
+      // Extract profile for skill-based scoring
+      const profileExtract = await extractProfileFromResume(resumeText);
+      const profileSkills = profileExtract?.hardSkills || [];
+
+      // Store AI's original score before we override it
+      const aiOriginalScore = analysis.overallScore || 0;
+
+      // Calculate REALISTIC match score based on skills (not AI's inflated score)
+      const jobText = jobDescription.toLowerCase();
+      let matchedSkills = 0;
+      const matchingSkills: string[] = [];
+
+      profileSkills.forEach((skill: string) => {
+        const skillLower = skill.toLowerCase();
+        // Match if skill appears in job description OR if skill is partial match
+        if (
+          jobText.includes(skillLower) ||
+          jobText.includes(skillLower.replace(/\.js$/, '')) || // Match "React.js" to "React"
+          jobText.split(/\W+/).some((word: string) => word === skillLower)
+        ) {
+          // Match whole words
+          matchedSkills++;
+          matchingSkills.push(skill);
+        }
       });
 
-      responseText = completion.choices[0]?.message?.content || '';
-      modelUsed = GROQ_MODEL;
-      selectedProvider = 'groq';
-    }
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      // Calculate score with more reasonable baseline
+      // If NO skills match, use AI's assessment but cap at 40%
+      // If skills match, use skill-based scoring
+      const realisticScore =
+        profileSkills.length > 0 && matchedSkills > 0
+          ? Math.min(95, Math.round((matchedSkills / profileSkills.length) * 100))
+          : profileSkills.length > 0 && matchedSkills === 0
+            ? Math.min(40, aiOriginalScore || 20) // Use AI's score but cap at 40%
+            : 30;
 
-    if (!jsonMatch) {
-      throw new Error('Failed to analyze');
-    }
+      // Override AI's inflated overallScore with realistic skill-based score
+      analysis.overallScore = realisticScore;
+      analysis.matchingSkills = matchingSkills;
+      analysis.skillMatchPercentage = realisticScore;
+      analysis.aiOriginalScore = aiOriginalScore; // Keep AI's original for comparison
 
-    const analysis = JSON.parse(jsonMatch[0]);
-
-    // Extract profile for skill-based scoring
-    const profileExtract = await extractProfileFromResume(resumeText);
-    const profileSkills = profileExtract?.hardSkills || [];
-
-    // Store AI's original score before we override it
-    const aiOriginalScore = analysis.overallScore || 0;
-
-    // Calculate REALISTIC match score based on skills (not AI's inflated score)
-    const jobText = jobDescription.toLowerCase();
-    let matchedSkills = 0;
-    const matchingSkills: string[] = [];
-
-    profileSkills.forEach((skill: string) => {
-      const skillLower = skill.toLowerCase();
-      // Match if skill appears in job description OR if skill is partial match
-      if (jobText.includes(skillLower) ||
-        jobText.includes(skillLower.replace(/\.js$/, '')) || // Match "React.js" to "React"
-        jobText.split(/\W+/).some((word: string) => word === skillLower)) { // Match whole words
-        matchedSkills++;
-        matchingSkills.push(skill);
+      // Also override interview probability to match realistic score
+      if (analysis.interviewProbability) {
+        analysis.interviewProbability.percentage = realisticScore;
       }
-    });
 
-    // Calculate score with more reasonable baseline
-    // If NO skills match, use AI's assessment but cap at 40%
-    // If skills match, use skill-based scoring
-    const realisticScore = profileSkills.length > 0 && matchedSkills > 0
-      ? Math.min(95, Math.round((matchedSkills / profileSkills.length) * 100))
-      : profileSkills.length > 0 && matchedSkills === 0
-        ? Math.min(40, aiOriginalScore || 20) // Use AI's score but cap at 40%
-        : 30;
+      // Save resume to database
+      const encryptedContent = Buffer.from(resumeText); // In production, encrypt this
 
-    // Override AI's inflated overallScore with realistic skill-based score
-    analysis.overallScore = realisticScore;
-    analysis.matchingSkills = matchingSkills;
-    analysis.skillMatchPercentage = realisticScore;
-    analysis.aiOriginalScore = aiOriginalScore; // Keep AI's original for comparison
-
-    // Also override interview probability to match realistic score
-    if (analysis.interviewProbability) {
-      analysis.interviewProbability.percentage = realisticScore;
-    }
-
-    // Save resume to database
-    const encryptedContent = Buffer.from(resumeText); // In production, encrypt this
-
-    // Try with llm_provider column first, fallback to without if column doesn't exist
-    let resumeAnalysis;
-    try {
-      resumeAnalysis = await pool.query(
-        `INSERT INTO resume_analyses
+      // Try with llm_provider column first, fallback to without if column doesn't exist
+      let resumeAnalysis;
+      try {
+        resumeAnalysis = await pool.query(
+          `INSERT INTO resume_analyses
          (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
           target_job_title, job_description, llm_provider, status, expires_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completed', NOW() + INTERVAL '30 days')
          RETURNING id`,
-        [
-          sessionUuid,
-          fileHash,
-          encryptedContent,
-          req.file.originalname,
-          path.extname(req.file.originalname).substring(1),
-          req.file.size,
-          'General Position', // Could extract from JD
-          jobDescription,
-          selectedProvider
-        ]
-      );
-    } catch (colError: any) {
-      // Fallback: column might not exist yet
-      if (colError.message && colError.message.includes('llm_provider')) {
-        console.warn('llm_provider column not found, using legacy insert');
-        resumeAnalysis = await pool.query(
-          `INSERT INTO resume_analyses
-           (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
-            target_job_title, job_description, status, expires_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'completed', NOW() + INTERVAL '30 days')
-           RETURNING id`,
           [
             sessionUuid,
             fileHash,
@@ -534,45 +525,46 @@ Return ONLY this JSON:
             req.file.originalname,
             path.extname(req.file.originalname).substring(1),
             req.file.size,
-            'General Position',
-            jobDescription
-          ]
+            'General Position', // Could extract from JD
+            jobDescription,
+            selectedProvider,
+          ],
         );
-      } else {
-        throw colError;
+      } catch (colError: any) {
+        // Fallback: column might not exist yet
+        if (colError.message && colError.message.includes('llm_provider')) {
+          console.warn('llm_provider column not found, using legacy insert');
+          resumeAnalysis = await pool.query(
+            `INSERT INTO resume_analyses
+           (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
+            target_job_title, job_description, status, expires_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'completed', NOW() + INTERVAL '30 days')
+           RETURNING id`,
+            [
+              sessionUuid,
+              fileHash,
+              encryptedContent,
+              req.file.originalname,
+              path.extname(req.file.originalname).substring(1),
+              req.file.size,
+              'General Position',
+              jobDescription,
+            ],
+          );
+        } else {
+          throw colError;
+        }
       }
-    }
 
-    const analysisId = resumeAnalysis.rows[0].id;
+      const analysisId = resumeAnalysis.rows[0].id;
 
-    // Cache the analysis result with backwards compatibility
-    try {
-      await pool.query(
-        `INSERT INTO diagnosis_results
+      // Cache the analysis result with backwards compatibility
+      try {
+        await pool.query(
+          `INSERT INTO diagnosis_results
          (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
           model_used, llm_provider, resume_processing_time, analysis_time)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [
-          analysisId,
-          realisticScore,
-          JSON.stringify(analysis),
-          realisticScore >= 70,
-          100,
-          modelUsed,
-          selectedProvider,
-          0,
-          0
-        ]
-      );
-    } catch (diagError: any) {
-      // Fallback: column might not exist yet
-      if (diagError.message && diagError.message.includes('llm_provider')) {
-        console.warn('llm_provider column not found in diagnosis_results, using legacy insert');
-        await pool.query(
-          `INSERT INTO diagnosis_results
-           (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
-            model_used, resume_processing_time, analysis_time)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [
             analysisId,
             realisticScore,
@@ -580,46 +572,67 @@ Return ONLY this JSON:
             realisticScore >= 70,
             100,
             modelUsed,
+            selectedProvider,
             0,
-            0
-          ]
+            0,
+          ],
         );
-      } else {
-        throw diagError;
+      } catch (diagError: any) {
+        // Fallback: column might not exist yet
+        if (diagError.message && diagError.message.includes('llm_provider')) {
+          console.warn('llm_provider column not found in diagnosis_results, using legacy insert');
+          await pool.query(
+            `INSERT INTO diagnosis_results
+           (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
+            model_used, resume_processing_time, analysis_time)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [
+              analysisId,
+              realisticScore,
+              JSON.stringify(analysis),
+              realisticScore >= 70,
+              100,
+              modelUsed,
+              0,
+              0,
+            ],
+          );
+        } else {
+          throw diagError;
+        }
       }
+
+      console.log(`✅ Saved analysis to database with realistic score: ${realisticScore}%`);
+
+      // Save extracted profile to DB for cross-screen persistence
+      try {
+        await pool.query(`UPDATE resume_analyses SET extracted_profile = $1 WHERE id = $2`, [
+          JSON.stringify(profileExtract),
+          analysisId,
+        ]);
+        console.log('✅ Structured profile saved to DB');
+      } catch (saveError: any) {
+        console.warn('Failed to save structured profile to DB:', saveError.message);
+      }
+
+      // Add provider info to response
+      analysis.llmProvider = selectedProvider;
+      analysis.modelUsed = modelUsed;
+
+      res.json({
+        success: true,
+        data: analysis,
+        sessionId: sessionToken,
+        profile: profileExtract,
+      });
+    } catch (error: any) {
+      console.error('Analysis error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    } finally {
+      if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
-
-    console.log(`✅ Saved analysis to database with realistic score: ${realisticScore}%`);
-
-    // Save extracted profile to DB for cross-screen persistence
-    try {
-      await pool.query(
-        `UPDATE resume_analyses SET extracted_profile = $1 WHERE id = $2`,
-        [JSON.stringify(profileExtract), analysisId]
-      );
-      console.log('✅ Structured profile saved to DB');
-    } catch (saveError: any) {
-      console.warn('Failed to save structured profile to DB:', saveError.message);
-    }
-
-    // Add provider info to response
-    analysis.llmProvider = selectedProvider;
-    analysis.modelUsed = modelUsed;
-
-    res.json({
-      success: true,
-      data: analysis,
-      sessionId: sessionToken,
-      profile: profileExtract
-    });
-
-  } catch (error: any) {
-    console.error('Analysis error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  } finally {
-    if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  }
-});
+  },
+);
 
 // ============================================================
 // FEATURE 2: PROFILE EXTRACTION (for Job Search)
@@ -660,7 +673,7 @@ ${resumeText.substring(0, 6000)}
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
-      max_tokens: 1500
+      max_tokens: 1500,
     });
 
     const responseText = completion.choices[0]?.message?.content || '';
@@ -673,7 +686,10 @@ ${resumeText.substring(0, 6000)}
     // Use stable session ID based on profile email if available
     let sessionId;
     if (profile.email) {
-      const cleanEmail = Buffer.from(profile.email).toString('base64').replace(/[=\/\+]/g, '').toLowerCase();
+      const cleanEmail = Buffer.from(profile.email)
+        .toString('base64')
+        .replace(/[=\/\+]/g, '')
+        .toLowerCase();
       sessionId = 'sess_' + cleanEmail.substring(0, 15);
     } else {
       sessionId = 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -684,16 +700,21 @@ ${resumeText.substring(0, 6000)}
     // Save extracted profile to database for cross-screen persistence
     try {
       const pool = getPool();
-      const fileHash = crypto.createHash('sha256').update(fs.readFileSync(req.file.path)).digest('hex');
+      const fileHash = crypto
+        .createHash('sha256')
+        .update(fs.readFileSync(req.file.path))
+        .digest('hex');
 
       // Get session UUID
-      let sessionRes = await pool.query('SELECT id FROM user_sessions WHERE session_id = $1', [sessionId]);
+      let sessionRes = await pool.query('SELECT id FROM user_sessions WHERE session_id = $1', [
+        sessionId,
+      ]);
       let sessionUuid;
       if (sessionRes.rows.length === 0) {
         const newSess = await pool.query(
           `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at)
            VALUES ($1, $2, $3, NOW() + INTERVAL '30 days') RETURNING id`,
-          [sessionId, req.ip || '127.0.0.1', req.get('user-agent') || 'Unknown']
+          [sessionId, req.ip || '127.0.0.1', req.get('user-agent') || 'Unknown'],
         );
         sessionUuid = newSess.rows[0].id;
       } else {
@@ -713,8 +734,8 @@ ${resumeText.substring(0, 6000)}
           path.extname(req.file.originalname).substring(1),
           req.file.size,
           profile.currentTitle || 'Extracted Profile',
-          JSON.stringify(profile)
-        ]
+          JSON.stringify(profile),
+        ],
       );
       console.log('✅ Extracted profile saved to DB');
     } catch (dbError: any) {
@@ -722,7 +743,6 @@ ${resumeText.substring(0, 6000)}
     }
 
     res.json({ success: true, data: { sessionId, profile, resumeText } });
-
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   } finally {
@@ -744,7 +764,7 @@ app.get('/api/profile/:sessionId', async (req, res) => {
        WHERE us.session_id = $1 AND ra.extracted_profile IS NOT NULL
        ORDER BY ra.created_at DESC
        LIMIT 1`,
-      [sessionId]
+      [sessionId],
     );
 
     if (result.rows.length === 0) {
@@ -771,7 +791,7 @@ app.get('/api/resume/:sessionId', async (req, res) => {
        WHERE us.session_id = $1
        ORDER BY ra.created_at DESC
        LIMIT 1`,
-      [sessionId]
+      [sessionId],
     );
 
     if (result.rows.length === 0) {
@@ -795,7 +815,10 @@ app.post('/api/init-session', async (req, res) => {
     }
 
     // Create stable session ID from email
-    const cleanEmail = Buffer.from(email).toString('base64').replace(/[=\/\+]/g, '').toLowerCase();
+    const cleanEmail = Buffer.from(email)
+      .toString('base64')
+      .replace(/[=\/\+]/g, '')
+      .toLowerCase();
     const sessionId = 'sess_' + cleanEmail.substring(0, 15);
 
     // Initialize or update session
@@ -804,7 +827,7 @@ app.post('/api/init-session', async (req, res) => {
         profile,
         resumeText: resumeText || '',
         jobs: [],
-        savedJobs: []
+        savedJobs: [],
       };
       console.log(`✅ Session initialized for ${email}: ${sessionId}`);
     } else {
@@ -812,7 +835,6 @@ app.post('/api/init-session', async (req, res) => {
     }
 
     res.json({ success: true, data: { sessionId } });
-
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -824,7 +846,8 @@ app.post('/api/init-session', async (req, res) => {
 
 // Generate smart job board search URLs
 function generateJobSearchLinks(profile: any, customQuery?: string, customLocation?: string) {
-  const title = customQuery || profile.targetTitles?.[0] || profile.currentTitle || 'software engineer';
+  const title =
+    customQuery || profile.targetTitles?.[0] || profile.currentTitle || 'software engineer';
   const location = customLocation || profile.location || '';
   const skills = (profile.hardSkills || []).slice(0, 3).join(' ');
 
@@ -836,52 +859,52 @@ function generateJobSearchLinks(profile: any, customQuery?: string, customLocati
         name: 'LinkedIn',
         icon: '💼',
         url: `https://www.linkedin.com/jobs/search/?keywords=${encode(title)}&location=${encode(location)}`,
-        description: 'Most professional jobs'
+        description: 'Most professional jobs',
       },
       {
         name: 'Indeed',
         icon: '🔍',
         url: `https://www.indeed.com/jobs?q=${encode(title)}&l=${encode(location)}`,
-        description: 'Largest job board'
+        description: 'Largest job board',
       },
       {
         name: 'Glassdoor',
         icon: '🚪',
         url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(title)}&locT=C&locKeyword=${encode(location)}`,
-        description: 'Jobs + salary info'
-      }
+        description: 'Jobs + salary info',
+      },
     ],
     secondary: [
       {
         name: 'Google Jobs',
         icon: '🔎',
-        url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs`
+        url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs`,
       },
       {
         name: 'ZipRecruiter',
         icon: '⚡',
-        url: `https://www.ziprecruiter.com/jobs-search?search=${encode(title)}&location=${encode(location)}`
+        url: `https://www.ziprecruiter.com/jobs-search?search=${encode(title)}&location=${encode(location)}`,
       },
       {
         name: 'Dice (Tech)',
         icon: '🎲',
-        url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}`
+        url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}`,
       },
       {
         name: 'Wellfound (Startups)',
         icon: '🚀',
-        url: `https://wellfound.com/jobs?query=${encode(title)}`
-      }
+        url: `https://wellfound.com/jobs?query=${encode(title)}`,
+      },
     ],
     bySkill: (profile.hardSkills || []).slice(0, 4).map((skill: string) => ({
       skill,
-      url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill + ' ' + profile.experienceLevel)}&location=${encode(location)}`
+      url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill + ' ' + profile.experienceLevel)}&location=${encode(location)}`,
     })),
     byTitle: (profile.targetTitles || []).slice(0, 4).map((t: string) => ({
       title: t,
       linkedin: `https://www.linkedin.com/jobs/search/?keywords=${encode(t)}&location=${encode(location)}`,
-      indeed: `https://www.indeed.com/jobs?q=${encode(t)}&l=${encode(location)}`
-    }))
+      indeed: `https://www.indeed.com/jobs?q=${encode(t)}&l=${encode(location)}`,
+    })),
   };
 }
 
@@ -891,7 +914,9 @@ app.post('/api/search-jobs', async (req, res) => {
     const session = sessions[sessionId];
 
     if (!session) {
-      return res.status(400).json({ success: false, error: 'Session not found. Upload resume first.' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Session not found. Upload resume first.' });
     }
 
     // Generate smart search links (always available)
@@ -903,7 +928,8 @@ app.post('/api/search-jobs', async (req, res) => {
 
     if (JSEARCH_API_KEY && useRealApi !== false) {
       try {
-        const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
+        const query =
+          searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
         const loc = location || session.profile.location || '';
 
         const response = await fetch(
@@ -911,34 +937,39 @@ app.post('/api/search-jobs', async (req, res) => {
           {
             headers: {
               'X-RapidAPI-Key': JSEARCH_API_KEY,
-              'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
-            }
-          }
+              'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
+            },
+          },
         );
 
         const data: any = await response.json();
 
         if (data.data && Array.isArray(data.data)) {
           // Score each real job against profile
-          realJobs = await Promise.all(data.data.slice(0, 8).map(async (job: any) => {
-            const score = quickMatchScore(session.profile, job);
-            return {
-              id: job.job_id,
-              title: job.job_title,
-              company: job.employer_name,
-              location: job.job_city ? `${job.job_city}, ${job.job_state}` : job.job_country,
-              salary: job.job_min_salary && job.job_max_salary
-                ? `$${job.job_min_salary.toLocaleString()} - $${job.job_max_salary.toLocaleString()}`
-                : null,
-              postedDate: job.job_posted_at_datetime_utc ? getRelativeTime(job.job_posted_at_datetime_utc) : 'Recently',
-              description: job.job_description?.substring(0, 200) + '...',
-              applyUrl: job.job_apply_link,
-              companyLogo: job.employer_logo,
-              employmentType: job.job_employment_type,
-              isRemote: job.job_is_remote,
-              ...score
-            };
-          }));
+          realJobs = await Promise.all(
+            data.data.slice(0, 8).map(async (job: any) => {
+              const score = quickMatchScore(session.profile, job);
+              return {
+                id: job.job_id,
+                title: job.job_title,
+                company: job.employer_name,
+                location: job.job_city ? `${job.job_city}, ${job.job_state}` : job.job_country,
+                salary:
+                  job.job_min_salary && job.job_max_salary
+                    ? `$${job.job_min_salary.toLocaleString()} - $${job.job_max_salary.toLocaleString()}`
+                    : null,
+                postedDate: job.job_posted_at_datetime_utc
+                  ? getRelativeTime(job.job_posted_at_datetime_utc)
+                  : 'Recently',
+                description: job.job_description?.substring(0, 200) + '...',
+                applyUrl: job.job_apply_link,
+                companyLogo: job.employer_logo,
+                employmentType: job.job_employment_type,
+                isRemote: job.job_is_remote,
+                ...score,
+              };
+            }),
+          );
 
           realJobs.sort((a, b) => b.matchScore - a.matchScore);
         }
@@ -951,7 +982,8 @@ app.post('/api/search-jobs', async (req, res) => {
     // If no API or API failed, generate AI suggestions
     if (realJobs.length === 0 && process.env.GROQ_API_KEY) {
       try {
-        const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
+        const query =
+          searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
         const skills = (session.profile.hardSkills || []).slice(0, 5).join(', ');
 
         const prompt = `Suggest 5 specific job titles and companies that would be good matches for someone with these skills: ${skills}, looking for: ${query}
@@ -963,7 +995,7 @@ Return ONLY JSON array:
           model: GROQ_MODEL,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 800
+          max_tokens: 800,
         });
 
         const responseText = completion.choices[0]?.message?.content || '';
@@ -978,7 +1010,7 @@ Return ONLY JSON array:
             matchScore: s.matchScore,
             quickTake: s.reason,
             isSuggestion: true,
-            searchUrl: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(s.title + ' ' + s.company)}`
+            searchUrl: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(s.title + ' ' + s.company)}`,
           }));
         }
       } catch (aiErr) {
@@ -994,10 +1026,9 @@ Return ONLY JSON array:
       data: {
         jobs: realJobs,
         searchLinks,
-        hasRealApi: !!process.env.JSEARCH_API_KEY
-      }
+        hasRealApi: !!process.env.JSEARCH_API_KEY,
+      },
     });
-
   } catch (error: any) {
     console.error('Job search error:', error);
     res.status(500).json({ success: false, error: error.message || 'Search failed' });
@@ -1006,7 +1037,13 @@ Return ONLY JSON array:
 
 // Quick match score without AI (fast)
 function quickMatchScore(profile: any, job: any) {
-  const jobText = (job.job_title + ' ' + job.job_description + ' ' + (job.job_required_skills || []).join(' ')).toLowerCase();
+  const jobText = (
+    job.job_title +
+    ' ' +
+    job.job_description +
+    ' ' +
+    (job.job_required_skills || []).join(' ')
+  ).toLowerCase();
   const profileSkills = (profile.hardSkills || []).map((s: string) => s.toLowerCase());
 
   let matched = 0;
@@ -1027,7 +1064,12 @@ function quickMatchScore(profile: any, job: any) {
     matchScore: score,
     matchingSkills,
     recommendation: score >= 70 ? 'APPLY_NOW' : score >= 50 ? 'WORTH_APPLYING' : 'CUSTOMIZE_FIRST',
-    quickTake: score >= 70 ? 'Strong match for your skills!' : score >= 50 ? 'Good potential - worth applying' : 'Consider customizing your resume'
+    quickTake:
+      score >= 70
+        ? 'Strong match for your skills!'
+        : score >= 50
+          ? 'Good potential - worth applying'
+          : 'Consider customizing your resume',
   };
 }
 
@@ -1062,7 +1104,7 @@ app.post('/api/generate-cover-letter', paywallMiddleware, async (req, res) => {
            JOIN user_sessions us ON ra.session_id = us.id
            WHERE us.session_id = $1
            ORDER BY ra.created_at DESC LIMIT 1`,
-          [sessionId]
+          [sessionId],
         );
         if (res.rows.length > 0) {
           session.resumeText = res.rows[0].encrypted_content.toString();
@@ -1076,13 +1118,15 @@ app.post('/api/generate-cover-letter', paywallMiddleware, async (req, res) => {
     }
 
     if (!session.resumeText && !session.profile) {
-      return res.status(400).json({ success: false, error: 'Session not found or empty. Please upload resume.' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Session not found or empty. Please upload resume.' });
     }
 
     const job = session.jobs?.find((j: any) => j.id === jobId);
     const company = companyName || job?.company || 'the company';
     const title = jobTitle || job?.title || 'the position';
-    const jd = jobDescription || (job?.description + '\n' + job?.requirements?.join('\n'));
+    const jd = jobDescription || job?.description + '\n' + job?.requirements?.join('\n');
 
     const prompt = `Write a compelling cover letter.
 
@@ -1106,12 +1150,14 @@ Return ONLY the cover letter text.`;
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 800
+      max_tokens: 800,
     });
 
     const coverLetter = completion.choices[0]?.message?.content || '';
-    res.json({ success: true, data: { coverLetter: coverLetter.trim(), company, jobTitle: title } });
-
+    res.json({
+      success: true,
+      data: { coverLetter: coverLetter.trim(), company, jobTitle: title },
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -1136,20 +1182,25 @@ app.post('/api/save-job', async (req, res) => {
            JOIN user_sessions us ON ra.session_id = us.id
            WHERE us.session_id = $1
            ORDER BY ra.created_at DESC LIMIT 1`,
-          [sessionId]
+          [sessionId],
         );
         if (res.rows.length > 0) {
           session.profile = res.rows[0].extracted_profile;
           sessions[sessionId] = session;
         }
-      } catch (dbErr) { }
+      } catch (dbErr) {}
     }
 
     if (!session.savedJobs) session.savedJobs = [];
 
     const existingIndex = session.savedJobs.findIndex((j: any) => j.id === job.id);
     if (existingIndex >= 0) {
-      session.savedJobs[existingIndex] = { ...session.savedJobs[existingIndex], ...job, status, updatedAt: Date.now() };
+      session.savedJobs[existingIndex] = {
+        ...session.savedJobs[existingIndex],
+        ...job,
+        status,
+        updatedAt: Date.now(),
+      };
     } else {
       session.savedJobs.push({ ...job, status: status || 'SAVED', savedAt: Date.now() });
     }
@@ -1205,15 +1256,15 @@ async function researchCompany(companyName: string): Promise<string> {
       const response = await fetch('https://api.tavily.com/search', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           api_key: TAVILY_API_KEY,
           query: searchQuery,
           search_depth: 'basic',
           max_results: 5,
-          include_answer: true
-        })
+          include_answer: true,
+        }),
       });
 
       if (response.ok) {
@@ -1248,11 +1299,13 @@ Keep it brief (3-4 sentences). ONLY include verified, publicly known facts. If y
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.1,
-      max_tokens: 300
+      max_tokens: 300,
     });
 
-    return completion.choices[0]?.message?.content?.trim() || 'No additional company information available.';
-
+    return (
+      completion.choices[0]?.message?.content?.trim() ||
+      'No additional company information available.'
+    );
   } catch (error) {
     console.error('Company research error:', error);
     return 'Unable to retrieve company information.';
@@ -1277,7 +1330,7 @@ app.post('/api/generate-specific-cover-letter', paywallMiddleware, async (req, r
            JOIN user_sessions us ON ra.session_id = us.id
            WHERE us.session_id = $1
            ORDER BY ra.created_at DESC LIMIT 1`,
-          [sessionId]
+          [sessionId],
         );
         if (dbRes.rows.length > 0) {
           session.resumeText = dbRes.rows[0].encrypted_content.toString();
@@ -1295,8 +1348,11 @@ app.post('/api/generate-specific-cover-letter', paywallMiddleware, async (req, r
     }
 
     // Extract company name and role from job description
-    const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
-    const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
+    const companyMatch = jobDescription.match(
+      /(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i,
+    );
+    const titleMatch =
+      jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
       jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
 
     const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
@@ -1312,11 +1368,11 @@ app.post('/api/generate-specific-cover-letter', paywallMiddleware, async (req, r
     const achievementPatterns = [
       /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
       /\d+%[^.]+\./gi,
-      /\$[\d,]+[^.]+\./gi
+      /\$[\d,]+[^.]+\./gi,
     ];
 
     let achievements: string[] = [];
-    achievementPatterns.forEach(pattern => {
+    achievementPatterns.forEach((pattern) => {
       const matches = resumeText.match(pattern);
       if (matches) achievements.push(...matches);
     });
@@ -1394,7 +1450,7 @@ Return ONLY the cover letter text, no additional commentary.`;
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 1500
+      max_tokens: 1500,
     });
 
     const coverLetter = completion.choices[0]?.message?.content || '';
@@ -1404,10 +1460,9 @@ Return ONLY the cover letter text, no additional commentary.`;
       data: {
         coverLetter: coverLetter.trim(),
         companyResearch: companyResearch,
-        companyName: companyName
-      }
+        companyName: companyName,
+      },
     });
-
   } catch (error: any) {
     console.error('Cover letter error:', error);
     res.status(500).json({ success: false, error: error.message || 'Generation failed' });
@@ -1432,7 +1487,7 @@ app.post('/api/generate-elevator-pitch', paywallMiddleware, async (req, res) => 
            JOIN user_sessions us ON ra.session_id = us.id
            WHERE us.session_id = $1
            ORDER BY ra.created_at DESC LIMIT 1`,
-          [sessionId]
+          [sessionId],
         );
         if (res.rows.length > 0) {
           session.resumeText = res.rows[0].encrypted_content.toString();
@@ -1450,8 +1505,11 @@ app.post('/api/generate-elevator-pitch', paywallMiddleware, async (req, res) => 
     }
 
     // Extract company name and role from job description
-    const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
-    const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
+    const companyMatch = jobDescription.match(
+      /(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i,
+    );
+    const titleMatch =
+      jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
       jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
 
     const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
@@ -1467,11 +1525,11 @@ app.post('/api/generate-elevator-pitch', paywallMiddleware, async (req, res) => 
     const achievementPatterns = [
       /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
       /\d+%[^.]+\./gi,
-      /\$[\d,]+[^.]+\./gi
+      /\$[\d,]+[^.]+\./gi,
     ];
 
     let achievements: string[] = [];
-    achievementPatterns.forEach(pattern => {
+    achievementPatterns.forEach((pattern) => {
       const matches = resumeText.match(pattern);
       if (matches) achievements.push(...matches);
     });
@@ -1520,7 +1578,7 @@ Return ONLY the elevator pitch text as one flowing paragraph.`;
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 800
+      max_tokens: 800,
     });
 
     const pitchText = completion.choices[0]?.message?.content || '';
@@ -1530,10 +1588,9 @@ Return ONLY the elevator pitch text as one flowing paragraph.`;
       data: {
         pitchText: pitchText.trim(),
         companyResearch: companyResearch,
-        companyName: companyName
-      }
+        companyName: companyName,
+      },
     });
-
   } catch (error: any) {
     console.error('Elevator pitch error:', error);
     res.status(500).json({ success: false, error: error.message || 'Generation failed' });
@@ -1558,7 +1615,7 @@ app.post('/api/generate-interview-prep', paywallMiddleware, async (req, res) => 
            JOIN user_sessions us ON ra.session_id = us.id
            WHERE us.session_id = $1
            ORDER BY ra.created_at DESC LIMIT 1`,
-          [sessionId]
+          [sessionId],
         );
         if (res.rows.length > 0) {
           session.resumeText = res.rows[0].encrypted_content.toString();
@@ -1576,7 +1633,9 @@ app.post('/api/generate-interview-prep', paywallMiddleware, async (req, res) => 
     }
 
     // Extract company name from job description
-    const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
+    const companyMatch = jobDescription.match(
+      /(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i,
+    );
     const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
 
     // Research company information
@@ -1589,11 +1648,11 @@ app.post('/api/generate-interview-prep', paywallMiddleware, async (req, res) => 
     const achievementPatterns = [
       /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
       /\d+%[^.]+\./gi,
-      /\$[\d,]+[^.]+\./gi
+      /\$[\d,]+[^.]+\./gi,
     ];
 
     let achievements: string[] = [];
-    achievementPatterns.forEach(pattern => {
+    achievementPatterns.forEach((pattern) => {
       const matches = resumeText.match(pattern);
       if (matches) achievements.push(...matches);
     });
@@ -1601,38 +1660,38 @@ app.post('/api/generate-interview-prep', paywallMiddleware, async (req, res) => 
 
     // The 20 standard interview questions
     const interviewQuestions = [
-      "Tell me about yourself",
-      "What are your strengths / weaknesses?",
-      "What do you like to do outside of work?",
-      "How do you handle difficult situations?",
-      "Do you like working alone or in a team?",
-      "Why did you leave your previous job?",
-      "Why should we hire you?",
-      "What do you know about this company?",
-      "Have you applied anywhere else?",
-      "Where do you see yourself in 5 years?",
-      "What are your salary expectations?",
-      "Describe your ability to work under pressure",
-      "What is the most challenging thing about working with you?",
-      "Talk about your achievements",
-      "How do you handle conflict?",
-      "What was your biggest challenge with your previous boss?",
-      "Why do you want to work with us?",
-      "Why do you think you deserve this job?",
-      "What motivates you?",
-      "Do you have any questions for us?"
+      'Tell me about yourself',
+      'What are your strengths / weaknesses?',
+      'What do you like to do outside of work?',
+      'How do you handle difficult situations?',
+      'Do you like working alone or in a team?',
+      'Why did you leave your previous job?',
+      'Why should we hire you?',
+      'What do you know about this company?',
+      'Have you applied anywhere else?',
+      'Where do you see yourself in 5 years?',
+      'What are your salary expectations?',
+      'Describe your ability to work under pressure',
+      'What is the most challenging thing about working with you?',
+      'Talk about your achievements',
+      'How do you handle conflict?',
+      'What was your biggest challenge with your previous boss?',
+      'Why do you want to work with us?',
+      'Why do you think you deserve this job?',
+      'What motivates you?',
+      'Do you have any questions for us?',
     ];
     console.log('Passed line 800');
     // Helper to call LLM with retry
 
     // Questions candidate should ask the interviewer
     const questionsToAskInterviewer = [
-      "Can you describe the company culture?",
-      "What does success look like in this role?",
+      'Can you describe the company culture?',
+      'What does success look like in this role?',
       "How does the team collaborate, and what's the typical workflow?",
-      "What are the biggest challenges the team or company is currently facing?",
-      "What opportunities are there for professional development and growth within the company?",
-      "Can you tell me about the next steps in the interview process?"
+      'What are the biggest challenges the team or company is currently facing?',
+      'What opportunities are there for professional development and growth within the company?',
+      'Can you tell me about the next steps in the interview process?',
     ];
 
     const prompt = `You are an interview preparation coach. Generate personalized answers for interview questions using ONLY the information provided below.
@@ -1689,7 +1748,7 @@ Return ONLY the JSON array, no additional text.`;
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.5,
-      max_tokens: 4000
+      max_tokens: 4000,
     });
 
     const responseText = completion.choices[0]?.message?.content || '';
@@ -1707,10 +1766,9 @@ Return ONLY the JSON array, no additional text.`;
         questions: interviewPrep,
         questionsToAsk: questionsToAskInterviewer,
         companyResearch: companyResearch,
-        companyName: companyName
-      }
+        companyName: companyName,
+      },
     });
-
   } catch (error: any) {
     console.error('Interview prep error:', error);
     res.status(500).json({ success: false, error: error.message || 'Generation failed' });
@@ -1744,16 +1802,16 @@ app.get('/api/llm-providers', (req, res) => {
         providers: providers.map((p: any) => ({
           name: p.name,
           displayName: p.displayName,
-          available: p.isAvailable()
+          available: p.isAvailable(),
         })),
-        default: getDefaultProvider()
-      }
+        default: getDefaultProvider(),
+      },
     });
   } catch (error: any) {
     console.error('Error in /api/llm-providers:', error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to load providers'
+      error: error.message || 'Failed to load providers',
     });
   }
 });
@@ -1761,51 +1819,60 @@ app.get('/api/llm-providers', (req, res) => {
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // ========== RESUME OPTIMIZER ENDPOINT ==========
-app.post('/api/optimize-resume', paywallMiddleware, checkLifetimeLimit, upload.single('resume'), async (req, res) => {
-  try {
-    const { jobDescription, sessionId } = req.body;
-    let resumeText = '';
+app.post(
+  '/api/optimize-resume',
+  paywallMiddleware,
+  checkLifetimeLimit,
+  upload.single('resume'),
+  async (req, res) => {
+    try {
+      const { jobDescription, sessionId } = req.body;
+      let resumeText = '';
 
-    if (req.file) {
-      // Extract from uploaded file
-      resumeText = await parseResume(req.file.path, req.file.mimetype);
-    } else if (sessionId) {
-      // Extract from session or DB
-      let session = sessions[sessionId] || {};
-      if (session.resumeText) {
-        resumeText = session.resumeText;
-      } else {
-        // Find in DB
-        try {
-          const pool = getPool();
-          const dbRes = await pool.query(
-            `SELECT ra.encrypted_content FROM resume_analyses ra
+      if (req.file) {
+        // Extract from uploaded file
+        resumeText = await parseResume(req.file.path, req.file.mimetype);
+      } else if (sessionId) {
+        // Extract from session or DB
+        let session = sessions[sessionId] || {};
+        if (session.resumeText) {
+          resumeText = session.resumeText;
+        } else {
+          // Find in DB
+          try {
+            const pool = getPool();
+            const dbRes = await pool.query(
+              `SELECT ra.encrypted_content FROM resume_analyses ra
              JOIN user_sessions us ON ra.session_id = us.id
              WHERE us.session_id = $1
              ORDER BY ra.created_at DESC LIMIT 1`,
-            [sessionId]
-          );
-          if (dbRes.rows.length > 0) {
-            resumeText = dbRes.rows[0].encrypted_content.toString();
-            session.resumeText = resumeText;
-            sessions[sessionId] = session;
+              [sessionId],
+            );
+            if (dbRes.rows.length > 0) {
+              resumeText = dbRes.rows[0].encrypted_content.toString();
+              session.resumeText = resumeText;
+              sessions[sessionId] = session;
+            }
+          } catch (dbErr) {
+            console.warn('Failed to restore resume from DB in optimizer:', dbErr);
           }
-        } catch (dbErr) {
-          console.warn('Failed to restore resume from DB in optimizer:', dbErr);
         }
       }
-    }
 
-    if (!resumeText) {
-      return res.status(400).json({ success: false, error: 'Resume required. Please upload or set session.' });
-    }
+      if (!resumeText) {
+        return res
+          .status(400)
+          .json({ success: false, error: 'Resume required. Please upload or set session.' });
+      }
 
-    if (!jobDescription || jobDescription.trim().length < 50) {
-      return res.status(400).json({ success: false, error: 'Job description required (min 50 chars)' });
-    }
+      if (!jobDescription || jobDescription.trim().length < 50) {
+        return res
+          .status(400)
+          .json({ success: false, error: 'Job description required (min 50 chars)' });
+      }
 
-    // Build comprehensive audit and optimization prompt
-    const prompt = `You are a professional resume writer and ATS optimization expert.
+      // Build comprehensive audit and optimization prompt
+      const prompt = `You are a professional resume writer and ATS optimization expert.
 
 CRITICAL INSTRUCTIONS:
 - Read the ACTUAL resume text below carefully
@@ -1878,43 +1945,46 @@ OUTPUT FORMAT (JSON):
   "changesSummary": "Summary of what was changed"
 }`;
 
-    // Call Groq API
-    const completion = await groq.chat.completions.create({
-      messages: [{
-        role: 'system',
-        content: 'You are a professional resume writer. Return ONLY valid JSON, no markdown.'
-      }, {
-        role: 'user',
-        content: prompt
-      }],
-      model: GROQ_MODEL,
-      temperature: 0.3,
-      max_tokens: 4000
-    });
+      // Call Groq API
+      const completion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional resume writer. Return ONLY valid JSON, no markdown.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        model: GROQ_MODEL,
+        temperature: 0.3,
+        max_tokens: 4000,
+      });
 
-    const content = completion.choices[0]?.message?.content || '';
+      const content = completion.choices[0]?.message?.content || '';
 
-    // Extract JSON from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Invalid AI response format');
+      // Extract JSON from response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Invalid AI response format');
+      }
+
+      const optimization = JSON.parse(jsonMatch[0]);
+
+      res.json({
+        success: true,
+        data: optimization,
+      });
+    } catch (error: any) {
+      console.error('Resume optimization error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Optimization failed',
+      });
     }
-
-    const optimization = JSON.parse(jsonMatch[0]);
-
-    res.json({
-      success: true,
-      data: optimization
-    });
-
-  } catch (error: any) {
-    console.error('Resume optimization error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Optimization failed'
-    });
-  }
-});
+  },
+);
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
@@ -1922,7 +1992,6 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.ht
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
-
 
 const PORT = process.env.PORT || 3000;
 console.log('Checking startup conditions - VERCEL:', process.env.VERCEL, 'PORT:', PORT);

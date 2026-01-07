@@ -6,7 +6,7 @@ let redisClient: RedisClientType | null = null;
 export const connectRedis = async (): Promise<void> => {
   try {
     const redisUrl = process.env.REDIS_URL;
-    
+
     if (!redisUrl) {
       logger.warn('REDIS_URL not set, caching disabled');
       return;
@@ -22,8 +22,8 @@ export const connectRedis = async (): Promise<void> => {
             return new Error('Redis reconnection failed');
           }
           return Math.min(retries * 100, 3000);
-        }
-      }
+        },
+      },
     });
 
     redisClient.on('error', (err) => {
@@ -39,7 +39,7 @@ export const connectRedis = async (): Promise<void> => {
     });
 
     await redisClient.connect();
-    
+
     // Test connection
     await redisClient.ping();
     logger.info('Redis connected successfully');
@@ -59,14 +59,14 @@ export const isRedisConnected = (): boolean => {
 };
 
 export const cacheSet = async (
-  key: string, 
-  value: any, 
-  ttlSeconds: number = 3600
+  key: string,
+  value: any,
+  ttlSeconds: number = 3600,
 ): Promise<boolean> => {
   if (!redisClient?.isOpen) {
     return false;
   }
-  
+
   try {
     const serialized = JSON.stringify(value);
     await redisClient.setEx(key, ttlSeconds, serialized);
@@ -81,7 +81,7 @@ export const cacheGet = async <T = any>(key: string): Promise<T | null> => {
   if (!redisClient?.isOpen) {
     return null;
   }
-  
+
   try {
     const value = await redisClient.get(key);
     if (value) {
@@ -98,7 +98,7 @@ export const cacheDelete = async (key: string): Promise<boolean> => {
   if (!redisClient?.isOpen) {
     return false;
   }
-  
+
   try {
     await redisClient.del(key);
     return true;
@@ -112,7 +112,7 @@ export const cacheExists = async (key: string): Promise<boolean> => {
   if (!redisClient?.isOpen) {
     return false;
   }
-  
+
   try {
     const exists = await redisClient.exists(key);
     return exists === 1;
@@ -126,28 +126,28 @@ export const cacheSetWithLock = async (
   key: string,
   value: any,
   ttlSeconds: number = 3600,
-  lockTimeout: number = 30
+  lockTimeout: number = 30,
 ): Promise<boolean> => {
   if (!redisClient?.isOpen) {
     return false;
   }
-  
+
   const lockKey = `lock:${key}`;
-  
+
   try {
     // Try to acquire lock
     const acquired = await redisClient.setNX(lockKey, '1');
     if (!acquired) {
       return false;
     }
-    
+
     // Set lock expiry
     await redisClient.expire(lockKey, lockTimeout);
-    
+
     // Set the actual value
     const serialized = JSON.stringify(value);
     await redisClient.setEx(key, ttlSeconds, serialized);
-    
+
     // Release lock
     await redisClient.del(lockKey);
     return true;
@@ -175,5 +175,5 @@ export default {
   cacheDelete,
   cacheExists,
   cacheSetWithLock,
-  closeRedis
+  closeRedis,
 };

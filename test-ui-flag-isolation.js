@@ -12,9 +12,10 @@ const hasUnconditionalLink = htmlContent.includes('<link rel="stylesheet" href="
 console.log('   ✓ No unconditional CSS link:', !hasUnconditionalLink ? 'PASS' : 'FAIL');
 
 // Verify conditional loading exists
-const hasConditionalLoading = htmlContent.includes('window.isNewUIEnabled') && 
-                             htmlContent.includes('new-ui.css') &&
-                             htmlContent.includes('document.head.appendChild(link)');
+const hasConditionalLoading =
+  htmlContent.includes('window.isNewUIEnabled') &&
+  htmlContent.includes('new-ui.css') &&
+  htmlContent.includes('document.head.appendChild(link)');
 console.log('   ✓ Conditional CSS loading:', hasConditionalLoading ? 'PASS' : 'FAIL');
 
 // Test 2: Check all new UI styles are scoped
@@ -27,11 +28,11 @@ const globalSelectors = [
   /^header\s*{/m,
   /^\.main-tab\s*{/m,
   /^\.section\s*{/m,
-  /^\.container\s*{/m
+  /^\.container\s*{/m,
 ];
 
 let hasGlobalSelectors = false;
-globalSelectors.forEach(regex => {
+globalSelectors.forEach((regex) => {
   if (regex.test(cssContent)) {
     hasGlobalSelectors = true;
     console.log('   ❌ Found global selector:', regex.source);
@@ -41,29 +42,34 @@ globalSelectors.forEach(regex => {
 console.log('   ✓ No global selectors:', !hasGlobalSelectors ? 'PASS' : 'FAIL');
 
 // Check that all styles are scoped under .new-ui (except Home tab show rule)
-const newUIScoped = cssContent.split('\n').filter(line => {
-  // Skip comments, empty lines, and media queries
-  if (line.trim().startsWith('/*') || 
-      line.trim() === '' || 
+const newUIScoped = cssContent
+  .split('\n')
+  .filter((line) => {
+    // Skip comments, empty lines, and media queries
+    if (
+      line.trim().startsWith('/*') ||
+      line.trim() === '' ||
       line.trim().startsWith('}') ||
       line.trim().startsWith('@media') ||
-      line.trim().includes('*/')) {
+      line.trim().includes('*/')
+    ) {
+      return false;
+    }
+
+    // Check if it's a CSS rule
+    if (line.includes('{') && !line.includes('@')) {
+      return true;
+    }
+
     return false;
-  }
-  
-  // Check if it's a CSS rule
-  if (line.includes('{') && !line.includes('@')) {
-    return true;
-  }
-  
-  return false;
-}).every(line => {
-  // Allow the Home tab show rule to be unscoped
-  if (line.includes('.main-tab[data-tab="home"]') && line.includes('display: block')) {
-    return true;
-  }
-  return line.includes('.new-ui') || line.includes('@media');
-});
+  })
+  .every((line) => {
+    // Allow the Home tab show rule to be unscoped
+    if (line.includes('.main-tab[data-tab="home"]') && line.includes('display: block')) {
+      return true;
+    }
+    return line.includes('.new-ui') || line.includes('@media');
+  });
 
 console.log('   ✓ All styles scoped under .new-ui:', newUIScoped ? 'PASS' : 'FAIL');
 
@@ -75,8 +81,9 @@ const mainCSSHasHideRule = htmlContent.includes('.main-tab[data-tab="home"] { di
 console.log('   ✓ Main CSS hides Home tab:', mainCSSHasHideRule ? 'PASS' : 'FAIL');
 
 // Check new UI CSS has show rule
-const newUICSSHasShowRule = cssContent.includes('.new-ui .main-tab[data-tab="home"]') && 
-                           cssContent.includes('display: block');
+const newUICSSHasShowRule =
+  cssContent.includes('.new-ui .main-tab[data-tab="home"]') &&
+  cssContent.includes('display: block');
 console.log('   ✓ New UI CSS shows Home tab:', newUICSSHasShowRule ? 'PASS' : 'FAIL');
 
 // Test 4: Check no JavaScript changes
@@ -87,15 +94,18 @@ const hasSwitchTab = htmlContent.includes('function switchTab(tabName)');
 console.log('   ✓ switchTab function exists:', hasSwitchTab ? 'PASS' : 'FAIL');
 
 // Verify no new navigation logic
-const hasOriginalNavigation = htmlContent.includes("document.querySelectorAll('.main-tab').forEach(tab => {") &&
-                             htmlContent.includes("tab.addEventListener('click', function() {");
+const hasOriginalNavigation =
+  htmlContent.includes("document.querySelectorAll('.main-tab').forEach(tab => {") &&
+  htmlContent.includes("tab.addEventListener('click', function() {");
 console.log('   ✓ Original navigation intact:', hasOriginalNavigation ? 'PASS' : 'FAIL');
 
 // Test 5: Check flag detection logic
 console.log('\n5. Checking flag detection...');
 
 // Verify both URL param and localStorage detection
-const hasURLParamDetection = htmlContent.includes("new URLSearchParams(window.location.search).get('ui') === '1'");
+const hasURLParamDetection = htmlContent.includes(
+  "new URLSearchParams(window.location.search).get('ui') === '1'",
+);
 const hasLocalStorageDetection = htmlContent.includes("localStorage.getItem('NEW_UI') === 'true'");
 
 console.log('   ✓ URL parameter detection:', hasURLParamDetection ? 'PASS' : 'FAIL');
@@ -113,7 +123,7 @@ const checks = [
   hasSwitchTab,
   hasOriginalNavigation,
   hasURLParamDetection,
-  hasLocalStorageDetection
+  hasLocalStorageDetection,
 ];
 
 const passed = checks.filter(Boolean).length;

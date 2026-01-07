@@ -30,11 +30,13 @@
 5. Add to Vercel environment variables
 
 **Alternative: Vercel Postgres**
+
 1. In Vercel Dashboard, go to Storage tab
 2. Create new Postgres database
 3. Copy connection strings to environment variables
 
 **Alternative: Railway**
+
 1. Go to [Railway](https://railway.app)
 2. Create new project with PostgreSQL template
 3. Copy connection string from variables tab

@@ -12,8 +12,8 @@ Expert in React, Node.js, Python, AWS`,
     currentTitle: 'Software Engineer',
     yearsExperience: 5,
     hardSkills: ['React', 'Node.js', 'Python', 'AWS'],
-    softSkills: ['Leadership', 'Problem Solving']
-  }
+    softSkills: ['Leadership', 'Problem Solving'],
+  },
 };
 
 const mockAnalysisData = {
@@ -21,9 +21,9 @@ const mockAnalysisData = {
   strengths: [
     { skill: 'React Development' },
     { skill: 'Team Leadership' },
-    { skill: 'Performance Optimization' }
+    { skill: 'Performance Optimization' },
   ],
-  profile: mockSessionData.profile
+  profile: mockSessionData.profile,
 };
 
 const mockJobDescription = `Senior Software Engineer at TechCorp

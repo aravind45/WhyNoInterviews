@@ -9,53 +9,70 @@ const router = Router();
  * GET /api/target-companies
  * Get all target companies for a session with statistics
  */
-router.get('/', asyncHandler(async (req: Request, res: Response) => {
-  const { sessionId } = req.query;
+router.get(
+  '/',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { sessionId } = req.query;
 
-  if (!sessionId) {
-    throw createError('sessionId is required', 400);
-  }
+    if (!sessionId) {
+      throw createError('sessionId is required', 400);
+    }
 
-  // Get internal session ID
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
+    // Get internal session ID
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
 
-  if (sessionCheck.rows.length === 0) {
-    res.json({ success: true, data: { companies: [], stats: null } });
-    return;
-  }
+    if (sessionCheck.rows.length === 0) {
+      res.json({ success: true, data: { companies: [], stats: null } });
+      return;
+    }
 
-  const internalSessionId = sessionCheck.rows[0].id;
+    const internalSessionId = sessionCheck.rows[0].id;
 
-  // Get companies with statistics
-  const result = await query(`
+    // Get companies with statistics
+    const result = await query(
+      `
     SELECT * FROM target_companies_summary
     WHERE session_id = $1
     ORDER BY priority ASC, company_name ASC
-  `, [internalSessionId]);
+  `,
+      [internalSessionId],
+    );
 
-  res.json({
-    success: true,
-    data: {
-      companies: result.rows,
-      stats: result.rows.length > 0 ? {
-        total: result.rows.length,
-        activeCount: result.rows.filter((c: any) => c.is_active).length,
-        totalJobsFound: result.rows.reduce((sum: number, c: any) => sum + (c.total_jobs_found || 0), 0),
-        newJobsCount: result.rows.reduce((sum: number, c: any) => sum + (c.new_jobs_count || 0), 0)
-      } : null
-    }
-  });
-}));
+    res.json({
+      success: true,
+      data: {
+        companies: result.rows,
+        stats:
+          result.rows.length > 0
+            ? {
+                total: result.rows.length,
+                activeCount: result.rows.filter((c: any) => c.is_active).length,
+                totalJobsFound: result.rows.reduce(
+                  (sum: number, c: any) => sum + (c.total_jobs_found || 0),
+                  0,
+                ),
+                newJobsCount: result.rows.reduce(
+                  (sum: number, c: any) => sum + (c.new_jobs_count || 0),
+                  0,
+                ),
+              }
+            : null,
+      },
+    });
+  }),
+);
 
 /**
  * GET /api/target-companies/suggestions
  * Get global company suggestions
  */
-router.get('/suggestions', asyncHandler(async (req: Request, res: Response) => {
-  const result = await query(`
+router.get(
+  '/suggestions',
+  asyncHandler(async (req: Request, res: Response) => {
+    const result = await query(`
     SELECT
       company_name,
       company_domain,
@@ -69,448 +86,489 @@ router.get('/suggestions', asyncHandler(async (req: Request, res: Response) => {
     ORDER BY company_name ASC
   `);
 
-  res.json({
-    success: true,
-    data: {
-      suggestions: result.rows
-    }
-  });
-}));
+    res.json({
+      success: true,
+      data: {
+        suggestions: result.rows,
+      },
+    });
+  }),
+);
 
 /**
  * POST /api/target-companies
  * Add a new target company
  */
-router.post('/', asyncHandler(async (req: Request, res: Response) => {
-  const {
-    sessionId,
-    companyName,
-    companyDomain,
-    industry,
-    companySize,
-    priority = 3,
-    notes,
-    targetRoles,
-    locationPreference,
-    referralContact
-  } = req.body;
+router.post(
+  '/',
+  asyncHandler(async (req: Request, res: Response) => {
+    const {
+      sessionId,
+      companyName,
+      companyDomain,
+      industry,
+      companySize,
+      priority = 3,
+      notes,
+      targetRoles,
+      locationPreference,
+      referralContact,
+    } = req.body;
 
-  if (!sessionId || !companyName) {
-    throw createError('sessionId and companyName are required', 400);
-  }
+    if (!sessionId || !companyName) {
+      throw createError('sessionId and companyName are required', 400);
+    }
 
-  // Verify session exists and get internal UUID
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
+    // Verify session exists and get internal UUID
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
 
-  if (sessionCheck.rows.length === 0) {
-    throw createError('Session not found or expired', 404);
-  }
+    if (sessionCheck.rows.length === 0) {
+      throw createError('Session not found or expired', 404);
+    }
 
-  const internalSessionId = sessionCheck.rows[0].id;
+    const internalSessionId = sessionCheck.rows[0].id;
 
-  // Insert new company
-  const result = await query(`
+    // Insert new company
+    const result = await query(
+      `
     INSERT INTO target_companies (
       session_id, company_name, company_domain, industry, company_size,
       priority, notes, target_roles, location_preference, referral_contact
     )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *
-  `, [
-    internalSessionId,
-    companyName,
-    companyDomain,
-    industry,
-    companySize,
-    priority,
-    notes,
-    targetRoles || [],
-    locationPreference,
-    referralContact
-  ]);
+  `,
+      [
+        internalSessionId,
+        companyName,
+        companyDomain,
+        industry,
+        companySize,
+        priority,
+        notes,
+        targetRoles || [],
+        locationPreference,
+        referralContact,
+      ],
+    );
 
-  logger.info('Target company added', {
-    sessionId,
-    companyName,
-    companyId: result.rows[0].id
-  });
+    logger.info('Target company added', {
+      sessionId,
+      companyName,
+      companyId: result.rows[0].id,
+    });
 
-  res.json({
-    success: true,
-    data: {
-      company: result.rows[0]
-    },
-    message: `${companyName} added to your target companies`
-  });
-}));
+    res.json({
+      success: true,
+      data: {
+        company: result.rows[0],
+      },
+      message: `${companyName} added to your target companies`,
+    });
+  }),
+);
 
 /**
  * POST /api/target-companies/bulk
  * Add multiple companies from suggestions at once
  */
-router.post('/bulk', asyncHandler(async (req: Request, res: Response) => {
-  const { sessionId, companyNames } = req.body;
+router.post(
+  '/bulk',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { sessionId, companyNames } = req.body;
 
-  if (!sessionId || !Array.isArray(companyNames) || companyNames.length === 0) {
-    throw createError('sessionId and companyNames array are required', 400);
-  }
+    if (!sessionId || !Array.isArray(companyNames) || companyNames.length === 0) {
+      throw createError('sessionId and companyNames array are required', 400);
+    }
 
-  // Verify session exists and get internal UUID
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
+    // Verify session exists and get internal UUID
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
 
-  if (sessionCheck.rows.length === 0) {
-    throw createError('Session not found or expired', 404);
-  }
+    if (sessionCheck.rows.length === 0) {
+      throw createError('Session not found or expired', 404);
+    }
 
-  const internalSessionId = sessionCheck.rows[0].id;
+    const internalSessionId = sessionCheck.rows[0].id;
 
-  // Get company details from suggestions
-  const suggestions = await query(`
+    // Get company details from suggestions
+    const suggestions = await query(
+      `
     SELECT * FROM global_company_suggestions
     WHERE company_name = ANY($1)
-  `, [companyNames]);
+  `,
+      [companyNames],
+    );
 
-  const added = [];
-  const skipped = [];
+    const added = [];
+    const skipped = [];
 
-  for (const suggestion of suggestions.rows) {
-    try {
-      const result = await query(`
+    for (const suggestion of suggestions.rows) {
+      try {
+        const result = await query(
+          `
         INSERT INTO target_companies (
           session_id, company_name, company_domain, industry, company_size, priority
         )
         VALUES ($1, $2, $3, $4, $5, 3)
         RETURNING id, company_name
-      `, [
-        internalSessionId,
-        suggestion.company_name,
-        suggestion.company_domain,
-        suggestion.industry,
-        suggestion.company_size
-      ]);
-      added.push(result.rows[0]);
-    } catch (error: any) {
-      if (error.code === '23505') { // Unique constraint violation
-        skipped.push(suggestion.company_name);
-      } else {
-        throw error;
+      `,
+          [
+            internalSessionId,
+            suggestion.company_name,
+            suggestion.company_domain,
+            suggestion.industry,
+            suggestion.company_size,
+          ],
+        );
+        added.push(result.rows[0]);
+      } catch (error: any) {
+        if (error.code === '23505') {
+          // Unique constraint violation
+          skipped.push(suggestion.company_name);
+        } else {
+          throw error;
+        }
       }
     }
-  }
 
-  logger.info('Bulk companies added', {
-    sessionId,
-    addedCount: added.length,
-    skippedCount: skipped.length
-  });
+    logger.info('Bulk companies added', {
+      sessionId,
+      addedCount: added.length,
+      skippedCount: skipped.length,
+    });
 
-  res.json({
-    success: true,
-    data: {
-      added,
-      skipped,
-      stats: {
-        totalRequested: companyNames.length,
-        successfullyAdded: added.length,
-        alreadyExisted: skipped.length
-      }
-    },
-    message: `${added.length} companies added successfully`
-  });
-}));
+    res.json({
+      success: true,
+      data: {
+        added,
+        skipped,
+        stats: {
+          totalRequested: companyNames.length,
+          successfullyAdded: added.length,
+          alreadyExisted: skipped.length,
+        },
+      },
+      message: `${added.length} companies added successfully`,
+    });
+  }),
+);
 
 /**
  * PUT /api/target-companies/:id
  * Update a target company
  */
-router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const {
-    sessionId,
-    companyName,
-    companyDomain,
-    industry,
-    companySize,
-    priority,
-    notes,
-    targetRoles,
-    locationPreference,
-    referralContact,
-    isActive
-  } = req.body;
+router.put(
+  '/:id',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const {
+      sessionId,
+      companyName,
+      companyDomain,
+      industry,
+      companySize,
+      priority,
+      notes,
+      targetRoles,
+      locationPreference,
+      referralContact,
+      isActive,
+    } = req.body;
 
-  if (!sessionId) {
-    throw createError('sessionId is required', 400);
-  }
+    if (!sessionId) {
+      throw createError('sessionId is required', 400);
+    }
 
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
-  if (sessionCheck.rows.length === 0) throw createError('Session not found', 404);
-  const internalSessionId = sessionCheck.rows[0].id;
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
+    if (sessionCheck.rows.length === 0) throw createError('Session not found', 404);
+    const internalSessionId = sessionCheck.rows[0].id;
 
-  // Build update query dynamically
-  const updates: string[] = [];
-  const values: any[] = [id, internalSessionId];
-  let paramCounter = 3;
+    // Build update query dynamically
+    const updates: string[] = [];
+    const values: any[] = [id, internalSessionId];
+    let paramCounter = 3;
 
-  if (companyName !== undefined) {
-    updates.push(`company_name = $${paramCounter++}`);
-    values.push(companyName);
-  }
-  if (companyDomain !== undefined) {
-    updates.push(`company_domain = $${paramCounter++}`);
-    values.push(companyDomain);
-  }
-  if (industry !== undefined) {
-    updates.push(`industry = $${paramCounter++}`);
-    values.push(industry);
-  }
-  if (companySize !== undefined) {
-    updates.push(`company_size = $${paramCounter++}`);
-    values.push(companySize);
-  }
-  if (priority !== undefined) {
-    updates.push(`priority = $${paramCounter++}`);
-    values.push(priority);
-  }
-  if (notes !== undefined) {
-    updates.push(`notes = $${paramCounter++}`);
-    values.push(notes);
-  }
-  if (targetRoles !== undefined) {
-    updates.push(`target_roles = $${paramCounter++}`);
-    values.push(targetRoles);
-  }
-  if (locationPreference !== undefined) {
-    updates.push(`location_preference = $${paramCounter++}`);
-    values.push(locationPreference);
-  }
-  if (referralContact !== undefined) {
-    updates.push(`referral_contact = $${paramCounter++}`);
-    values.push(referralContact);
-  }
-  if (isActive !== undefined) {
-    updates.push(`is_active = $${paramCounter++}`);
-    values.push(isActive);
-  }
+    if (companyName !== undefined) {
+      updates.push(`company_name = $${paramCounter++}`);
+      values.push(companyName);
+    }
+    if (companyDomain !== undefined) {
+      updates.push(`company_domain = $${paramCounter++}`);
+      values.push(companyDomain);
+    }
+    if (industry !== undefined) {
+      updates.push(`industry = $${paramCounter++}`);
+      values.push(industry);
+    }
+    if (companySize !== undefined) {
+      updates.push(`company_size = $${paramCounter++}`);
+      values.push(companySize);
+    }
+    if (priority !== undefined) {
+      updates.push(`priority = $${paramCounter++}`);
+      values.push(priority);
+    }
+    if (notes !== undefined) {
+      updates.push(`notes = $${paramCounter++}`);
+      values.push(notes);
+    }
+    if (targetRoles !== undefined) {
+      updates.push(`target_roles = $${paramCounter++}`);
+      values.push(targetRoles);
+    }
+    if (locationPreference !== undefined) {
+      updates.push(`location_preference = $${paramCounter++}`);
+      values.push(locationPreference);
+    }
+    if (referralContact !== undefined) {
+      updates.push(`referral_contact = $${paramCounter++}`);
+      values.push(referralContact);
+    }
+    if (isActive !== undefined) {
+      updates.push(`is_active = $${paramCounter++}`);
+      values.push(isActive);
+    }
 
-  if (updates.length === 0) {
-    throw createError('No fields to update', 400);
-  }
+    if (updates.length === 0) {
+      throw createError('No fields to update', 400);
+    }
 
-  const result = await query(`
+    const result = await query(
+      `
     UPDATE target_companies
     SET ${updates.join(', ')}
     WHERE id = $1 AND session_id = $2
     RETURNING *
-  `, values);
+  `,
+      values,
+    );
 
-  if (result.rows.length === 0) {
-    throw createError('Company not found or access denied', 404);
-  }
+    if (result.rows.length === 0) {
+      throw createError('Company not found or access denied', 404);
+    }
 
-  logger.info('Target company updated', {
-    sessionId,
-    companyId: id,
-    fieldsUpdated: updates.length
-  });
+    logger.info('Target company updated', {
+      sessionId,
+      companyId: id,
+      fieldsUpdated: updates.length,
+    });
 
-  res.json({
-    success: true,
-    data: {
-      company: result.rows[0]
-    },
-    message: 'Company updated successfully'
-  });
-}));
+    res.json({
+      success: true,
+      data: {
+        company: result.rows[0],
+      },
+      message: 'Company updated successfully',
+    });
+  }),
+);
 
 /**
  * DELETE /api/target-companies/:id
  * Remove a target company
  */
-router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { sessionId } = req.query;
+router.delete(
+  '/:id',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { sessionId } = req.query;
 
-  if (!sessionId) {
-    throw createError('sessionId is required', 400);
-  }
+    if (!sessionId) {
+      throw createError('sessionId is required', 400);
+    }
 
-  // Get internal session ID
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
+    // Get internal session ID
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
 
-  if (sessionCheck.rows.length === 0) {
-    throw createError('Session not found or expired', 404);
-  }
+    if (sessionCheck.rows.length === 0) {
+      throw createError('Session not found or expired', 404);
+    }
 
-  const internalSessionId = sessionCheck.rows[0].id;
+    const internalSessionId = sessionCheck.rows[0].id;
 
-  const result = await query(`
+    const result = await query(
+      `
     DELETE FROM target_companies
     WHERE id = $1 AND session_id = $2
     RETURNING company_name
-  `, [id, internalSessionId]);
+  `,
+      [id, internalSessionId],
+    );
 
-  if (result.rows.length === 0) {
-    throw createError('Company not found or access denied', 404);
-  }
+    if (result.rows.length === 0) {
+      throw createError('Company not found or access denied', 404);
+    }
 
-  logger.info('Target company deleted', {
-    sessionId,
-    companyId: id,
-    companyName: result.rows[0].company_name
-  });
+    logger.info('Target company deleted', {
+      sessionId,
+      companyId: id,
+      companyName: result.rows[0].company_name,
+    });
 
-  res.json({
-    success: true,
-    message: `${result.rows[0].company_name} removed from target companies`
-  });
-}));
+    res.json({
+      success: true,
+      message: `${result.rows[0].company_name} removed from target companies`,
+    });
+  }),
+);
 
 /**
  * GET /api/target-companies/:id/jobs
  * Get all jobs found for a specific target company
  */
-router.get('/:id/jobs', asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { sessionId, includeApplied = 'true' } = req.query;
+router.get(
+  '/:id/jobs',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { sessionId, includeApplied = 'true' } = req.query;
 
-  if (!sessionId) {
-    throw createError('sessionId is required', 400);
-  }
+    if (!sessionId) {
+      throw createError('sessionId is required', 400);
+    }
 
-  // Get internal session ID
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
+    // Get internal session ID
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
 
-  if (sessionCheck.rows.length === 0) {
-    res.json({ success: true, data: { jobs: [], stats: null } });
-    return;
-  }
+    if (sessionCheck.rows.length === 0) {
+      res.json({ success: true, data: { jobs: [], stats: null } });
+      return;
+    }
 
-  const internalSessionId = sessionCheck.rows[0].id;
+    const internalSessionId = sessionCheck.rows[0].id;
 
-  let jobsQuery = `
+    let jobsQuery = `
     SELECT * FROM company_job_listings
     WHERE company_id = $1 AND session_id = $2
   `;
 
-  if (includeApplied === 'false') {
-    jobsQuery += ' AND applied = FALSE';
-  }
-
-  jobsQuery += ' ORDER BY discovered_at DESC';
-
-  const result = await query(jobsQuery, [id, internalSessionId]);
-
-  res.json({
-    success: true,
-    data: {
-      jobs: result.rows,
-      stats: {
-        total: result.rows.length,
-        newJobs: result.rows.filter((j: any) => j.is_new).length,
-        bookmarked: result.rows.filter((j: any) => j.bookmarked).length,
-        applied: result.rows.filter((j: any) => j.applied).length
-      }
+    if (includeApplied === 'false') {
+      jobsQuery += ' AND applied = FALSE';
     }
-  });
-}));
+
+    jobsQuery += ' ORDER BY discovered_at DESC';
+
+    const result = await query(jobsQuery, [id, internalSessionId]);
+
+    res.json({
+      success: true,
+      data: {
+        jobs: result.rows,
+        stats: {
+          total: result.rows.length,
+          newJobs: result.rows.filter((j: any) => j.is_new).length,
+          bookmarked: result.rows.filter((j: any) => j.bookmarked).length,
+          applied: result.rows.filter((j: any) => j.applied).length,
+        },
+      },
+    });
+  }),
+);
 
 /**
  * POST /api/target-companies/:id/search
  * Perform a job search for a specific target company
  */
-router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { sessionId } = req.body;
+router.post(
+  '/:id/search',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { sessionId } = req.body;
 
-  // Get internal session ID
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
+    // Get internal session ID
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
 
-  if (sessionCheck.rows.length === 0) {
-    throw createError('Session not found or expired', 404);
-  }
+    if (sessionCheck.rows.length === 0) {
+      throw createError('Session not found or expired', 404);
+    }
 
-  const internalSessionId = sessionCheck.rows[0].id;
+    const internalSessionId = sessionCheck.rows[0].id;
 
-  // Get company details
-  const companyResult = await query(`
+    // Get company details
+    const companyResult = await query(
+      `
     SELECT * FROM target_companies
     WHERE id = $1 AND session_id = $2
-  `, [id, internalSessionId]);
+  `,
+      [id, internalSessionId],
+    );
 
-  if (companyResult.rows.length === 0) {
-    throw createError('Company not found', 404);
-  }
+    if (companyResult.rows.length === 0) {
+      throw createError('Company not found', 404);
+    }
 
-  const company = companyResult.rows[0];
+    const company = companyResult.rows[0];
 
-  // Generate search URLs for different platforms
-  const searchPlatforms = generateSearchUrls(
-    company.company_name,
-    req.body.searchQuery || req.body.roles?.join(' OR ') || '',
-    company.location_preference
-  );
+    // Generate search URLs for different platforms
+    const searchPlatforms = generateSearchUrls(
+      company.company_name,
+      req.body.searchQuery || req.body.roles?.join(' OR ') || '',
+      company.location_preference,
+    );
 
-  // Record the search
-  const searchResults = [];
+    // Record the search
+    const searchResults = [];
 
-  for (const platform of searchPlatforms) {
-    const searchRecord = await query(`
+    for (const platform of searchPlatforms) {
+      const searchRecord = await query(
+        `
       INSERT INTO company_job_searches (
         company_id, session_id, search_query, search_platform, search_url
       )
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *
-    `, [
-      id,
-      internalSessionId,
-      req.body.searchQuery || req.body.roles?.join(', ') || 'all roles',
-      platform.name,
-      platform.url
-    ]);
+    `,
+        [
+          id,
+          internalSessionId,
+          req.body.searchQuery || req.body.roles?.join(', ') || 'all roles',
+          platform.name,
+          platform.url,
+        ],
+      );
 
-    searchResults.push({
-      platform: platform.name,
-      url: platform.url,
-      searchId: searchRecord.rows[0].id
+      searchResults.push({
+        platform: platform.name,
+        url: platform.url,
+        searchId: searchRecord.rows[0].id,
+      });
+    }
+
+    logger.info('Company job search performed', {
+      sessionId,
+      companyId: id,
+      companyName: company.company_name,
+      platforms: searchPlatforms.length,
     });
-  }
 
-  logger.info('Company job search performed', {
-    sessionId,
-    companyId: id,
-    companyName: company.company_name,
-    platforms: searchPlatforms.length
-  });
-
-  res.json({
-    success: true,
-    data: {
-      company: company.company_name,
-      searchQuery: req.body.searchQuery || req.body.roles?.join(', ') || 'all roles',
-      searchUrls: searchResults
-    },
-    message: `Search initiated for ${company.company_name}`
-  });
-}));
+    res.json({
+      success: true,
+      data: {
+        company: company.company_name,
+        searchQuery: req.body.searchQuery || req.body.roles?.join(', ') || 'all roles',
+        searchUrls: searchResults,
+      },
+      message: `Search initiated for ${company.company_name}`,
+    });
+  }),
+);
 
 /**
  * Helper: Generate search URLs for various platforms
@@ -518,7 +576,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
 function generateSearchUrls(
   companyName: string,
   query: string,
-  location: string = ''
+  location: string = '',
 ): Array<{ name: string; url: string }> {
   const encodeName = encodeURIComponent(companyName);
   const encodeQuery = encodeURIComponent(`${query} ${companyName}`.trim());
@@ -527,20 +585,20 @@ function generateSearchUrls(
   return [
     {
       name: 'linkedin',
-      url: `https://www.linkedin.com/jobs/search/?keywords=${encodeQuery}&location=${encodeLocation}&f_C=${encodeName}`
+      url: `https://www.linkedin.com/jobs/search/?keywords=${encodeQuery}&location=${encodeLocation}&f_C=${encodeName}`,
     },
     {
       name: 'indeed',
-      url: `https://www.indeed.com/jobs?q=${encodeQuery}&l=${encodeLocation}`
+      url: `https://www.indeed.com/jobs?q=${encodeQuery}&l=${encodeLocation}`,
     },
     {
       name: 'glassdoor',
-      url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encodeQuery}&locT=C&locKeyword=${encodeLocation}`
+      url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encodeQuery}&locT=C&locKeyword=${encodeLocation}`,
     },
     {
       name: 'google',
-      url: `https://www.google.com/search?q=${encodeQuery}+jobs+${encodeLocation}&ibp=htl;jobs`
-    }
+      url: `https://www.google.com/search?q=${encodeQuery}+jobs+${encodeLocation}&ibp=htl;jobs`,
+    },
   ];
 }
 
@@ -548,49 +606,56 @@ function generateSearchUrls(
  * GET /api/target-companies/stats
  * Get overall statistics for target companies
  */
-router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
-  const { sessionId } = req.query;
+router.get(
+  '/stats',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { sessionId } = req.query;
 
-  if (!sessionId) {
-    throw createError('sessionId is required', 400);
-  }
+    if (!sessionId) {
+      throw createError('sessionId is required', 400);
+    }
 
-  // Get internal session ID
-  const sessionCheck = await query(
-    'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
-    [sessionId]
-  );
+    // Get internal session ID
+    const sessionCheck = await query(
+      'SELECT id FROM user_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId],
+    );
 
-  if (sessionCheck.rows.length === 0) {
+    if (sessionCheck.rows.length === 0) {
+      res.json({
+        success: true,
+        data: {
+          total_companies: 0,
+          active_companies: 0,
+          high_priority: 0,
+          medium_high_priority: 0,
+          medium_priority: 0,
+        },
+      });
+      return;
+    }
+
+    const internalSessionId = sessionCheck.rows[0].id;
+
+    const stats = await query(
+      `
+    SELECT * FROM target_companies_stats
+    WHERE session_id = $1
+  `,
+      [internalSessionId],
+    );
+
     res.json({
-      success: true, data: {
+      success: true,
+      data: stats.rows[0] || {
         total_companies: 0,
         active_companies: 0,
         high_priority: 0,
         medium_high_priority: 0,
-        medium_priority: 0
-      }
+        medium_priority: 0,
+      },
     });
-    return;
-  }
-
-  const internalSessionId = sessionCheck.rows[0].id;
-
-  const stats = await query(`
-    SELECT * FROM target_companies_stats
-    WHERE session_id = $1
-  `, [internalSessionId]);
-
-  res.json({
-    success: true,
-    data: stats.rows[0] || {
-      total_companies: 0,
-      active_companies: 0,
-      high_priority: 0,
-      medium_high_priority: 0,
-      medium_priority: 0
-    }
-  });
-}));
+  }),
+);
 
 export default router;

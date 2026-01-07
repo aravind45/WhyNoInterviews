@@ -20,27 +20,31 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // Security middleware with CSP for frontend
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false,
-}));
+    crossOriginEmbedderPolicy: false,
+  }),
+);
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }),
+);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -67,7 +71,7 @@ app.get('/health', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'resume-diagnosis-engine',
-    version: '1.0.0'
+    version: '1.0.0',
   });
 });
 
@@ -99,8 +103,8 @@ app.get('/api', (req, res) => {
           resume: 'File (PDF, DOC, DOCX)',
           targetJobTitle: 'String (required)',
           jobDescription: 'String (optional)',
-          applicationCount: 'Number (optional)'
-        }
+          applicationCount: 'Number (optional)',
+        },
       },
       analyze: {
         method: 'POST',
@@ -109,38 +113,38 @@ app.get('/api', (req, res) => {
         body: {
           sessionId: 'UUID',
           targetJobTitle: 'String',
-          jobDescription: 'String (optional)'
-        }
+          jobDescription: 'String (optional)',
+        },
       },
       session: {
         method: 'GET',
         path: '/api/session/:sessionId',
-        description: 'Get session and analysis status'
+        description: 'Get session and analysis status',
       },
       results: {
         method: 'GET',
         path: '/api/results/:sessionId',
-        description: 'Get diagnosis results'
+        description: 'Get diagnosis results',
       },
       deleteSession: {
         method: 'DELETE',
         path: '/api/session/:sessionId',
-        description: 'Delete session and all associated data'
+        description: 'Delete session and all associated data',
       },
       admin: {
         health: 'GET /api/admin/health',
         migrate: 'POST /api/admin/migrate',
         seed: 'POST /api/admin/seed',
         cleanup: 'POST /api/admin/cleanup',
-        stats: 'GET /api/admin/stats'
-      }
+        stats: 'GET /api/admin/stats',
+      },
     },
     requirements: {
       maxFileSize: '10MB',
       maxPages: 10,
       supportedFormats: ['PDF', 'DOC', 'DOCX'],
-      dataRetention: '24 hours'
-    }
+      dataRetention: '24 hours',
+    },
   });
 });
 
@@ -179,7 +183,7 @@ const startCleanupJob = () => {
 async function startServer() {
   try {
     logger.info('Starting Resume Diagnosis Engine...');
-    
+
     // Initialize database connection
     await connectDatabase();
     logger.info('✓ Database connected');
@@ -203,7 +207,6 @@ async function startServer() {
       logger.info(`✓ API: http://localhost:${PORT}/api`);
       logger.info(`✓ Frontend: http://localhost:${PORT}`);
     });
-    
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);
@@ -213,14 +216,14 @@ async function startServer() {
 // Graceful shutdown
 const shutdown = async (signal: string) => {
   logger.info(`${signal} received, shutting down gracefully...`);
-  
+
   try {
     const { closeDatabase } = require('./database/connection');
     const { closeRedis } = require('./cache/redis');
-    
+
     await closeDatabase();
     await closeRedis();
-    
+
     logger.info('Graceful shutdown completed');
     process.exit(0);
   } catch (error) {

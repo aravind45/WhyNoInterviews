@@ -7,6 +7,7 @@ A comprehensive feature allowing users to manage a list of target companies they
 ## Features Implemented
 
 ### 1. **Database Schema** ✅
+
 - `target_companies` - Main companies table with user preferences
 - `company_job_searches` - Track searches performed
 - `company_job_listings` - Jobs found at target companies
@@ -14,9 +15,11 @@ A comprehensive feature allowing users to manage a list of target companies they
 - Views for statistics and summaries
 
 ### 2. **Backend API** ✅
+
 File: `src/routes/targetCompanies.ts`
 
 **Endpoints:**
+
 - `GET /api/target-companies` - List all user's target companies with stats
 - `GET /api/target-companies/suggestions` - Get 15 suggested companies
 - `POST /api/target-companies` - Add single company
@@ -28,9 +31,11 @@ File: `src/routes/targetCompanies.ts`
 - `GET /api/target-companies/stats` - Overall statistics
 
 ### 3. **Frontend UI** ✅
+
 File: `src/public/index.html`
 
 **Components:**
+
 - New tab "🏢 Target Companies" in main navigation
 - Stats dashboard (total companies, new jobs, priority counts)
 - Company cards with priority indicators
@@ -40,6 +45,7 @@ File: `src/public/index.html`
 - Jobs display section
 
 **Styling:**
+
 - Priority-based color coding (1=Red, 2=Orange, 3=Blue, 4-5=Gray)
 - Hover effects and animations
 - Responsive grid layouts
@@ -361,16 +367,16 @@ Find the tab switching code and make sure it includes 'target-companies':
 
 ```javascript
 // Tab switching
-document.querySelectorAll('.main-tab').forEach(tab => {
+document.querySelectorAll('.main-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
     const tabName = tab.dataset.tab;
 
     // Update active tab
-    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.main-tab').forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
 
     // Show corresponding section
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.section').forEach((s) => s.classList.remove('active'));
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
     // Load data for specific tabs
@@ -421,6 +427,7 @@ git push
 ## Data Model
 
 ### Target Company Object
+
 ```typescript
 {
   id: UUID,
@@ -492,6 +499,7 @@ git push
 ## Support
 
 If you encounter issues:
+
 1. Check browser console for errors
 2. Verify DATABASE_URL is set
 3. Confirm migrations ran successfully
