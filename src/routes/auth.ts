@@ -192,9 +192,18 @@ router.post('/google', async (req: AuthRequest, res: Response) => {
             }
         });
 
-    } catch (error) {
-        logger.error('Google Auth error', error);
-        res.status(500).json({ success: false, error: 'Google authentication failed' });
+    } catch (error: any) {
+        logger.error('Google Auth error', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            clientId: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET'
+        });
+        res.status(500).json({
+            success: false,
+            error: 'Google authentication failed',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
