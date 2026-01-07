@@ -28,7 +28,7 @@ async function linkSessionToUser(sessionId: string, userId: string) {
         // Update the current session to belong to the user
         // We use session_token column for lookup if passed from client (usually 'sess_...')
         await pool.query(
-            `UPDATE user_sessions SET user_id = $1 WHERE session_token = $2`,
+            `UPDATE user_sessions SET user_id = $1 WHERE session_id = $2`,
             [userId, sessionId]
         );
     } catch (err) {
@@ -284,7 +284,7 @@ router.get('/me', async (req: Request, res: Response) => {
             SELECT u.id, u.email, u.full_name, u.is_verified
             FROM user_sessions s
             JOIN users u ON s.user_id = u.id
-            WHERE s.session_token = $1 AND s.expires_at > NOW()
+            WHERE s.session_id = $1 AND s.expires_at > NOW()
         `, [sessionId]);
 
         if (result.rows.length === 0) {

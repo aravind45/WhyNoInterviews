@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 
 CREATE TABLE IF NOT EXISTS user_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    session_token VARCHAR(255) NOT NULL UNIQUE,
+    session_id VARCHAR(255) NOT NULL UNIQUE,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Account link
     ip_address INET,
     user_agent TEXT,
