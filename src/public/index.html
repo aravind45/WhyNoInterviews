@@ -2970,6 +2970,20 @@
           callback: handleGoogleSignIn,
           auto_select: false
         });
+
+        // Render the button if the container exists
+        const btnContainer = document.getElementById('g_id_signin_container');
+        if (btnContainer) {
+          google.accounts.id.renderButton(btnContainer, {
+            type: 'standard',
+            shape: 'rectangular',
+            theme: 'outline',
+            text: 'continue_with',
+            size: 'large',
+            logo_alignment: 'left',
+            width: btnContainer.offsetWidth || 340
+          });
+        }
       }
     }
 
@@ -3065,9 +3079,9 @@
 
     // Initialize Google Sign-In when ready
     if (document.readyState === 'complete') {
-      initGoogleSignIn();
+      loadGoogleClientId();
     } else {
-      window.addEventListener('load', initGoogleSignIn);
+      window.addEventListener('load', loadGoogleClientId);
     }
 
     function toggleUserDropdown() {
@@ -6485,24 +6499,12 @@
       </div>
 
       <!-- Google Button Container -->
-      <div id="g_id_onload" data-context="signin" data-ux_mode="popup" data-callback="handleGoogleCredential"
-        data-auto_prompt="false">
-      </div>
-      <div id="g_id_signin_container" class="g_id_signin" data-type="standard" data-shape="rectangular"
-        data-theme="outline" data-text="continue_with" data-size="large" data-logo_alignment="left" data-width="100%">
-      </div>
+      <div id="g_id_signin_container" style="width: 100%; margin-bottom: 20px;"></div>
       <script>
-        // Load Google Client ID and initialize button
-        fetch('/api/config')
-          .then(res => res.json())
-          .then(data => {
-            const container = document.getElementById('g_id_onload');
-            if (container && data.googleClientId) {
-              container.setAttribute('data-client_id', data.googleClientId);
-              console.log('Google Sign-In button configured');
-            }
-          })
-          .catch(err => console.error('Failed to load Google Client ID:', err));
+        // Check if client ID is already loaded and re-initialize if needed
+        if (typeof GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID) {
+          initGoogleSignIn();
+        }
       </script>
 
       <div style="display: flex; align-items: center; gap: 10px; margin: 20px 0; color: #64748b; font-size: 0.8rem;">
