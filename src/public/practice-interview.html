@@ -1,626 +1,611 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Practice Interview - Standalone Demo</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
 
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: #fff9f0;
-        color: #1e293b;
-        padding: 24px;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Practice Interview - Standalone Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      .container {
-        max-width: 1100px;
-        margin: 0 auto;
-      }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fff9f0;
+      color: #1e293b;
+      padding: 24px;
+    }
 
-      .card {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 20px;
-      }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-      .card-header {
-        margin-bottom: 20px;
-      }
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
 
-      .card-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
+    .card-header {
+      margin-bottom: 20px;
+    }
 
-      .card-subtitle {
-        font-size: 0.9rem;
-        color: #64748b;
-      }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
 
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 12px 24px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
+    .card-subtitle {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
 
-      .btn-primary {
-        background: linear-gradient(135deg, #ff9500, #ff7a00);
-        color: white;
-      }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
 
-      .btn-primary:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(255, 149, 0, 0.3);
-      }
+    .btn-primary {
+      background: linear-gradient(135deg, #ff9500, #ff7a00);
+      color: white;
+    }
 
-      .btn-secondary {
-        background: white;
-        color: #1e293b;
-        border: 1px solid #e2e8f0;
-      }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 149, 0, 0.3);
+    }
 
-      .btn-sm {
-        padding: 8px 16px;
-        font-size: 0.85rem;
-      }
+    .btn-secondary {
+      background: white;
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+    }
 
-      .btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
 
-      .input,
-      select,
-      textarea {
-        width: 100%;
-        padding: 12px 16px;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        color: #1e293b;
-        font-size: 0.95rem;
-        font-family: inherit;
-      }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
-      .input:focus,
-      select:focus,
-      textarea:focus {
-        outline: none;
-        border-color: #ff9500;
-      }
+    .input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      color: #1e293b;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
 
-      .form-group {
-        margin-bottom: 16px;
-      }
+    .input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #ff9500;
+    }
 
-      .form-label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 500;
-        font-size: 0.9rem;
-      }
+    .form-group {
+      margin-bottom: 16px;
+    }
 
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
       .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .assessment-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+    }
+
+    .assessment-card:hover {
+      border-color: #ff9500;
+      transform: translateY(-2px);
+    }
+
+    .assessment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .assessment-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .assessment-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .assessment-meta {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    .question-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .question-number {
+      font-size: 0.85rem;
+      color: #ff9500;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .question-text {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .option {
+      background: #fff9f0;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option:hover {
+      border-color: #ff9500;
+    }
+
+    .option.selected {
+      border-color: #ff9500;
+      background: rgba(255, 149, 0, 0.1);
+    }
+
+    .option.correct {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .option.incorrect {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .timer {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #f59e0b;
+    }
+
+    .progress {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    .score-display {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .score-number {
+      font-size: 4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+
+    .score-label {
+      font-size: 1.2rem;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+
+    .feedback-section {
+      background: #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .feedback-section h3 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      color: #a5b4fc;
+    }
+
+    .feedback-list {
+      list-style: none;
+    }
+
+    .feedback-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #2e2e3e;
+    }
+
+    .feedback-list li:last-child {
+      border-bottom: none;
+    }
+
+    .ai-help-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .ai-help-modal.show {
+      display: flex;
+    }
+
+    .ai-help-content {
+      background: #12121a;
+      border: 1px solid #2e2e3e;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .ai-help-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .ai-help-text {
+      line-height: 1.8;
+      color: #cbd5e1;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    .close-btn:hover {
+      background: #1e1e2e;
+      color: #e2e8f0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    .spinner {
+      border: 3px solid #1e1e2e;
+      border-top: 3px solid #6366f1;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
       }
 
-      @media (max-width: 768px) {
-        .grid-2 {
-          grid-template-columns: 1fr;
-        }
+      100% {
+        transform: rotate(360deg);
       }
+    }
+  </style>
+</head>
 
-      .assessment-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 16px;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 1px solid #e2e8f0;
-      }
-
-      .assessment-card:hover {
-        border-color: #ff9500;
-        transform: translateY(-2px);
-      }
-
-      .assessment-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 12px;
-      }
-
-      .assessment-icon {
-        font-size: 2rem;
-        margin-bottom: 8px;
-      }
-
-      .assessment-name {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
-
-      .assessment-meta {
-        font-size: 0.85rem;
-        color: #64748b;
-      }
-
-      .question-card {
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 20px;
-        border: 1px solid #e2e8f0;
-      }
-
-      .question-number {
-        font-size: 0.85rem;
-        color: #ff9500;
-        font-weight: 600;
-        margin-bottom: 12px;
-      }
-
-      .question-text {
-        font-size: 1.1rem;
-        font-weight: 500;
-        margin-bottom: 20px;
-        line-height: 1.6;
-      }
-
-      .option {
-        background: #fff9f0;
-        border: 2px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .option:hover {
-        border-color: #ff9500;
-      }
-
-      .option.selected {
-        border-color: #ff9500;
-        background: rgba(255, 149, 0, 0.1);
-      }
-
-      .option.correct {
-        border-color: #10b981;
-        background: rgba(16, 185, 129, 0.1);
-      }
-
-      .option.incorrect {
-        border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.1);
-      }
-
-      .timer {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #f59e0b;
-      }
-
-      .progress {
-        font-size: 0.9rem;
-        color: #64748b;
-      }
-
-      .score-display {
-        text-align: center;
-        padding: 40px;
-      }
-
-      .score-number {
-        font-size: 4rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 16px;
-      }
-
-      .score-label {
-        font-size: 1.2rem;
-        color: #94a3b8;
-        margin-bottom: 24px;
-      }
-
-      .feedback-section {
-        background: #1e1e2e;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 16px;
-      }
-
-      .feedback-section h3 {
-        font-size: 1rem;
-        margin-bottom: 12px;
-        color: #a5b4fc;
-      }
-
-      .feedback-list {
-        list-style: none;
-      }
-
-      .feedback-list li {
-        padding: 8px 0;
-        border-bottom: 1px solid #2e2e3e;
-      }
-
-      .feedback-list li:last-child {
-        border-bottom: none;
-      }
-
-      .ai-help-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.85);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-      }
-
-      .ai-help-modal.show {
-        display: flex;
-      }
-
-      .ai-help-content {
-        background: #12121a;
-        border: 1px solid #2e2e3e;
-        border-radius: 16px;
-        padding: 32px;
-        max-width: 600px;
-        width: 90%;
-        max-height: 80vh;
-        overflow-y: auto;
-      }
-
-      .ai-help-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-
-      .ai-help-text {
-        line-height: 1.8;
-        color: #cbd5e1;
-      }
-
-      .close-btn {
-        background: none;
-        border: none;
-        color: #94a3b8;
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-      }
-
-      .close-btn:hover {
-        background: #1e1e2e;
-        color: #e2e8f0;
-      }
-
-      .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: #64748b;
-      }
-
-      .empty-state-icon {
-        font-size: 4rem;
-        margin-bottom: 16px;
-        opacity: 0.5;
-      }
-
-      .loading {
-        text-align: center;
-        padding: 40px;
-        color: #64748b;
-      }
-
-      .spinner {
-        border: 3px solid #1e1e2e;
-        border-top: 3px solid #6366f1;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 16px;
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="container">
-      <h1 style="margin-bottom: 24px">🎯 Practice Interview</h1>
-
-      <!-- Dashboard View -->
-      <div id="dashboard-view">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Your Practice Assessments</h2>
-            <p class="card-subtitle">Create and practice with AI-generated interview questions</p>
-          </div>
-          <button class="btn btn-primary" onclick="showCreateModal()">
-            ➕ Create New Assessment
-          </button>
+<body>
+  <!-- Navigation Header -->
+  <header
+    style="background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 24px; margin: -24px -24px 24px -24px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="/" style="text-decoration: none; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.5rem;">←</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img src="logo.svg" alt="JobMatch AI" style="width: 28px; height: 28px;" />
+          <span style="font-size: 1.1rem;"><strong>Job</strong>Match AI</span>
         </div>
+      </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="/"
+        style="text-decoration: none; color: #64748b; font-size: 0.9rem; padding: 8px 16px; border-radius: 8px; transition: all 0.2s;"
+        onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+        🏠 Home
+      </a>
+      <a href="/help-guide.html" target="_blank"
+        style="text-decoration: none; color: #64748b; font-size: 0.9rem; padding: 8px 16px; border-radius: 8px; transition: all 0.2s;"
+        onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+        ❓ Help
+      </a>
+    </div>
+  </header>
 
-        <div id="assessments-list">
-          <!-- Assessments will be loaded here -->
+  <div class="container">
+    <h1 style="margin-bottom: 24px">🎯 Practice Interview</h1>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Your Practice Assessments</h2>
+          <p class="card-subtitle">Create and practice with AI-generated interview questions</p>
         </div>
+        <button class="btn btn-primary" onclick="showCreateModal()">
+          ➕ Create New Assessment
+        </button>
       </div>
 
-      <!-- Practice Session View -->
-      <div id="practice-view" style="display: none">
-        <div class="card">
-          <div
-            style="
+      <div id="assessments-list">
+        <!-- Assessments will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Practice Session View -->
+    <div id="practice-view" style="display: none">
+      <div class="card">
+        <div style="
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 24px;
-            "
-          >
-            <button class="btn btn-secondary btn-sm" onclick="exitPractice()">
-              ← Back to Dashboard
-            </button>
-            <div>
-              <span class="timer" id="session-timer">00:00</span>
-              <span class="progress" id="session-progress" style="margin-left: 20px"
-                >Question 1 of 10</span
-              >
-            </div>
-          </div>
-
-          <div id="question-container">
-            <!-- Current question will be displayed here -->
-          </div>
-
-          <div style="display: flex; gap: 12px; margin-top: 24px">
-            <button class="btn btn-secondary" onclick="requestHint()" id="hint-btn">
-              💡 Get Hint
-            </button>
-            <button
-              class="btn btn-secondary"
-              onclick="requestExplanation()"
-              id="explain-btn"
-              style="display: none"
-            >
-              📖 Explain
-            </button>
-            <button
-              class="btn btn-primary"
-              onclick="submitAnswer()"
-              id="submit-btn"
-              style="margin-left: auto"
-            >
-              Submit Answer
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Results View -->
-      <div id="results-view" style="display: none">
-        <div class="card">
-          <button class="btn btn-secondary btn-sm" onclick="backToDashboard()">
+            ">
+          <button class="btn btn-secondary btn-sm" onclick="exitPractice()">
             ← Back to Dashboard
           </button>
-
-          <div class="score-display">
-            <div class="score-number" id="final-score">85%</div>
-            <div class="score-label">Your Score</div>
-            <p id="score-message" style="color: #64748b; margin-bottom: 24px"></p>
+          <div>
+            <span class="timer" id="session-timer">00:00</span>
+            <span class="progress" id="session-progress" style="margin-left: 20px">Question 1 of 10</span>
           </div>
+        </div>
 
-          <div id="feedback-container">
-            <!-- AI feedback will be displayed here -->
-          </div>
+        <div id="question-container">
+          <!-- Current question will be displayed here -->
+        </div>
 
-          <button class="btn btn-primary" onclick="retryAssessment()" style="margin-top: 24px">
-            🔄 Practice Again
+        <div style="display: flex; gap: 12px; margin-top: 24px">
+          <button class="btn btn-secondary" onclick="requestHint()" id="hint-btn">
+            💡 Get Hint
+          </button>
+          <button class="btn btn-secondary" onclick="requestExplanation()" id="explain-btn" style="display: none">
+            📖 Explain
+          </button>
+          <button class="btn btn-primary" onclick="submitAnswer()" id="submit-btn" style="margin-left: auto">
+            Submit Answer
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Create Assessment Modal -->
-    <div class="ai-help-modal" id="create-modal">
-      <div class="ai-help-content">
-        <div class="ai-help-header">
-          <h2>Create Practice Assessment</h2>
-          <button class="close-btn" onclick="closeCreateModal()">×</button>
+    <!-- Results View -->
+    <div id="results-view" style="display: none">
+      <div class="card">
+        <button class="btn btn-secondary btn-sm" onclick="backToDashboard()">
+          ← Back to Dashboard
+        </button>
+
+        <div class="score-display">
+          <div class="score-number" id="final-score">85%</div>
+          <div class="score-label">Your Score</div>
+          <p id="score-message" style="color: #64748b; margin-bottom: 24px"></p>
         </div>
 
-        <form id="create-form" onsubmit="createAssessment(event)">
-          <div class="form-group">
-            <label class="form-label">Assessment Name</label>
-            <input
-              type="text"
-              class="input"
-              id="assessment-name"
-              placeholder="e.g., Software Engineer Technical"
-              required
-            />
-          </div>
+        <div id="feedback-container">
+          <!-- AI feedback will be displayed here -->
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Description (Optional)</label>
-            <textarea
-              class="input"
-              id="assessment-desc"
-              rows="2"
-              placeholder="Brief description of this assessment"
-            ></textarea>
-          </div>
-
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label">Job Role</label>
-              <input
-                type="text"
-                class="input"
-                id="job-role"
-                placeholder="e.g., Software Engineer"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Assessment Type</label>
-              <select class="input" id="assessment-type" required>
-                <option value="technical">Technical</option>
-                <option value="behavioral">Behavioral</option>
-                <option value="mixed">Mixed</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label">Number of Questions</label>
-              <input
-                type="number"
-                class="input"
-                id="question-count"
-                value="10"
-                min="5"
-                max="20"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Difficulty</label>
-              <select class="input" id="difficulty">
-                <option value="easy">Easy</option>
-                <option value="medium" selected>Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            class="btn btn-primary"
-            style="width: 100%; margin-top: 16px"
-            id="create-btn"
-          >
-            ✨ Generate Questions with AI
-          </button>
-        </form>
+        <button class="btn btn-primary" onclick="retryAssessment()" style="margin-top: 24px">
+          🔄 Practice Again
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- AI Help Modal -->
-    <div class="ai-help-modal" id="ai-help-modal">
-      <div class="ai-help-content">
-        <div class="ai-help-header">
-          <h2 id="ai-help-title">AI Hint</h2>
-          <button class="close-btn" onclick="closeAIHelp()">×</button>
+  <!-- Create Assessment Modal -->
+  <div class="ai-help-modal" id="create-modal">
+    <div class="ai-help-content">
+      <div class="ai-help-header">
+        <h2>Create Practice Assessment</h2>
+        <button class="close-btn" onclick="closeCreateModal()">×</button>
+      </div>
+
+      <form id="create-form" onsubmit="createAssessment(event)">
+        <div class="form-group">
+          <label class="form-label">Assessment Name</label>
+          <input type="text" class="input" id="assessment-name" placeholder="e.g., Software Engineer Technical"
+            required />
         </div>
-        <div class="ai-help-text" id="ai-help-text">
-          <!-- AI response will be displayed here -->
+
+        <div class="form-group">
+          <label class="form-label">Description (Optional)</label>
+          <textarea class="input" id="assessment-desc" rows="2"
+            placeholder="Brief description of this assessment"></textarea>
         </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Job Role</label>
+            <input type="text" class="input" id="job-role" placeholder="e.g., Software Engineer" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assessment Type</label>
+            <select class="input" id="assessment-type" required>
+              <option value="technical">Technical</option>
+              <option value="behavioral">Behavioral</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Number of Questions</label>
+            <input type="number" class="input" id="question-count" value="10" min="5" max="20" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Difficulty</label>
+            <select class="input" id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px" id="create-btn">
+          ✨ Generate Questions with AI
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- AI Help Modal -->
+  <div class="ai-help-modal" id="ai-help-modal">
+    <div class="ai-help-content">
+      <div class="ai-help-header">
+        <h2 id="ai-help-title">AI Hint</h2>
+        <button class="close-btn" onclick="closeAIHelp()">×</button>
+      </div>
+      <div class="ai-help-text" id="ai-help-text">
+        <!-- AI response will be displayed here -->
       </div>
     </div>
+  </div>
 
-    <script>
-      // API Base URL
-      const API_BASE = '/api/practice';
+  <script>
+    // API Base URL
+    const API_BASE = '/api/practice';
 
-      // State
-      let currentAssessment = null;
-      let currentSession = null;
-      let currentQuestionIndex = 0;
-      let questions = [];
-      let answers = [];
-      let sessionStartTime = null;
-      let timerInterval = null;
-      let hintUsed = false;
-      let explanationUsed = false;
+    // State
+    let currentAssessment = null;
+    let currentSession = null;
+    let currentQuestionIndex = 0;
+    let questions = [];
+    let answers = [];
+    let sessionStartTime = null;
+    let timerInterval = null;
+    let hintUsed = false;
+    let explanationUsed = false;
 
-      // Initialize
-      loadAssessments();
+    // Initialize
+    loadAssessments();
 
-      // Load user's assessments
-      async function loadAssessments() {
-        try {
-          const response = await fetch(`${API_BASE}/assessments`);
-          const data = await response.json();
+    // Load user's assessments
+    async function loadAssessments() {
+      try {
+        const response = await fetch(`${API_BASE}/assessments`);
+        const data = await response.json();
 
-          if (data.success) {
-            displayAssessments(data.assessments);
-          }
-        } catch (error) {
-          console.error('Error loading assessments:', error);
+        if (data.success) {
+          displayAssessments(data.assessments);
         }
+      } catch (error) {
+        console.error('Error loading assessments:', error);
       }
+    }
 
-      // Display assessments
-      function displayAssessments(assessments) {
-        const container = document.getElementById('assessments-list');
+    // Display assessments
+    function displayAssessments(assessments) {
+      const container = document.getElementById('assessments-list');
 
-        if (assessments.length === 0) {
-          container.innerHTML = `
+      if (assessments.length === 0) {
+        container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">📝</div>
             <h3>No Practice Assessments Yet</h3>
             <p>Create your first assessment to start practicing!</p>
           </div>
         `;
-          return;
-        }
+        return;
+      }
 
-        container.innerHTML = assessments
-          .map(
-            (assessment) => `
+      container.innerHTML = assessments
+        .map(
+          (assessment) => `
         <div class="assessment-card" onclick="startPractice('${assessment.id}')">
           <div class="assessment-icon">${assessment.icon || '💼'}</div>
           <div class="assessment-name">${assessment.name}</div>
@@ -629,131 +614,131 @@
           </div>
         </div>
       `,
-          )
-          .join('');
+        )
+        .join('');
+    }
+
+    // Show create modal
+    function showCreateModal() {
+      document.getElementById('create-modal').classList.add('show');
+    }
+
+    // Close create modal
+    function closeCreateModal() {
+      document.getElementById('create-modal').classList.remove('show');
+    }
+
+    // Create assessment
+    async function createAssessment(event) {
+      event.preventDefault();
+
+      const btn = document.getElementById('create-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating Questions...';
+
+      try {
+        // Create assessment
+        const assessmentData = {
+          name: document.getElementById('assessment-name').value,
+          description: document.getElementById('assessment-desc').value,
+          assessmentType: document.getElementById('assessment-type').value,
+        };
+
+        const createResponse = await fetch(`${API_BASE}/create-assessment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(assessmentData),
+        });
+
+        const createResult = await createResponse.json();
+        if (!createResult.success) throw new Error('Failed to create assessment');
+
+        // Generate questions
+        const questionData = {
+          assessmentId: createResult.assessment.id,
+          jobRole: document.getElementById('job-role').value,
+          assessmentType: document.getElementById('assessment-type').value,
+          questionCount: parseInt(document.getElementById('question-count').value),
+          difficulty: document.getElementById('difficulty').value,
+        };
+
+        const questionsResponse = await fetch(`${API_BASE}/generate-questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(questionData),
+        });
+
+        const questionsResult = await questionsResponse.json();
+        if (!questionsResult.success) throw new Error('Failed to generate questions');
+
+        alert('✅ Assessment created successfully!');
+        closeCreateModal();
+        loadAssessments();
+        document.getElementById('create-form').reset();
+      } catch (error) {
+        console.error('Error creating assessment:', error);
+        alert('❌ Failed to create assessment. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Generate Questions with AI';
       }
+    }
 
-      // Show create modal
-      function showCreateModal() {
-        document.getElementById('create-modal').classList.add('show');
+    // Start practice session
+    async function startPractice(assessmentId) {
+      try {
+        // Load assessment with questions
+        const assessmentResponse = await fetch(`${API_BASE}/assessment/${assessmentId}`);
+        const assessmentData = await assessmentResponse.json();
+
+        if (!assessmentData.success) throw new Error('Failed to load assessment');
+
+        currentAssessment = assessmentData.assessment;
+        questions = currentAssessment.questions;
+
+        // Start session
+        const sessionResponse = await fetch(`${API_BASE}/start-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assessmentId }),
+        });
+
+        const sessionData = await sessionResponse.json();
+        if (!sessionData.success) throw new Error('Failed to start session');
+
+        currentSession = sessionData.session;
+        currentQuestionIndex = 0;
+        answers = [];
+        sessionStartTime = Date.now();
+
+        // Start timer
+        startTimer();
+
+        // Show practice view
+        document.getElementById('dashboard-view').style.display = 'none';
+        document.getElementById('practice-view').style.display = 'block';
+
+        // Display first question
+        displayQuestion();
+      } catch (error) {
+        console.error('Error starting practice:', error);
+        alert('Failed to start practice session');
       }
+    }
 
-      // Close create modal
-      function closeCreateModal() {
-        document.getElementById('create-modal').classList.remove('show');
-      }
+    // Display current question
+    function displayQuestion() {
+      const question = questions[currentQuestionIndex];
+      hintUsed = false;
+      explanationUsed = false;
 
-      // Create assessment
-      async function createAssessment(event) {
-        event.preventDefault();
+      document.getElementById('session-progress').textContent =
+        `Question ${currentQuestionIndex + 1} of ${questions.length}`;
 
-        const btn = document.getElementById('create-btn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Generating Questions...';
+      const container = document.getElementById('question-container');
 
-        try {
-          // Create assessment
-          const assessmentData = {
-            name: document.getElementById('assessment-name').value,
-            description: document.getElementById('assessment-desc').value,
-            assessmentType: document.getElementById('assessment-type').value,
-          };
-
-          const createResponse = await fetch(`${API_BASE}/create-assessment`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(assessmentData),
-          });
-
-          const createResult = await createResponse.json();
-          if (!createResult.success) throw new Error('Failed to create assessment');
-
-          // Generate questions
-          const questionData = {
-            assessmentId: createResult.assessment.id,
-            jobRole: document.getElementById('job-role').value,
-            assessmentType: document.getElementById('assessment-type').value,
-            questionCount: parseInt(document.getElementById('question-count').value),
-            difficulty: document.getElementById('difficulty').value,
-          };
-
-          const questionsResponse = await fetch(`${API_BASE}/generate-questions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(questionData),
-          });
-
-          const questionsResult = await questionsResponse.json();
-          if (!questionsResult.success) throw new Error('Failed to generate questions');
-
-          alert('✅ Assessment created successfully!');
-          closeCreateModal();
-          loadAssessments();
-          document.getElementById('create-form').reset();
-        } catch (error) {
-          console.error('Error creating assessment:', error);
-          alert('❌ Failed to create assessment. Please try again.');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = '✨ Generate Questions with AI';
-        }
-      }
-
-      // Start practice session
-      async function startPractice(assessmentId) {
-        try {
-          // Load assessment with questions
-          const assessmentResponse = await fetch(`${API_BASE}/assessment/${assessmentId}`);
-          const assessmentData = await assessmentResponse.json();
-
-          if (!assessmentData.success) throw new Error('Failed to load assessment');
-
-          currentAssessment = assessmentData.assessment;
-          questions = currentAssessment.questions;
-
-          // Start session
-          const sessionResponse = await fetch(`${API_BASE}/start-session`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ assessmentId }),
-          });
-
-          const sessionData = await sessionResponse.json();
-          if (!sessionData.success) throw new Error('Failed to start session');
-
-          currentSession = sessionData.session;
-          currentQuestionIndex = 0;
-          answers = [];
-          sessionStartTime = Date.now();
-
-          // Start timer
-          startTimer();
-
-          // Show practice view
-          document.getElementById('dashboard-view').style.display = 'none';
-          document.getElementById('practice-view').style.display = 'block';
-
-          // Display first question
-          displayQuestion();
-        } catch (error) {
-          console.error('Error starting practice:', error);
-          alert('Failed to start practice session');
-        }
-      }
-
-      // Display current question
-      function displayQuestion() {
-        const question = questions[currentQuestionIndex];
-        hintUsed = false;
-        explanationUsed = false;
-
-        document.getElementById('session-progress').textContent =
-          `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-
-        const container = document.getElementById('question-container');
-
-        if (question.question_type === 'multiple_choice') {
-          container.innerHTML = `
+      if (question.question_type === 'multiple_choice') {
+        container.innerHTML = `
           <div class="question-card">
             <div class="question-number">Question ${currentQuestionIndex + 1}</div>
             <div class="question-text">${question.question_text}</div>
@@ -772,149 +757,148 @@
           </div>
         `;
 
-          // Add click handlers
-          document.querySelectorAll('.option').forEach((option) => {
-            option.addEventListener('click', () => {
-              document.querySelectorAll('.option').forEach((o) => o.classList.remove('selected'));
-              option.classList.add('selected');
-            });
+        // Add click handlers
+        document.querySelectorAll('.option').forEach((option) => {
+          option.addEventListener('click', () => {
+            document.querySelectorAll('.option').forEach((o) => o.classList.remove('selected'));
+            option.classList.add('selected');
           });
-        } else {
-          container.innerHTML = `
+        });
+      } else {
+        container.innerHTML = `
           <div class="question-card">
             <div class="question-number">Question ${currentQuestionIndex + 1}</div>
             <div class="question-text">${question.question_text}</div>
             <textarea class="input" id="open-answer" rows="6" placeholder="Type your answer here..."></textarea>
           </div>
         `;
-        }
-
-        // Reset buttons
-        document.getElementById('hint-btn').style.display = 'inline-flex';
-        document.getElementById('explain-btn').style.display = 'none';
       }
 
-      // Submit answer
-      async function submitAnswer() {
-        const question = questions[currentQuestionIndex];
-        let userAnswer = '';
+      // Reset buttons
+      document.getElementById('hint-btn').style.display = 'inline-flex';
+      document.getElementById('explain-btn').style.display = 'none';
+    }
 
+    // Submit answer
+    async function submitAnswer() {
+      const question = questions[currentQuestionIndex];
+      let userAnswer = '';
+
+      if (question.question_type === 'multiple_choice') {
+        const selected = document.querySelector('.option.selected');
+        if (!selected) {
+          alert('Please select an answer');
+          return;
+        }
+        userAnswer = selected.dataset.answer;
+      } else {
+        userAnswer = document.getElementById('open-answer').value.trim();
+        if (!userAnswer) {
+          alert('Please provide an answer');
+          return;
+        }
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/submit-answer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionPracticeId: currentSession.id,
+            questionId: question.id,
+            userAnswer,
+            timeSpent: Math.floor((Date.now() - sessionStartTime) / 1000),
+            aiHintUsed: hintUsed,
+            aiExplanationUsed: explanationUsed,
+          }),
+        });
+
+        const data = await response.json();
+
+        // Show feedback
         if (question.question_type === 'multiple_choice') {
           const selected = document.querySelector('.option.selected');
-          if (!selected) {
-            alert('Please select an answer');
-            return;
-          }
-          userAnswer = selected.dataset.answer;
-        } else {
-          userAnswer = document.getElementById('open-answer').value.trim();
-          if (!userAnswer) {
-            alert('Please provide an answer');
-            return;
-          }
-        }
-
-        try {
-          const response = await fetch(`${API_BASE}/submit-answer`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionPracticeId: currentSession.id,
-              questionId: question.id,
-              userAnswer,
-              timeSpent: Math.floor((Date.now() - sessionStartTime) / 1000),
-              aiHintUsed: hintUsed,
-              aiExplanationUsed: explanationUsed,
-            }),
-          });
-
-          const data = await response.json();
-
-          // Show feedback
-          if (question.question_type === 'multiple_choice') {
-            const selected = document.querySelector('.option.selected');
-            if (data.isCorrect) {
-              selected.classList.add('correct');
-            } else {
-              selected.classList.add('incorrect');
-              // Highlight correct answer
-              document
-                .querySelector(`[data-answer="${data.correctAnswer}"]`)
-                .classList.add('correct');
-            }
-
-            // Show explanation button
-            document.getElementById('hint-btn').style.display = 'none';
-            document.getElementById('explain-btn').style.display = 'inline-flex';
-            document.getElementById('submit-btn').textContent = 'Next Question →';
-            document.getElementById('submit-btn').onclick = nextQuestion;
+          if (data.isCorrect) {
+            selected.classList.add('correct');
           } else {
-            nextQuestion();
+            selected.classList.add('incorrect');
+            // Highlight correct answer
+            document
+              .querySelector(`[data-answer="${data.correctAnswer}"]`)
+              .classList.add('correct');
           }
-        } catch (error) {
-          console.error('Error submitting answer:', error);
-          alert('Failed to submit answer');
-        }
-      }
 
-      // Next question
-      function nextQuestion() {
-        currentQuestionIndex++;
-
-        if (currentQuestionIndex >= questions.length) {
-          completeSession();
+          // Show explanation button
+          document.getElementById('hint-btn').style.display = 'none';
+          document.getElementById('explain-btn').style.display = 'inline-flex';
+          document.getElementById('submit-btn').textContent = 'Next Question →';
+          document.getElementById('submit-btn').onclick = nextQuestion;
         } else {
-          document.getElementById('submit-btn').textContent = 'Submit Answer';
-          document.getElementById('submit-btn').onclick = submitAnswer;
-          displayQuestion();
+          nextQuestion();
         }
+      } catch (error) {
+        console.error('Error submitting answer:', error);
+        alert('Failed to submit answer');
       }
+    }
 
-      // Complete session
-      async function completeSession() {
-        stopTimer();
+    // Next question
+    function nextQuestion() {
+      currentQuestionIndex++;
 
-        try {
-          const response = await fetch(`${API_BASE}/complete-session`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionPracticeId: currentSession.id }),
-          });
+      if (currentQuestionIndex >= questions.length) {
+        completeSession();
+      } else {
+        document.getElementById('submit-btn').textContent = 'Submit Answer';
+        document.getElementById('submit-btn').onclick = submitAnswer;
+        displayQuestion();
+      }
+    }
 
-          const data = await response.json();
+    // Complete session
+    async function completeSession() {
+      stopTimer();
 
-          if (data.success) {
-            showResults(data.result);
-          }
-        } catch (error) {
-          console.error('Error completing session:', error);
-          alert('Failed to complete session');
+      try {
+        const response = await fetch(`${API_BASE}/complete-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionPracticeId: currentSession.id }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showResults(data.result);
         }
+      } catch (error) {
+        console.error('Error completing session:', error);
+        alert('Failed to complete session');
       }
+    }
 
-      // Show results
-      function showResults(result) {
-        document.getElementById('practice-view').style.display = 'none';
-        document.getElementById('results-view').style.display = 'block';
+    // Show results
+    function showResults(result) {
+      document.getElementById('practice-view').style.display = 'none';
+      document.getElementById('results-view').style.display = 'block';
 
-        const percentage = Math.round((result.score / result.total_questions) * 100);
-        document.getElementById('final-score').textContent = `${percentage}%`;
-        document.getElementById('score-message').textContent =
-          `You answered ${result.score} out of ${result.total_questions} questions correctly`;
+      const percentage = Math.round((result.score / result.total_questions) * 100);
+      document.getElementById('final-score').textContent = `${percentage}%`;
+      document.getElementById('score-message').textContent =
+        `You answered ${result.score} out of ${result.total_questions} questions correctly`;
 
-        // Display AI feedback
-        const feedbackContainer = document.getElementById('feedback-container');
-        if (result.ai_feedback) {
-          const feedback = result.ai_feedback;
-          feedbackContainer.innerHTML = `
+      // Display AI feedback
+      const feedbackContainer = document.getElementById('feedback-container');
+      if (result.ai_feedback) {
+        const feedback = result.ai_feedback;
+        feedbackContainer.innerHTML = `
           <div class="feedback-section">
             <h3>📊 Overall Feedback</h3>
             <p>${feedback.overallFeedback || 'Great job completing the practice session!'}</p>
           </div>
           
-          ${
-            feedback.strengths
-              ? `
+          ${feedback.strengths
+            ? `
             <div class="feedback-section">
               <h3>💪 Strengths</h3>
               <ul class="feedback-list">
@@ -922,12 +906,11 @@
               </ul>
             </div>
           `
-              : ''
+            : ''
           }
           
-          ${
-            feedback.improvements
-              ? `
+          ${feedback.improvements
+            ? `
             <div class="feedback-section">
               <h3>🎯 Areas to Improve</h3>
               <ul class="feedback-list">
@@ -935,12 +918,11 @@
               </ul>
             </div>
           `
-              : ''
+            : ''
           }
           
-          ${
-            feedback.nextSteps
-              ? `
+          ${feedback.nextSteps
+            ? `
             <div class="feedback-section">
               <h3>📝 Next Steps</h3>
               <ul class="feedback-list">
@@ -948,108 +930,109 @@
               </ul>
             </div>
           `
-              : ''
+            : ''
           }
         `;
+      }
+    }
+
+    // Request hint
+    async function requestHint() {
+      const question = questions[currentQuestionIndex];
+      showAIHelp('💡 AI Hint', 'Loading hint...');
+      hintUsed = true;
+
+      try {
+        const response = await fetch(`${API_BASE}/ai-hint`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId: question.id }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('ai-help-text').textContent = data.hint;
         }
+      } catch (error) {
+        console.error('Error getting hint:', error);
+        document.getElementById('ai-help-text').textContent = 'Failed to load hint';
       }
+    }
 
-      // Request hint
-      async function requestHint() {
-        const question = questions[currentQuestionIndex];
-        showAIHelp('💡 AI Hint', 'Loading hint...');
-        hintUsed = true;
+    // Request explanation
+    async function requestExplanation() {
+      const question = questions[currentQuestionIndex];
+      showAIHelp('📖 Explanation', 'Loading explanation...');
+      explanationUsed = true;
 
-        try {
-          const response = await fetch(`${API_BASE}/ai-hint`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ questionId: question.id }),
-          });
+      try {
+        const response = await fetch(`${API_BASE}/ai-explanation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId: question.id }),
+        });
 
-          const data = await response.json();
-          if (data.success) {
-            document.getElementById('ai-help-text').textContent = data.hint;
-          }
-        } catch (error) {
-          console.error('Error getting hint:', error);
-          document.getElementById('ai-help-text').textContent = 'Failed to load hint';
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('ai-help-text').textContent = data.explanation;
         }
+      } catch (error) {
+        console.error('Error getting explanation:', error);
+        document.getElementById('ai-help-text').textContent = 'Failed to load explanation';
       }
+    }
 
-      // Request explanation
-      async function requestExplanation() {
-        const question = questions[currentQuestionIndex];
-        showAIHelp('📖 Explanation', 'Loading explanation...');
-        explanationUsed = true;
+    // Show AI help modal
+    function showAIHelp(title, text) {
+      document.getElementById('ai-help-title').textContent = title;
+      document.getElementById('ai-help-text').textContent = text;
+      document.getElementById('ai-help-modal').classList.add('show');
+    }
 
-        try {
-          const response = await fetch(`${API_BASE}/ai-explanation`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ questionId: question.id }),
-          });
+    // Close AI help
+    function closeAIHelp() {
+      document.getElementById('ai-help-modal').classList.remove('show');
+    }
 
-          const data = await response.json();
-          if (data.success) {
-            document.getElementById('ai-help-text').textContent = data.explanation;
-          }
-        } catch (error) {
-          console.error('Error getting explanation:', error);
-          document.getElementById('ai-help-text').textContent = 'Failed to load explanation';
-        }
+    // Timer functions
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        document.getElementById('session-timer').textContent =
+          `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
       }
+    }
 
-      // Show AI help modal
-      function showAIHelp(title, text) {
-        document.getElementById('ai-help-title').textContent = title;
-        document.getElementById('ai-help-text').textContent = text;
-        document.getElementById('ai-help-modal').classList.add('show');
+    // Navigation
+    function exitPractice() {
+      if (confirm('Are you sure you want to exit? Your progress will be lost.')) {
+        stopTimer();
+        backToDashboard();
       }
+    }
 
-      // Close AI help
-      function closeAIHelp() {
-        document.getElementById('ai-help-modal').classList.remove('show');
-      }
+    function backToDashboard() {
+      document.getElementById('practice-view').style.display = 'none';
+      document.getElementById('results-view').style.display = 'none';
+      document.getElementById('dashboard-view').style.display = 'block';
+      loadAssessments();
+    }
 
-      // Timer functions
-      function startTimer() {
-        timerInterval = setInterval(() => {
-          const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
-          const minutes = Math.floor(elapsed / 60);
-          const seconds = elapsed % 60;
-          document.getElementById('session-timer').textContent =
-            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }, 1000);
+    function retryAssessment() {
+      if (currentAssessment) {
+        startPractice(currentAssessment.id);
       }
+    }
+  </script>
+</body>
 
-      function stopTimer() {
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
-      }
-
-      // Navigation
-      function exitPractice() {
-        if (confirm('Are you sure you want to exit? Your progress will be lost.')) {
-          stopTimer();
-          backToDashboard();
-        }
-      }
-
-      function backToDashboard() {
-        document.getElementById('practice-view').style.display = 'none';
-        document.getElementById('results-view').style.display = 'none';
-        document.getElementById('dashboard-view').style.display = 'block';
-        loadAssessments();
-      }
-
-      function retryAssessment() {
-        if (currentAssessment) {
-          startPractice(currentAssessment.id);
-        }
-      }
-    </script>
-  </body>
 </html>
