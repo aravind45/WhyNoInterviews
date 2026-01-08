@@ -1,37 +1,32 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-async function checkCounts() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-  });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
+(async () => {
   try {
-    const tables = await pool.query(`
+    console.log('🔍 Listing all tables in current database...\n');
+    const res = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_type = 'BASE TABLE'
+      WHERE table_schema = 'public'
     `);
 
-    console.log('--- Row Counts ---');
-    for (const table of tables.rows) {
-      const name = table.table_name;
-      const countRes = await pool.query(`SELECT COUNT(*) FROM "${name}"`);
-      console.log(`${name}: ${countRes.rows[0].count}`);
+    console.log('Tables found:');
+    res.rows.forEach(row => console.log(`- ${row.table_name}`));
+
+    console.log('\n🔍 Checking row counts for major tables:');
+    for (const row of res.rows) {
+      const countRes = await pool.query(`SELECT COUNT(*) FROM ${row.table_name}`);
+      console.log(`${row.table_name}: ${countRes.rows[0].count} rows`);
     }
 
-    const userRes = await pool.query('SELECT email FROM users');
-    console.log(
-      '\nEmails in users table:',
-      userRes.rows.map((r) => r.email),
-    );
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('❌ Error:', error.message);
   } finally {
     await pool.end();
   }
-}
-
-checkCounts();
+})();

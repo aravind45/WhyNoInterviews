@@ -7039,7 +7039,7 @@
         }
 
         async function handleGoogleCredential(response) {
-          const sessionId = localStorage.getItem('currentSessionId');
+          const sessionId = localStorage.getItem('jobmatch_session') || localStorage.getItem('currentSessionId');
 
           try {
             const res = await fetch('/api/auth/google', {
