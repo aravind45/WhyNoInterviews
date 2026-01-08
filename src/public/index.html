@@ -7081,21 +7081,45 @@
         });
 
         function updateUserDisplay(user) {
+          // Header items
           const authButtons = document.getElementById('auth-buttons');
           const userMenu = document.getElementById('user-menu');
           const userDisplayName = document.getElementById('user-display-name');
           const userAvatar = document.getElementById('user-avatar');
 
+          // Sidebar items
+          const sidebarAuthButtons = document.getElementById('sidebar-auth-buttons');
+          const sidebarUserMenu = document.getElementById('sidebar-user-menu');
+          const sidebarUserName = document.getElementById('sidebar-user-name');
+          const sidebarUserAvatar = document.getElementById('sidebar-user-avatar');
+
+          const nameToDisplay = user ? (user.fullName || user.email) : '';
+          const avatarInitial = nameToDisplay ? nameToDisplay.charAt(0).toUpperCase() : 'U';
+
           if (user) {
+            // Update Header
             if (authButtons) authButtons.style.display = 'none';
             if (userMenu) {
-              userMenu.style.display = 'block'; // or flex
-              if (userDisplayName) userDisplayName.innerText = user.fullName || user.email;
-              if (userAvatar) userAvatar.innerText = (user.fullName || user.email).charAt(0).toUpperCase();
+              userMenu.style.display = 'block';
+              if (userDisplayName) userDisplayName.innerText = nameToDisplay;
+              if (userAvatar) userAvatar.innerText = avatarInitial;
+            }
+
+            // Update Sidebar
+            if (sidebarAuthButtons) sidebarAuthButtons.style.display = 'none';
+            if (sidebarUserMenu) {
+              sidebarUserMenu.style.display = 'block';
+              if (sidebarUserName) sidebarUserName.innerText = nameToDisplay;
+              if (sidebarUserAvatar) sidebarUserAvatar.innerText = avatarInitial;
             }
           } else {
+            // Update Header
             if (authButtons) authButtons.style.display = 'flex';
             if (userMenu) userMenu.style.display = 'none';
+
+            // Update Sidebar
+            if (sidebarAuthButtons) sidebarAuthButtons.style.display = 'flex';
+            if (sidebarUserMenu) sidebarUserMenu.style.display = 'none';
           }
         }
       </script>
