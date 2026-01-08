@@ -19,7 +19,7 @@ export const connectDatabase = async (): Promise<void> => {
       ssl: isProduction || isNeonDb ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 20000,
     });
 
     // Test the connection
