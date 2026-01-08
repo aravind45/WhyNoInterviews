@@ -7044,8 +7044,13 @@
         }
 
         function closeAuthModal() {
-          document.getElementById('authModal').style.display = 'none';
-          document.getElementById('authError').style.display = 'none';
+          const modal = document.getElementById('authModal');
+          const errorDiv = document.getElementById('authError');
+          if (modal) modal.style.display = 'none';
+          if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.innerText = '';
+          }
         }
 
         function toggleAuthMode() {
