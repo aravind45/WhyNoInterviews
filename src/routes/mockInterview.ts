@@ -150,8 +150,22 @@ router.post(
   '/analyze-interview-video',
   asyncHandler(async (req: Request, res: Response) => {
     const { sessionToken, questionId, videoUrl } = req.body;
-    const sessionInfo = await cacheGet(`interview:${sessionToken}`);
-    if (!sessionInfo) throw new ValidationError('Invalid session token');
+    let sessionInfo = await cacheGet(`interview:${sessionToken}`);
+
+    if (!sessionInfo) {
+      const sessionResult = await query(
+        `SELECT id FROM interview_sessions WHERE session_token = $1`,
+        [sessionToken],
+      );
+
+      if (sessionResult.rows.length === 0) {
+        throw new ValidationError('Invalid session token');
+      }
+
+      sessionInfo = { sessionId: sessionResult.rows[0].id };
+      await cacheSet(`interview:${sessionToken}`, sessionInfo, 60 * 60);
+    }
+
     const analysis = await analyzeInterviewVideo(videoUrl, questionId);
     // store analysis data
     await query(

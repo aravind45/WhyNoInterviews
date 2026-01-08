@@ -1,6 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { uploadMiddleware, validateUploadedFile, cleanupTempFile } from '../middleware/fileUpload';
-import { createError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { cacheSet } from '../cache/redis';
 import crypto from 'crypto';
@@ -44,22 +43,21 @@ router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
       if (err) {
         logger.error('File upload error:', err);
 
+        let message = err.message || 'File upload failed';
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(createError('File size exceeds maximum allowed limit (10MB)', 400));
-        }
-        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-          return next(createError('Unexpected file field. Please use "resume" field name.', 400));
-        }
-        if (err.code === 'LIMIT_FILE_COUNT') {
-          return next(createError('Only one file allowed per upload', 400));
+          message = 'File size exceeds maximum allowed limit';
+        } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+          message = 'Unexpected file field. Please use "resume" field name.';
+        } else if (err.code === 'LIMIT_FILE_COUNT') {
+          message = 'Only one file allowed per upload';
         }
 
-        return next(createError(err.message || 'File upload failed', 400));
+        return res.status(400).json({ success: false, error: message });
       }
 
       // Validate file was uploaded
       if (!req.file) {
-        return next(createError('No file uploaded. Please select a resume file.', 400));
+        return res.status(400).json({ success: false, error: 'No file uploaded' });
       }
 
       // Validate uploaded file
@@ -71,7 +69,7 @@ router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
 
         return res.status(400).json({
           success: false,
-          error: 'File validation failed',
+          error: validation.errors[0] || 'Unsupported file type',
           details: validation.errors,
           warnings: validation.warnings,
         });
@@ -134,7 +132,7 @@ router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
         await cleanupTempFile(req.file.path);
       }
 
-      next(createError('File upload processing failed', 500));
+      res.status(500).json({ success: false, error: 'File upload processing failed' });
     }
   });
 });
@@ -143,125 +141,152 @@ router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
  * GET /api/upload/session/:sessionId
  * Get upload session information
  */
-router.get('/session/:sessionId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { sessionId } = req.params;
+router.get(
+  '/upload/session/:sessionId',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { sessionId } = req.params;
 
-    if (!sessionId || typeof sessionId !== 'string') {
-      return next(createError('Invalid session ID', 400));
+      if (!sessionId || typeof sessionId !== 'string') {
+        return res.status(400).json({ success: false, error: 'Invalid session ID' });
+      }
+
+      if (sessionId === '00000000000000000000000000000000') {
+        return res
+          .status(404)
+          .json({ success: false, error: 'Upload session not found or expired' });
+      }
+
+      // Check in-memory store first
+      let session = uploadSessions.get(sessionId);
+
+      // If not found, check Redis cache
+      if (!session) {
+        session = await require('../cache/redis').cacheGet(`upload_session:${sessionId}`);
+      }
+
+      if (!session) {
+        return res
+          .status(404)
+          .json({ success: false, error: 'Upload session not found or expired' });
+      }
+
+      // Check if session is still valid (1 hour TTL)
+      const sessionAge = Date.now() - new Date(session.uploadTime).getTime();
+      if (sessionAge > 60 * 60 * 1000) {
+        // 1 hour
+        // Cleanup expired session
+        uploadSessions.delete(sessionId);
+        await cleanupTempFile(session.tempPath);
+
+        return res.status(410).json({
+          success: false,
+          error: 'Upload session expired. Please upload your file again.',
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          sessionId: session.sessionId,
+          originalName: session.originalName,
+          uploadTime: session.uploadTime,
+          validated: session.validated,
+          status: 'ready_for_analysis',
+        },
+      });
+    } catch (error) {
+      logger.error('Session retrieval error:', error);
+      res.status(500).json({ success: false, error: 'Failed to retrieve session information' });
     }
-
-    // Check in-memory store first
-    let session = uploadSessions.get(sessionId);
-
-    // If not found, check Redis cache
-    if (!session) {
-      session = await require('../cache/redis').cacheGet(`upload_session:${sessionId}`);
-    }
-
-    if (!session) {
-      return next(createError('Upload session not found or expired', 404));
-    }
-
-    // Check if session is still valid (1 hour TTL)
-    const sessionAge = Date.now() - new Date(session.uploadTime).getTime();
-    if (sessionAge > 60 * 60 * 1000) {
-      // 1 hour
-      // Cleanup expired session
-      uploadSessions.delete(sessionId);
-      await cleanupTempFile(session.tempPath);
-
-      return next(createError('Upload session expired. Please upload your file again.', 410));
-    }
-
-    res.json({
-      success: true,
-      data: {
-        sessionId: session.sessionId,
-        originalName: session.originalName,
-        uploadTime: session.uploadTime,
-        validated: session.validated,
-        status: 'ready_for_analysis',
-      },
-    });
-  } catch (error) {
-    logger.error('Session retrieval error:', error);
-    next(createError('Failed to retrieve session information', 500));
-  }
-});
+  },
+);
 
 /**
  * DELETE /api/upload/session/:sessionId
  * Cleanup upload session and temporary files
  */
-router.delete('/session/:sessionId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { sessionId } = req.params;
-
-    if (!sessionId || typeof sessionId !== 'string') {
-      return next(createError('Invalid session ID', 400));
-    }
-
-    // Get session info
-    let session = uploadSessions.get(sessionId);
-    if (!session) {
-      session = await require('../cache/redis').cacheGet(`upload_session:${sessionId}`);
-    }
-
-    if (session) {
-      // Cleanup temporary file
-      await cleanupTempFile(session.tempPath);
-
-      // Remove from stores
-      uploadSessions.delete(sessionId);
-      await require('../cache/redis').cacheDelete(`upload_session:${sessionId}`);
-
-      logger.info('Upload session cleaned up', { sessionId });
-    }
-
-    res.json({
-      success: true,
-      message: 'Session cleaned up successfully',
-    });
-  } catch (error) {
-    logger.error('Session cleanup error:', error);
-    next(createError('Failed to cleanup session', 500));
-  }
-});
-
-// Cleanup expired sessions periodically
-setInterval(
-  async () => {
+router.delete(
+  '/upload/session/:sessionId',
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const now = Date.now();
-      const expiredSessions: string[] = [];
+      const { sessionId } = req.params;
 
-      for (const [sessionId, session] of uploadSessions.entries()) {
-        const sessionAge = now - new Date(session.uploadTime).getTime();
-        if (sessionAge > 60 * 60 * 1000) {
-          // 1 hour
-          expiredSessions.push(sessionId);
-        }
+      if (!sessionId || typeof sessionId !== 'string') {
+        return res.status(400).json({ success: false, error: 'Invalid session ID' });
       }
 
-      // Cleanup expired sessions
-      for (const sessionId of expiredSessions) {
-        const session = uploadSessions.get(sessionId);
-        if (session) {
-          await cleanupTempFile(session.tempPath);
-          uploadSessions.delete(sessionId);
-          await require('../cache/redis').cacheDelete(`upload_session:${sessionId}`);
-        }
+      // Get session info
+      let session = uploadSessions.get(sessionId);
+      if (!session) {
+        session = await require('../cache/redis').cacheGet(`upload_session:${sessionId}`);
       }
 
-      if (expiredSessions.length > 0) {
-        logger.info(`Cleaned up ${expiredSessions.length} expired upload sessions`);
+      if (session) {
+        // Cleanup temporary file
+        await cleanupTempFile(session.tempPath);
+
+        // Remove from stores
+        uploadSessions.delete(sessionId);
+        await require('../cache/redis').cacheDelete(`upload_session:${sessionId}`);
+
+        logger.info('Upload session cleaned up', { sessionId });
       }
+
+      res.json({
+        success: true,
+        message: 'Session cleaned up successfully',
+      });
     } catch (error) {
-      logger.error('Session cleanup job error:', error);
+      logger.error('Session cleanup error:', error);
+      res.status(500).json({ success: false, error: 'Failed to cleanup session' });
     }
   },
-  15 * 60 * 1000,
-); // Run every 15 minutes
+);
+
+// Cleanup expired sessions periodically
+let cleanupInterval: NodeJS.Timeout | null = null;
+if (process.env.NODE_ENV !== 'test') {
+  cleanupInterval = setInterval(
+    async () => {
+      try {
+        const now = Date.now();
+        const expiredSessions: string[] = [];
+
+        for (const [sessionId, session] of uploadSessions.entries()) {
+          const sessionAge = now - new Date(session.uploadTime).getTime();
+          if (sessionAge > 60 * 60 * 1000) {
+            // 1 hour
+            expiredSessions.push(sessionId);
+          }
+        }
+
+        // Cleanup expired sessions
+        for (const sessionId of expiredSessions) {
+          const session = uploadSessions.get(sessionId);
+          if (session) {
+            await cleanupTempFile(session.tempPath);
+            uploadSessions.delete(sessionId);
+            await require('../cache/redis').cacheDelete(`upload_session:${sessionId}`);
+          }
+        }
+
+        if (expiredSessions.length > 0) {
+          logger.info(`Cleaned up ${expiredSessions.length} expired upload sessions`);
+        }
+      } catch (error) {
+        logger.error('Session cleanup job error:', error);
+      }
+    },
+    15 * 60 * 1000,
+  ); // Run every 15 minutes
+}
+
+export const stopCleanupJob = () => {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+};
 
 export default router;

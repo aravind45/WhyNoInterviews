@@ -57,23 +57,41 @@ export interface ResumeData {
   rawText: string;
   sections: ResumeSection[];
   metadata: ResumeMetadata;
+  extractionConfidence: number; // 0-100
   extractedAt: Date;
 }
 
+export enum SectionType {
+  CONTACT = 'contact',
+  SUMMARY = 'summary',
+  EXPERIENCE = 'experience',
+  EDUCATION = 'education',
+  SKILLS = 'skills',
+  PROJECTS = 'projects',
+  CERTIFICATIONS = 'certifications',
+  OTHER = 'other',
+}
+
 export interface ResumeSection {
-  type:
-    | 'contact'
-    | 'summary'
-    | 'experience'
-    | 'education'
-    | 'skills'
-    | 'projects'
-    | 'certifications'
-    | 'other';
+  type: SectionType;
   title: string;
   content: string;
   startIndex: number;
   endIndex: number;
+  bullets: BulletPoint[];
+}
+
+export interface BulletPoint {
+  id: string;
+  text: string;
+  achievements: Achievement[];
+}
+
+export interface Achievement {
+  text: string;
+  hasQuantification: boolean;
+  metrics: string[];
+  actionVerbs: string[];
 }
 
 export interface ResumeMetadata {
@@ -83,6 +101,8 @@ export interface ResumeMetadata {
   fileType: 'pdf' | 'doc' | 'docx';
   fileSize: number;
   processingTime: number;
+  extractionMethod: 'pdf-parse' | 'mammoth';
+  warnings?: string[];
 }
 
 // ============================================

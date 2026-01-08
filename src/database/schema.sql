@@ -178,6 +178,140 @@ CREATE TABLE IF NOT EXISTS interview_results (
 
 -- End of Mock Interview Feature Tables
 
+-- ============================================
+-- Practice Interview Assessment Tables
+-- Interactive practice with AI-powered help
+-- ============================================
+
+-- Practice assessments (collections of interview questions for practice)
+CREATE TABLE IF NOT EXISTS practice_assessments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES user_sessions(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    assessment_type VARCHAR(50) DEFAULT 'interview' CHECK (assessment_type IN ('technical', 'behavioral', 'mixed', 'interview')),
+    icon VARCHAR(50) DEFAULT '💼',
+    color VARCHAR(20) DEFAULT '#4F46E5',
+    is_public BOOLEAN DEFAULT FALSE,
+    question_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_practice_assessments_user ON practice_assessments(user_id);
+CREATE INDEX IF NOT EXISTS idx_practice_assessments_session ON practice_assessments(session_id);
+CREATE INDEX IF NOT EXISTS idx_practice_assessments_type ON practice_assessments(assessment_type);
+
+-- Practice questions (individual questions in assessments)
+CREATE TABLE IF NOT EXISTS practice_questions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    assessment_id UUID NOT NULL REFERENCES practice_assessments(id) ON DELETE CASCADE,
+    question_number INTEGER NOT NULL,
+    question_text TEXT NOT NULL,
+    option_a TEXT,
+    option_b TEXT,
+    option_c TEXT,
+    option_d TEXT,
+    correct_answer CHAR(1) CHECK (correct_answer IN ('A', 'B', 'C', 'D') OR correct_answer IS NULL),
+    question_type VARCHAR(50) DEFAULT 'multiple_choice' CHECK (question_type IN ('multiple_choice', 'open_ended')),
+    difficulty VARCHAR(20) DEFAULT 'medium' CHECK (difficulty IN ('easy', 'medium', 'hard')),
+    explanation TEXT, -- Detailed explanation for the answer
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(assessment_id, question_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_practice_questions_assessment ON practice_questions(assessment_id);
+CREATE INDEX IF NOT EXISTS idx_practice_questions_type ON practice_questions(question_type);
+
+-- Practice sessions (active practice attempts)
+CREATE TABLE IF NOT EXISTS practice_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES user_sessions(id) ON DELETE CASCADE,
+    assessment_id UUID NOT NULL REFERENCES practice_assessments(id) ON DELETE CASCADE,
+    status VARCHAR(50) DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed', 'abandoned')),
+    current_question_number INTEGER DEFAULT 1,
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completed_at TIMESTAMP WITH TIME ZONE,
+    time_elapsed INTEGER DEFAULT 0 -- seconds
+);
+
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_user ON practice_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_assessment ON practice_sessions(assessment_id);
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_status ON practice_sessions(status);
+
+-- Practice answers (user's answers during a session)
+CREATE TABLE IF NOT EXISTS practice_answers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_practice_id UUID NOT NULL REFERENCES practice_sessions(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES practice_questions(id) ON DELETE CASCADE,
+    user_answer TEXT,
+    is_correct BOOLEAN,
+    time_spent INTEGER, -- seconds spent on this question
+    ai_hint_used BOOLEAN DEFAULT FALSE,
+    ai_explanation_used BOOLEAN DEFAULT FALSE,
+    answered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(session_practice_id, question_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_practice_answers_session ON practice_answers(session_practice_id);
+CREATE INDEX IF NOT EXISTS idx_practice_answers_question ON practice_answers(question_id);
+
+-- Practice results (completed practice session results)
+CREATE TABLE IF NOT EXISTS practice_results (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES user_sessions(id) ON DELETE CASCADE,
+    assessment_id UUID NOT NULL REFERENCES practice_assessments(id) ON DELETE CASCADE,
+    practice_session_id UUID REFERENCES practice_sessions(id) ON DELETE SET NULL,
+    score INTEGER NOT NULL CHECK (score >= 0),
+    total_questions INTEGER NOT NULL CHECK (total_questions > 0),
+    percentage DECIMAL(5,2) GENERATED ALWAYS AS (ROUND((score::DECIMAL / total_questions) * 100, 2)) STORED,
+    time_taken INTEGER, -- seconds
+    hints_used INTEGER DEFAULT 0,
+    explanations_used INTEGER DEFAULT 0,
+    ai_feedback JSONB, -- AI-generated feedback on performance
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_practice_results_user ON practice_results(user_id);
+CREATE INDEX IF NOT EXISTS idx_practice_results_session ON practice_results(session_id);
+CREATE INDEX IF NOT EXISTS idx_practice_results_assessment ON practice_results(assessment_id);
+CREATE INDEX IF NOT EXISTS idx_practice_results_created ON practice_results(created_at);
+
+-- Trigger to update question_count when questions are added/removed
+CREATE OR REPLACE FUNCTION update_assessment_question_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE practice_assessments 
+        SET question_count = question_count + 1,
+            updated_at = NOW()
+        WHERE id = NEW.assessment_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE practice_assessments 
+        SET question_count = GREATEST(0, question_count - 1),
+            updated_at = NOW()
+        WHERE id = OLD.assessment_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_question_count ON practice_questions;
+CREATE TRIGGER update_question_count
+    AFTER INSERT OR DELETE ON practice_questions
+    FOR EACH ROW EXECUTE FUNCTION update_assessment_question_count();
+
+-- Trigger for updated_at on practice_assessments
+DROP TRIGGER IF EXISTS update_practice_assessments_updated_at ON practice_assessments;
+CREATE TRIGGER update_practice_assessments_updated_at
+    BEFORE UPDATE ON practice_assessments
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- End of Practice Interview Assessment Tables
+
 CREATE INDEX IF NOT EXISTS idx_resume_analyses_session ON resume_analyses(session_id);
 CREATE INDEX IF NOT EXISTS idx_resume_analyses_status ON resume_analyses(status);
 CREATE INDEX IF NOT EXISTS idx_resume_analyses_expires ON resume_analyses(expires_at);

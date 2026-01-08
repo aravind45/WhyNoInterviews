@@ -69,8 +69,10 @@ app.use('/api/admin', adminRouter);
 // Import and mount Mock Interview Router
 import mockInterviewRouter from './routes/mockInterview';
 import configRouter from './routes/config';
+import practiceRouter from './routes/practice';
 app.use('/api', mockInterviewRouter); // Routes in file are like /interview-session
 app.use('/api', configRouter); // Config endpoint
+app.use('/api/practice', practiceRouter); // Practice interview routes
 
 const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
 

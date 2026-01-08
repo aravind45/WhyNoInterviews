@@ -1,12 +1,12 @@
 import request from 'supertest';
 import app from '../../index';
 import { clearDatabase, createTestUser } from '../helpers';
-import { closeDatabase } from '../../database/connection';
+import { closeDatabase, connectDatabase } from '../../database/connection';
 
 // Mock dependencies
 jest.mock('../../services/videoAnalysis', () => ({
   analyzeInterviewVideo: jest.fn().mockResolvedValue({
-    transcript: 'This is a mock transcript of the interview response.',
+    transcript: 'This is a Mock transcript of the interview response.',
     duration: 120,
     audio_url: 'http://mock/audio.mp3',
     confidence: 0.95,
@@ -60,6 +60,14 @@ describe('Mock Interview Integration Tests', () => {
   let user: any;
   let sessionToken: string;
   let sessionId: string;
+
+  beforeAll(async () => {
+    // Ensure database is initialized for tests
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
+    }
+    await connectDatabase();
+  });
 
   beforeEach(async () => {
     await clearDatabase();

@@ -139,7 +139,7 @@ describe('ResumeParser', () => {
     });
 
     test('should reject files that are too large', () => {
-      mockFile.size = 15 * 1024 * 1024; // 15MB
+      mockFile.size = 20 * 1024 * 1024; // 20MB, clearly > 15MB limit
 
       const result = parser.validateFile(mockFile);
 
@@ -259,12 +259,16 @@ describe('ResumeParser', () => {
     });
 
     test('should handle empty PDF gracefully', async () => {
+      mockFile.originalname = 'empty.pdf';
+      mockFile.path = '/tmp/empty.pdf';
       mockFs.readFileSync.mockReturnValue(Buffer.from('empty'));
 
       await expect(parser.parseResume(mockFile)).rejects.toThrow('Failed to extract text from PDF');
     });
 
     test('should handle PDF parsing errors', async () => {
+      mockFile.originalname = 'error.pdf';
+      mockFile.path = '/tmp/error.pdf';
       mockFs.readFileSync.mockReturnValue(Buffer.from('error'));
 
       await expect(parser.parseResume(mockFile)).rejects.toThrow('Failed to extract text from PDF');
@@ -272,6 +276,7 @@ describe('ResumeParser', () => {
 
     test('should handle DOCX parsing errors', async () => {
       mockFile.mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      mockFile.originalname = 'error.docx';
       mockFile.path = '/tmp/error.docx';
 
       await expect(parser.parseResume(mockFile)).rejects.toThrow(
@@ -281,6 +286,7 @@ describe('ResumeParser', () => {
 
     test('should reject unsupported file types', async () => {
       mockFile.mimetype = 'text/plain';
+      mockFile.originalname = 'test.txt';
 
       await expect(parser.parseResume(mockFile)).rejects.toThrow('Unsupported file type');
     });

@@ -40,37 +40,12 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter
+// File filter - only used for basic sanity checks if any
 const fileFilter = (
   req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback,
 ): void => {
-  const ext = path.extname(file.originalname).toLowerCase();
-  const mimetype = file.mimetype.toLowerCase();
-
-  // Check extension
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    cb(
-      new ValidationError(`Invalid file type. Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`, {
-        allowedExtensions: ALLOWED_EXTENSIONS,
-        receivedExtension: ext,
-      }),
-    );
-    return;
-  }
-
-  // Check MIME type
-  if (!ALLOWED_MIMETYPES.includes(mimetype)) {
-    cb(
-      new ValidationError(`Invalid file format. Please upload a PDF or Word document.`, {
-        allowedMimetypes: ALLOWED_MIMETYPES,
-        receivedMimetype: mimetype,
-      }),
-    );
-    return;
-  }
-
   cb(null, true);
 };
 
@@ -119,25 +94,29 @@ export const validateUploadedFile = (file: Express.Multer.File): FileValidationR
   // Extension validation
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
     result.isValid = false;
-    result.errors.push(`Invalid file extension: ${ext}. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`);
+    result.errors.push(`Unsupported file type`);
   }
 
   // MIME type validation
   if (!ALLOWED_MIMETYPES.includes(file.mimetype)) {
     result.isValid = false;
-    result.errors.push(`Invalid MIME type: ${file.mimetype}`);
+    // Only push if not already marked as invalid by extension
+    if (result.isValid) {
+      result.errors.push(`Unsupported file type`);
+    }
   }
 
   // Size validation
-  if (file.size > MAX_FILE_SIZE) {
+  if (file.size === 0) {
     result.isValid = false;
-    result.errors.push(
-      `File size (${formatBytes(file.size)}) exceeds maximum (${formatBytes(MAX_FILE_SIZE)})`,
-    );
+    result.errors.push('File is empty');
+  } else if (file.size > MAX_FILE_SIZE) {
+    result.isValid = false;
+    result.errors.push(`File size exceeds maximum allowed limit`);
   }
 
   // Size warnings
-  if (file.size < 1000) {
+  if (file.size > 0 && file.size < 1000) {
     result.warnings.push('File seems very small. Please ensure it contains your complete resume.');
   }
 
@@ -180,19 +159,33 @@ export const cleanupTempFile = async (filePath: string): Promise<void> => {
   }
 };
 
+/**
+ * Encrypt file content using AES-256-GCM
+ */
+export const encryptFileContent = (content: Buffer, key: string): Buffer => {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', crypto.scryptSync(key, 'salt', 32), iv);
+  const encrypted = Buffer.concat([cipher.update(content), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return Buffer.concat([iv, authTag, encrypted]);
+};
+
+/**
+ * Decrypt file content using AES-256-GCM
+ */
+export const decryptFileContent = (encryptedContent: Buffer, key: string): Buffer => {
+  const iv = encryptedContent.slice(0, 12);
+  const authTag = encryptedContent.slice(12, 28);
+  const encrypted = encryptedContent.slice(28);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', crypto.scryptSync(key, 'salt', 32), iv);
+  decipher.setAuthTag(authTag);
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]);
+};
+
 // Calculate file hash for deduplication
 export const calculateFileHash = (filePath: string): string => {
   const fileBuffer = fs.readFileSync(filePath);
   return crypto.createHash('sha256').update(fileBuffer).digest('hex');
-};
-
-// Format bytes helper
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 // Cleanup old files periodically

@@ -5,46 +5,8 @@ import { logger } from '../../utils/logger';
 // Mock logger to avoid noise in tests
 jest.mock('../../utils/logger');
 
-// Mock pg module for testing
-jest.mock('pg', () => {
-  const mockClient = {
-    query: jest.fn().mockImplementation((text, params) => {
-      if (text.includes('NOW()')) {
-        return Promise.resolve({ rows: [{ current_time: new Date() }] });
-      }
-      if (text.includes('$1 as test_value')) {
-        return Promise.resolve({ rows: [{ test_value: params?.[0] || 'test' }] });
-      }
-      if (text.includes('$1 as value')) {
-        return Promise.resolve({ rows: [{ value: params?.[0] }] });
-      }
-      if (text.includes('$1 as string_value')) {
-        return Promise.resolve({ rows: [{ string_value: params?.[0] }] });
-      }
-      if (text.includes('$1 as number_value')) {
-        return Promise.resolve({ rows: [{ number_value: params?.[0] }] });
-      }
-      if (text.includes('$1 as boolean_value')) {
-        return Promise.resolve({ rows: [{ boolean_value: params?.[0] }] });
-      }
-      if (text.includes('$1 as request_id')) {
-        return Promise.resolve({ rows: [{ request_id: params?.[0] }] });
-      }
-      return Promise.resolve({ rows: [{}] });
-    }),
-    release: jest.fn(),
-  };
-
-  const mockPool = {
-    connect: jest.fn().mockResolvedValue(mockClient),
-    query: jest.fn().mockImplementation((text, params) => mockClient.query(text, params)),
-    end: jest.fn().mockResolvedValue(undefined),
-  };
-
-  return {
-    Pool: jest.fn().mockImplementation(() => mockPool),
-  };
-});
+// Mock pg module for testing using the manual mock in __mocks__
+jest.mock('pg');
 
 describe('Database Connection Tests', () => {
   beforeEach(() => {
@@ -89,7 +51,9 @@ describe('Database Connection Tests', () => {
       jest.resetModules();
       const { getPool: freshGetPool } = require('../connection');
 
-      expect(() => freshGetPool()).toThrow('Database pool not initialized');
+      expect(() => freshGetPool()).toThrow(
+        'Database pool not initialized. Call connectDatabase() first.',
+      );
     });
   });
 
@@ -114,9 +78,9 @@ describe('Database Connection Tests', () => {
             }),
             { minLength: 1, maxLength: 10 },
           ),
-          async (queryOperations) => {
+          async (queryOperations: any[]) => {
             // Test that database connection can handle multiple operations consistently
-            const promises = queryOperations.map(async (op, index) => {
+            const promises = queryOperations.map(async (op: any, index: number) => {
               const result = await query(op.queryText, [op.paramValue]);
               return { operation: op, result, index };
             });
@@ -152,7 +116,7 @@ describe('Database Connection Tests', () => {
             numberParam: fc.integer({ min: 1, max: 1000 }),
             booleanParam: fc.boolean(),
           }),
-          async (params) => {
+          async (params: any) => {
             // Test parameter handling consistency
             const stringResult = await query('SELECT $1 as string_value', [params.stringParam]);
             const numberResult = await query('SELECT $1 as number_value', [params.numberParam]);
@@ -180,7 +144,7 @@ describe('Database Connection Tests', () => {
       await connectDatabase();
 
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 20 }), async (concurrentRequests) => {
+        fc.asyncProperty(fc.integer({ min: 1, max: 20 }), async (concurrentRequests: number) => {
           // Test concurrent pool usage
           const promises = Array.from({ length: concurrentRequests }, async (_, index) => {
             const result = await query('SELECT $1 as request_id', [index]);

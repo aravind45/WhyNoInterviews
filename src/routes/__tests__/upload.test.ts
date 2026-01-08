@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import uploadRoutes from '../upload';
 import { logger } from '../../utils/logger';
+import { connectDatabase, closeDatabase } from '../../database/connection';
 
 // Mock logger
 jest.mock('../../utils/logger');
@@ -27,7 +28,7 @@ const validDocxPath = path.join(testFilesDir, 'sample-resume.docx');
 const invalidTxtPath = path.join(testFilesDir, 'invalid-file.txt');
 
 // Create test files directory and sample files
-beforeAll(() => {
+beforeAll(async () => {
   if (!fs.existsSync(testFilesDir)) {
     fs.mkdirSync(testFilesDir, { recursive: true });
   }
@@ -44,13 +45,20 @@ beforeAll(() => {
 
   // Create invalid text file
   fs.writeFileSync(invalidTxtPath, 'This is not a valid resume file format');
+
+  // Ensure database is initialized
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
+  }
+  await connectDatabase();
 });
 
 // Cleanup test files
-afterAll(() => {
+afterAll(async () => {
   if (fs.existsSync(testFilesDir)) {
     fs.rmSync(testFilesDir, { recursive: true, force: true });
   }
+  await closeDatabase();
 });
 
 describe('File Upload Routes', () => {

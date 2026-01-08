@@ -12,6 +12,13 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/your-project/',
+    '/test_temp/',
+    '/test_uploads/',
+  ],
   detectOpenHandles: true,
   verbose: true,
   testTimeout: 30000,

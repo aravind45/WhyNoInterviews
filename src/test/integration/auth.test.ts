@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '../../index';
 import { clearDatabase, createTestUser } from '../helpers';
-import { closeDatabase } from '../../database/connection';
+import { closeDatabase, connectDatabase } from '../../database/connection';
 
 // Mock Google Auth Library
 jest.mock('google-auth-library', () => {
@@ -31,6 +31,14 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 describe('Auth Integration Tests', () => {
+  beforeAll(async () => {
+    // Ensure database is initialized for tests
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
+    }
+    await connectDatabase();
+  });
+
   beforeEach(async () => {
     await clearDatabase();
   });

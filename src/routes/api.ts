@@ -353,7 +353,9 @@ router.post(
           fileType: analysis.file_type,
           fileSize: analysis.file_size,
           processingTime: 0,
+          extractionMethod: 'pdf-parse' as const, // Added to match ResumeMetadata type
         },
+        extractionConfidence: 100, // Added to match ResumeData type
         extractedAt: new Date(),
       };
 
