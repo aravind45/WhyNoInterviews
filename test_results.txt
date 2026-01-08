@@ -1,0 +1,569 @@
+
+> jobmatch-ai-complete@1.0.0 test
+> jest
+
+  console.log
+    ≡ƒöº Groq model configured: llama-3.1-8b-instant
+
+      at Object.<anonymous> (src/index.ts:41:9)
+
+  console.log
+    --- STARTUP ENVIRONMENT CHECK ---
+
+      at Object.<anonymous> (src/index.ts:44:9)
+
+  console.log
+    PAYWALL_ENABLED: undefined
+
+      at Object.<anonymous> (src/index.ts:45:9)
+
+  console.log
+    PAYWALL_SECRET_KEY set: false
+
+      at Object.<anonymous> (src/index.ts:46:9)
+
+  console.log
+    --------------------------------
+
+      at Object.<anonymous> (src/index.ts:47:9)
+
+  console.log
+    Loading api.ts...
+
+      at Object.<anonymous> (src/routes/api.ts:2:9)
+
+  console.log
+    Finished loading api.ts
+
+      at Object.<anonymous> (src/routes/api.ts:878:9)
+
+  console.log
+    Checking startup conditions - VERCEL: undefined PORT: 3000
+
+      at Object.<anonymous> (src/index.ts:1997:9)
+
+  console.error
+    Error generating questions with LLM: Error: Invalid questions format from LLM
+        at generateInterviewQuestions (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\questionGenerator.ts:103:15)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\routes\mockInterview.ts:29:23
+
+    [0m [90m 112 |[39m       }))[33m;[39m
+     [90m 113 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 114 |[39m       console[33m.[39merror([32m'Error generating questions with LLM:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 115 |[39m       [90m// Fall through to fallback questions[39m
+     [90m 116 |[39m     }
+     [90m 117 |[39m   }[0m
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:114:15)
+      at src/routes/mockInterview.ts:29:23
+
+  console.log
+    Using fallback questions (LLM not available or failed)
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:120:11)
+
+FAIL src/test/integration/mockInterview.test.ts (5.735 s)
+  Mock Interview Integration Tests
+    End-to-End Mock Interview Flow
+      ΓêÜ should generate interview questions (466 ms)
+      ΓêÜ should create an interview session (387 ms)
+      ΓêÜ should upload a response (mock video) (566 ms)
+      ├ù should analyze a response (409 ms)
+      ├ù should generate final results (626 ms)
+      ΓêÜ should retrieve interview dashboard (471 ms)
+
+  ΓùÅ Mock Interview Integration Tests ΓÇ║ End-to-End Mock Interview Flow ΓÇ║ should analyze a response
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 400
+
+      140 |       });
+      141 |
+    > 142 |       expect(res.status).toBe(200);
+          |                          ^
+      143 |       expect(res.body.success).toBe(true);
+      144 |       // Check if mock analysis data is returned
+      145 |       expect(res.body.data.transcript).toContain('Mock transcript');
+
+      at Object.<anonymous> (src/test/integration/mockInterview.test.ts:142:26)
+
+  ΓùÅ Mock Interview Integration Tests ΓÇ║ End-to-End Mock Interview Flow ΓÇ║ should generate final results
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 85
+    Received: 0
+
+      159 |       expect(res.status).toBe(200);
+      160 |       expect(res.body.success).toBe(true);
+    > 161 |       expect(res.body.data.overallScore).toBe(85);
+          |                                          ^
+      162 |     });
+      163 |
+      164 |     it('should retrieve interview dashboard', async () => {
+
+      at Object.<anonymous> (src/test/integration/mockInterview.test.ts:161:42)
+
+FAIL src/routes/__tests__/upload.test.ts
+  File Upload Routes
+    POST /api/upload
+      ΓêÜ should successfully upload a valid PDF file (57 ms)
+      ΓêÜ should successfully upload a valid DOCX file (29 ms)
+      ├ù should reject unsupported file types (34 ms)
+      ├ù should reject requests without files (27 ms)
+      ├ù should reject files that are too large (199 ms)
+      ΓêÜ should handle files with dangerous filenames (1 ms)
+    GET /api/upload/session/:sessionId
+      ├ù should return 400 for invalid session ID (13 ms)
+      ├ù should return 404 for non-existent session (12 ms)
+    DELETE /api/upload/session/:sessionId
+      ΓêÜ should return 400 for invalid session ID (11 ms)
+      ├ù should successfully cleanup non-existent session (12 ms)
+    File Validation
+      ΓêÜ should validate file extensions correctly (2 ms)
+      ΓêÜ should reject files with invalid extensions (1 ms)
+      ├ù should reject empty files (1 ms)
+
+  ΓùÅ File Upload Routes ΓÇ║ POST /api/upload ΓÇ║ should reject unsupported file types
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      87 |         .expect(400);
+      88 |
+    > 89 |       expect(response.body.success).toBe(false);
+         |                                     ^
+      90 |       expect(response.body.error).toContain('Unsupported file type');
+      91 |     });
+      92 |
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:89:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ POST /api/upload ΓÇ║ should reject requests without files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      94 |       const response = await request(app).post('/api/upload').expect(400);
+      95 |
+    > 96 |       expect(response.body.success).toBe(false);
+         |                                     ^
+      97 |       expect(response.body.error).toContain('No file uploaded');
+      98 |     });
+      99 |
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:96:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ POST /api/upload ΓÇ║ should reject files that are too large
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      105 |         .expect(400);
+      106 |
+    > 107 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      108 |     });
+      109 |
+      110 |     test('should handle files with dangerous filenames', async () => {
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:107:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ GET /api/upload/session/:sessionId ΓÇ║ should return 400 for invalid session ID
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      130 |       const response = await request(app).get('/api/upload/session/invalid-id').expect(404);
+      131 |
+    > 132 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      133 |     });
+      134 |
+      135 |     test('should return 404 for non-existent session', async () => {
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:132:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ GET /api/upload/session/:sessionId ΓÇ║ should return 404 for non-existent session
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      138 |         .expect(404);
+      139 |
+    > 140 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      141 |       expect(response.body.error).toContain('not found');
+      142 |     });
+      143 |   });
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:140:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ DELETE /api/upload/session/:sessionId ΓÇ║ should successfully cleanup non-existent session
+
+    expected 200 "OK", got 404 "Not Found"
+
+      151 |       const response = await request(app)
+      152 |         .delete('/api/upload/session/00000000000000000000000000000000')
+    > 153 |         .expect(200);
+          |          ^
+      154 |
+      155 |       expect(response.body.success).toBe(true);
+      156 |       expect(response.body.message).toContain('cleaned up');
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:153:10)
+      ----
+      at Test._assertStatus (node_modules/supertest/lib/test.js:309:14)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ΓùÅ File Upload Routes ΓÇ║ File Validation ΓÇ║ should reject empty files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      200 |
+      201 |       const result = validateUploadedFile(emptyFile);
+    > 202 |       expect(result.isValid).toBe(false);
+          |                              ^
+      203 |       expect(result.errors).toContain('File is empty');
+      204 |     });
+      205 |   });
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:202:30)
+
+  console.log
+    ≡ƒöº Groq model configured: llama-3.1-8b-instant
+
+      at Object.<anonymous> (src/index.ts:41:9)
+
+  console.log
+    --- STARTUP ENVIRONMENT CHECK ---
+
+      at Object.<anonymous> (src/index.ts:44:9)
+
+  console.log
+    PAYWALL_ENABLED: undefined
+
+      at Object.<anonymous> (src/index.ts:45:9)
+
+  console.log
+    PAYWALL_SECRET_KEY set: false
+
+      at Object.<anonymous> (src/index.ts:46:9)
+
+  console.log
+    --------------------------------
+
+      at Object.<anonymous> (src/index.ts:47:9)
+
+  console.log
+    Loading api.ts...
+
+      at Object.<anonymous> (src/routes/api.ts:2:9)
+
+  console.log
+    Finished loading api.ts
+
+      at Object.<anonymous> (src/routes/api.ts:878:9)
+
+  console.log
+    Checking startup conditions - VERCEL: undefined PORT: 3000
+
+      at Object.<anonymous> (src/index.ts:1997:9)
+
+PASS src/test/integration/auth.test.ts
+  Auth Integration Tests
+    POST /api/auth/register
+      ΓêÜ should register a new user successfully (437 ms)
+      ΓêÜ should fail if email already exists (397 ms)
+      ΓêÜ should require email and password (230 ms)
+    POST /api/auth/login
+      ΓêÜ should login successfully with correct credentials (501 ms)
+      ΓêÜ should reject invalid password (478 ms)
+      ΓêÜ should reject non-existent user (242 ms)
+    POST /api/auth/google
+      ΓêÜ should authenticate with google token (310 ms)
+      ΓêÜ should require credential (227 ms)
+
+  console.log
+    Using fallback questions (LLM not available or failed)
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:120:11)
+
+  console.error
+    Error generating questions with LLM: Error: API Rate Limit
+        at Object.<anonymous> (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\__tests__\questionGenerator.test.ts:73:40)
+        at Promise.finally.completed (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at _runTest (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-runner\build\index.js:275:16)
+        at runTest (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-runner\build\index.js:343:7)
+
+    [0m [90m 112 |[39m       }))[33m;[39m
+     [90m 113 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 114 |[39m       console[33m.[39merror([32m'Error generating questions with LLM:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 115 |[39m       [90m// Fall through to fallback questions[39m
+     [90m 116 |[39m     }
+     [90m 117 |[39m   }[0m
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:114:15)
+      at Object.<anonymous> (src/services/__tests__/questionGenerator.test.ts:76:20)
+
+  console.log
+    Using fallback questions (LLM not available or failed)
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:120:11)
+
+  console.error
+    Error generating questions with LLM: Error: Invalid questions format from LLM
+        at generateInterviewQuestions (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\questionGenerator.ts:103:15)
+        at Object.<anonymous> (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\__tests__\questionGenerator.test.ts:120:5)
+
+    [0m [90m 112 |[39m       }))[33m;[39m
+     [90m 113 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 114 |[39m       console[33m.[39merror([32m'Error generating questions with LLM:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 115 |[39m       [90m// Fall through to fallback questions[39m
+     [90m 116 |[39m     }
+     [90m 117 |[39m   }[0m
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:114:15)
+      at Object.<anonymous> (src/services/__tests__/questionGenerator.test.ts:120:5)
+
+  console.log
+    Using fallback questions (LLM not available or failed)
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:120:11)
+
+PASS src/services/__tests__/questionGenerator.test.ts
+  Question Generator Service
+    ΓêÜ should generate questions using LLM when available (2 ms)
+    ΓêÜ should use fallback questions when LLM is unavailable (5 ms)
+    ΓêÜ should use fallback questions when LLM generation fails (5 ms)
+    ΓêÜ should parse LLM response containing markdown code blocks (1 ms)
+    ΓêÜ should calculate question count based on duration (3 ms)
+
+  console.error
+    Error parsing AI feedback: Error: Could not parse feedback JSON
+        at generateAIFeedback (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\feedbackGenerator.ts:340:15)
+        at generateInterviewFeedback (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\feedbackGenerator.ts:138:14)
+        at Object.<anonymous> (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\__tests__\feedbackGenerator.test.ts:126:20)
+
+    [0m [90m 371 |[39m     [36mreturn[39m feedback[33m;[39m
+     [90m 372 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 373 |[39m     console[33m.[39merror([32m'Error parsing AI feedback:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 374 |[39m     [36mreturn[39m generateRuleBasedFeedback(session[33m,[39m responses)[33m;[39m
+     [90m 375 |[39m   }
+     [90m 376 |[39m }[0m
+
+      at generateAIFeedback (src/services/feedbackGenerator.ts:373:13)
+      at generateInterviewFeedback (src/services/feedbackGenerator.ts:138:14)
+      at Object.<anonymous> (src/services/__tests__/feedbackGenerator.test.ts:126:20)
+
+PASS src/services/__tests__/feedbackGenerator.test.ts
+  Feedback Generator Service
+    ΓêÜ should throw error if interview session is not found (9 ms)
+    ΓêÜ should return default empty-state feedback if no responses exist (1 ms)
+    ΓêÜ should generate AI feedback when LLM is available and succeeds (2 ms)
+    ΓêÜ should fallback to rule-based feedback if LLM is unavailable (1 ms)
+    ΓêÜ should fallback to rule-based feedback if LLM returns invalid JSON (5 ms)
+
+FAIL src/middleware/__tests__/fileUpload.property.test.ts
+  ΓùÅ Test suite failed to run
+
+    src/middleware/__tests__/fileUpload.property.test.ts:1:16 - error TS2307: Cannot find module 'fast-check' or its corresponding type declarations.
+
+    1 import fc from 'fast-check';
+                     ~~~~~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:8:3 - error TS2614: Module '"../fileUpload"' has no exported member 'encryptFileContent'. Did you mean to use 'import encryptFileContent from "../fileUpload"' instead?
+
+    8   encryptFileContent,
+        ~~~~~~~~~~~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:9:3 - error TS2614: Module '"../fileUpload"' has no exported member 'decryptFileContent'. Did you mean to use 'import decryptFileContent from "../fileUpload"' instead?
+
+    9   decryptFileContent,
+        ~~~~~~~~~~~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:50:23 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    50                 .map((s) => `${s.trim().replace(/[^a-zA-Z0-9]/g, 'a')}.pdf`),
+                             ~
+    src/middleware/__tests__/fileUpload.property.test.ts:53:23 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    53                 .map((s) => `${s.trim().replace(/[^a-zA-Z0-9]/g, 'a')}.doc`),
+                             ~
+    src/middleware/__tests__/fileUpload.property.test.ts:56:23 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    56                 .map((s) => `${s.trim().replace(/[^a-zA-Z0-9]/g, 'a')}.docx`),
+                             ~
+    src/middleware/__tests__/fileUpload.property.test.ts:64:68 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    64             path: fc.string({ minLength: 10, maxLength: 50 }).map((s) => `/tmp/${s}`),
+                                                                          ~
+    src/middleware/__tests__/fileUpload.property.test.ts:66:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    66           async (fileData) => {
+                        ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:116:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    116               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.txt'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:117:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    117               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.jpg'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:118:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    118               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.exe'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:119:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    119               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.zip'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:128:68 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    128             path: fc.string({ minLength: 10, maxLength: 50 }).map((s) => `/tmp/${s}`),
+                                                                           ~
+    src/middleware/__tests__/fileUpload.property.test.ts:130:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    130           async (fileData) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:168:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    168           async (fileData) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:201:18 - error TS7006: Parameter 'testData' implicitly has an 'any' type.
+
+    201           async (testData) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:236:60 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    236           fc.string({ minLength: 5, maxLength: 100 }).map((s) => `/tmp/test_${s}`),
+                                                                   ~
+    src/middleware/__tests__/fileUpload.property.test.ts:237:18 - error TS7006: Parameter 'filePath' implicitly has an 'any' type.
+
+    237           async (filePath) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:276:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    276           async (fileData) => {
+                         ~~~~~~~~
+
+FAIL src/components/__tests__/ResumeParser.test.ts
+  ΓùÅ Test suite failed to run
+
+    src/components/__tests__/ResumeParser.test.ts:177:21 - error TS2339: Property 'extractionConfidence' does not exist on type 'ResumeData'.
+
+    177       expect(result.extractionConfidence).toBeGreaterThan(0);
+                            ~~~~~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:178:21 - error TS2339: Property 'extractionConfidence' does not exist on type 'ResumeData'.
+
+    178       expect(result.extractionConfidence).toBeLessThanOrEqual(100);
+                            ~~~~~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:183:30 - error TS2339: Property 'extractionMethod' does not exist on type 'ResumeMetadata'.
+
+    183       expect(result.metadata.extractionMethod).toBe('pdf-parse');
+                                     ~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:195:30 - error TS2339: Property 'extractionMethod' does not exist on type 'ResumeMetadata'.
+
+    195       expect(result.metadata.extractionMethod).toBe('mammoth');
+                                     ~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:206:30 - error TS2339: Property 'extractionMethod' does not exist on type 'ResumeMetadata'.
+
+    206       expect(result.metadata.extractionMethod).toBe('mammoth');
+                                     ~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:253:21 - error TS2339: Property 'extractionConfidence' does not exist on type 'ResumeData'.
+
+    253       expect(result.extractionConfidence).toBeGreaterThanOrEqual(60);
+                            ~~~~~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:254:21 - error TS2339: Property 'extractionConfidence' does not exist on type 'ResumeData'.
+
+    254       expect(result.extractionConfidence).toBeLessThanOrEqual(100);
+                            ~~~~~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:347:21 - error TS2339: Property 'extractionConfidence' does not exist on type 'ResumeData'.
+
+    347       expect(result.extractionConfidence).toBeLessThan(70); // Lower confidence for minimal content
+                            ~~~~~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:348:30 - error TS2339: Property 'warnings' does not exist on type 'ResumeMetadata'.
+
+    348       expect(result.metadata.warnings).toContain(
+                                     ~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:434:21 - error TS2339: Property 'extractionConfidence' does not exist on type 'ResumeData'.
+
+    434       expect(result.extractionConfidence).toBeLessThan(50);
+                            ~~~~~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:435:30 - error TS2339: Property 'warnings' does not exist on type 'ResumeMetadata'.
+
+    435       expect(result.metadata.warnings).toContain(
+                                     ~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:448:21 - error TS2339: Property 'extractionConfidence' does not exist on type 'ResumeData'.
+
+    448       expect(result.extractionConfidence).toBeLessThan(90);
+                            ~~~~~~~~~~~~~~~~~~~~
+    src/components/__tests__/ResumeParser.test.ts:449:30 - error TS2339: Property 'warnings' does not exist on type 'ResumeMetadata'.
+
+    449       expect(result.metadata.warnings).toContain('Some text may not have been extracted correctly');
+                                     ~~~~~~~~
+
+FAIL src/database/__tests__/connection.test.ts
+  ΓùÅ Test suite failed to run
+
+    src/database/__tests__/connection.test.ts:1:16 - error TS2307: Cannot find module 'fast-check' or its corresponding type declarations.
+
+    1 import fc from 'fast-check';
+                     ~~~~~~~~~~~~
+    src/database/__tests__/connection.test.ts:117:18 - error TS7006: Parameter 'queryOperations' implicitly has an 'any' type.
+
+    117           async (queryOperations) => {
+                         ~~~~~~~~~~~~~~~
+    src/database/__tests__/connection.test.ts:119:57 - error TS7006: Parameter 'op' implicitly has an 'any' type.
+
+    119             const promises = queryOperations.map(async (op, index) => {
+                                                                ~~
+    src/database/__tests__/connection.test.ts:119:61 - error TS7006: Parameter 'index' implicitly has an 'any' type.
+
+    119             const promises = queryOperations.map(async (op, index) => {
+                                                                    ~~~~~
+    src/database/__tests__/connection.test.ts:155:18 - error TS7006: Parameter 'params' implicitly has an 'any' type.
+
+    155           async (params) => {
+                         ~~~~~~
+    src/database/__tests__/connection.test.ts:183:66 - error TS7006: Parameter 'concurrentRequests' implicitly has an 'any' type.
+
+    183         fc.asyncProperty(fc.integer({ min: 1, max: 20 }), async (concurrentRequests) => {
+                                                                         ~~~~~~~~~~~~~~~~~~
+
+Test Suites: 5 failed, 3 passed, 8 total
+Tests:       9 failed, 28 passed, 37 total
+Snapshots:   0 total
+Time:        14.23 s
+Ran all test suites.

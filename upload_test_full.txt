@@ -1,0 +1,106 @@
+
+> jobmatch-ai-complete@1.0.0 test
+> jest src/routes/__tests__/upload.test.ts
+
+FAIL src/routes/__tests__/upload.test.ts
+  File Upload Routes
+    POST /api/upload
+      ΓêÜ should successfully upload a valid PDF file (63 ms)
+      ΓêÜ should successfully upload a valid DOCX file (16 ms)
+      ├ù should reject unsupported file types (10 ms)
+      ΓêÜ should reject requests without files (6 ms)
+      ΓêÜ should reject files that are too large (101 ms)
+      ΓêÜ should handle files with dangerous filenames (1 ms)
+    GET /api/upload/session/:sessionId
+      ├ù should return 400 for invalid session ID (9 ms)
+      ├ù should return 404 for non-existent session (6 ms)
+    DELETE /api/upload/session/:sessionId
+      ΓêÜ should return 400 for invalid session ID (7 ms)
+      ├ù should successfully cleanup non-existent session (7 ms)
+    File Validation
+      ΓêÜ should validate file extensions correctly (1 ms)
+      ΓêÜ should reject files with invalid extensions (1 ms)
+      ├ù should reject empty files
+
+  ΓùÅ File Upload Routes ΓÇ║ POST /api/upload ΓÇ║ should reject unsupported file types
+
+    read ECONNRESET
+
+
+  ΓùÅ File Upload Routes ΓÇ║ GET /api/upload/session/:sessionId ΓÇ║ should return 400 for invalid session ID
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      130 |       const response = await request(app).get('/api/upload/session/invalid-id').expect(404);
+      131 |
+    > 132 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      133 |     });
+      134 |
+      135 |     test('should return 404 for non-existent session', async () => {
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:132:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ GET /api/upload/session/:sessionId ΓÇ║ should return 404 for non-existent session
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      138 |         .expect(404);
+      139 |
+    > 140 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      141 |       expect(response.body.error).toContain('not found');
+      142 |     });
+      143 |   });
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:140:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ DELETE /api/upload/session/:sessionId ΓÇ║ should successfully cleanup non-existent session
+
+    expected 200 "OK", got 404 "Not Found"
+
+      151 |       const response = await request(app)
+      152 |         .delete('/api/upload/session/00000000000000000000000000000000')
+    > 153 |         .expect(200);
+          |          ^
+      154 |
+      155 |       expect(response.body.success).toBe(true);
+      156 |       expect(response.body.message).toContain('cleaned up');
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:153:10)
+      ----
+      at Test._assertStatus (node_modules/supertest/lib/test.js:309:14)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ΓùÅ File Upload Routes ΓÇ║ File Validation ΓÇ║ should reject empty files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      200 |
+      201 |       const result = validateUploadedFile(emptyFile);
+    > 202 |       expect(result.isValid).toBe(false);
+          |                              ^
+      203 |       expect(result.errors).toContain('File is empty');
+      204 |     });
+      205 |   });
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:202:30)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 8 passed, 13 total
+Snapshots:   0 total
+Time:        2.33 s, estimated 4 s
+Ran all test suites matching src/routes/__tests__/upload.test.ts.

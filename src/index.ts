@@ -787,7 +787,7 @@ app.get('/api/resume/:sessionId', async (req, res) => {
     const pool = getPool();
 
     const result = await pool.query(
-      `SELECT original_filename, file_type, created_at, status
+      `SELECT ra.original_filename, ra.file_type, ra.created_at, ra.status
        FROM resume_analyses ra
        JOIN user_sessions us ON ra.session_id = us.id
        WHERE us.session_id = $1
@@ -1190,7 +1190,7 @@ app.post('/api/save-job', async (req, res) => {
           session.profile = res.rows[0].extracted_profile;
           sessions[sessionId] = session;
         }
-      } catch (dbErr) {}
+      } catch (dbErr) { }
     }
 
     if (!session.savedJobs) session.savedJobs = [];

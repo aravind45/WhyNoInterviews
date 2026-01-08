@@ -1,0 +1,714 @@
+
+> jobmatch-ai-complete@1.0.0 test
+> jest
+
+  console.log
+    ≡ƒöº Groq model configured: llama-3.1-8b-instant
+
+      at Object.<anonymous> (src/index.ts:41:9)
+
+  console.log
+    --- STARTUP ENVIRONMENT CHECK ---
+
+      at Object.<anonymous> (src/index.ts:44:9)
+
+  console.log
+    PAYWALL_ENABLED: undefined
+
+      at Object.<anonymous> (src/index.ts:45:9)
+
+  console.log
+    PAYWALL_SECRET_KEY set: false
+
+      at Object.<anonymous> (src/index.ts:46:9)
+
+  console.log
+    --------------------------------
+
+      at Object.<anonymous> (src/index.ts:47:9)
+
+FAIL src/test/integration/mockInterview.test.ts
+  ΓùÅ Test suite failed to run
+
+    src/routes/api.ts:373:9 - error TS2345: Argument of type '{ rawText: any; sections: never[]; metadata: { pageCount: any; wordCount: any; fileName: any; fileType: any; fileSize: any; processingTime: number; }; extractedAt: Date; }' is not assignable to parameter of type 'ResumeData'.
+      Property 'extractionConfidence' is missing in type '{ rawText: any; sections: never[]; metadata: { pageCount: any; wordCount: any; fileName: any; fileType: any; fileSize: any; processingTime: number; }; extractedAt: Date; }' but required in type 'ResumeData'.
+
+    373         resumeData,
+                ~~~~~~~~~~
+
+      src/types/index.ts:60:3
+        60   extractionConfidence: number; // 0-100
+             ~~~~~~~~~~~~~~~~~~~~
+        'extractionConfidence' is declared here.
+
+FAIL src/routes/__tests__/upload.test.ts
+  File Upload Routes
+    POST /api/upload
+      ΓêÜ should successfully upload a valid PDF file (218 ms)
+      ΓêÜ should successfully upload a valid DOCX file (27 ms)
+      ├ù should reject unsupported file types (52 ms)
+      ├ù should reject requests without files (22 ms)
+      ├ù should reject files that are too large (186 ms)
+      ΓêÜ should handle files with dangerous filenames (2 ms)
+    GET /api/upload/session/:sessionId
+      ├ù should return 400 for invalid session ID (16 ms)
+      ├ù should return 404 for non-existent session (17 ms)
+    DELETE /api/upload/session/:sessionId
+      ΓêÜ should return 400 for invalid session ID (16 ms)
+      ├ù should successfully cleanup non-existent session (15 ms)
+    File Validation
+      ΓêÜ should validate file extensions correctly (2 ms)
+      ΓêÜ should reject files with invalid extensions (1 ms)
+      ├ù should reject empty files (2 ms)
+
+  ΓùÅ File Upload Routes ΓÇ║ POST /api/upload ΓÇ║ should reject unsupported file types
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      87 |         .expect(400);
+      88 |
+    > 89 |       expect(response.body.success).toBe(false);
+         |                                     ^
+      90 |       expect(response.body.error).toContain('Unsupported file type');
+      91 |     });
+      92 |
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:89:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ POST /api/upload ΓÇ║ should reject requests without files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      94 |       const response = await request(app).post('/api/upload').expect(400);
+      95 |
+    > 96 |       expect(response.body.success).toBe(false);
+         |                                     ^
+      97 |       expect(response.body.error).toContain('No file uploaded');
+      98 |     });
+      99 |
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:96:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ POST /api/upload ΓÇ║ should reject files that are too large
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      105 |         .expect(400);
+      106 |
+    > 107 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      108 |     });
+      109 |
+      110 |     test('should handle files with dangerous filenames', async () => {
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:107:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ GET /api/upload/session/:sessionId ΓÇ║ should return 400 for invalid session ID
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      130 |       const response = await request(app).get('/api/upload/session/invalid-id').expect(404);
+      131 |
+    > 132 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      133 |     });
+      134 |
+      135 |     test('should return 404 for non-existent session', async () => {
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:132:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ GET /api/upload/session/:sessionId ΓÇ║ should return 404 for non-existent session
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      138 |         .expect(404);
+      139 |
+    > 140 |       expect(response.body.success).toBe(false);
+          |                                     ^
+      141 |       expect(response.body.error).toContain('not found');
+      142 |     });
+      143 |   });
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:140:37)
+
+  ΓùÅ File Upload Routes ΓÇ║ DELETE /api/upload/session/:sessionId ΓÇ║ should successfully cleanup non-existent session
+
+    expected 200 "OK", got 404 "Not Found"
+
+      151 |       const response = await request(app)
+      152 |         .delete('/api/upload/session/00000000000000000000000000000000')
+    > 153 |         .expect(200);
+          |          ^
+      154 |
+      155 |       expect(response.body.success).toBe(true);
+      156 |       expect(response.body.message).toContain('cleaned up');
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:153:10)
+      ----
+      at Test._assertStatus (node_modules/supertest/lib/test.js:309:14)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ΓùÅ File Upload Routes ΓÇ║ File Validation ΓÇ║ should reject empty files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      200 |
+      201 |       const result = validateUploadedFile(emptyFile);
+    > 202 |       expect(result.isValid).toBe(false);
+          |                              ^
+      203 |       expect(result.errors).toContain('File is empty');
+      204 |     });
+      205 |   });
+
+      at Object.<anonymous> (src/routes/__tests__/upload.test.ts:202:30)
+
+  console.log
+    ≡ƒöº Groq model configured: llama-3.1-8b-instant
+
+      at Object.<anonymous> (src/index.ts:41:9)
+
+  console.log
+    --- STARTUP ENVIRONMENT CHECK ---
+
+      at Object.<anonymous> (src/index.ts:44:9)
+
+  console.log
+    PAYWALL_ENABLED: undefined
+
+      at Object.<anonymous> (src/index.ts:45:9)
+
+  console.log
+    PAYWALL_SECRET_KEY set: false
+
+      at Object.<anonymous> (src/index.ts:46:9)
+
+  console.log
+    --------------------------------
+
+      at Object.<anonymous> (src/index.ts:47:9)
+
+FAIL src/test/integration/auth.test.ts
+  ΓùÅ Test suite failed to run
+
+    src/routes/api.ts:373:9 - error TS2345: Argument of type '{ rawText: any; sections: never[]; metadata: { pageCount: any; wordCount: any; fileName: any; fileType: any; fileSize: any; processingTime: number; }; extractedAt: Date; }' is not assignable to parameter of type 'ResumeData'.
+      Property 'extractionConfidence' is missing in type '{ rawText: any; sections: never[]; metadata: { pageCount: any; wordCount: any; fileName: any; fileType: any; fileSize: any; processingTime: number; }; extractedAt: Date; }' but required in type 'ResumeData'.
+
+    373         resumeData,
+                ~~~~~~~~~~
+
+      src/types/index.ts:60:3
+        60   extractionConfidence: number; // 0-100
+             ~~~~~~~~~~~~~~~~~~~~
+        'extractionConfidence' is declared here.
+
+  console.error
+    Error parsing AI feedback: Error: Could not parse feedback JSON
+        at generateAIFeedback (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\feedbackGenerator.ts:340:15)
+        at generateInterviewFeedback (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\feedbackGenerator.ts:138:14)
+        at Object.<anonymous> (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\__tests__\feedbackGenerator.test.ts:126:20)
+
+    [0m [90m 371 |[39m     [36mreturn[39m feedback[33m;[39m
+     [90m 372 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 373 |[39m     console[33m.[39merror([32m'Error parsing AI feedback:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 374 |[39m     [36mreturn[39m generateRuleBasedFeedback(session[33m,[39m responses)[33m;[39m
+     [90m 375 |[39m   }
+     [90m 376 |[39m }[0m
+
+      at generateAIFeedback (src/services/feedbackGenerator.ts:373:13)
+      at generateInterviewFeedback (src/services/feedbackGenerator.ts:138:14)
+      at Object.<anonymous> (src/services/__tests__/feedbackGenerator.test.ts:126:20)
+
+PASS src/services/__tests__/feedbackGenerator.test.ts
+  Feedback Generator Service
+    ΓêÜ should throw error if interview session is not found (11 ms)
+    ΓêÜ should return default empty-state feedback if no responses exist (1 ms)
+    ΓêÜ should generate AI feedback when LLM is available and succeeds (3 ms)
+    ΓêÜ should fallback to rule-based feedback if LLM is unavailable (2 ms)
+    ΓêÜ should fallback to rule-based feedback if LLM returns invalid JSON (15 ms)
+
+  console.log
+    Using fallback questions (LLM not available or failed)
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:120:11)
+
+  console.error
+    Error generating questions with LLM: Error: API Rate Limit
+        at Object.<anonymous> (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\__tests__\questionGenerator.test.ts:73:40)
+        at Promise.finally.completed (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at _runTest (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-runner\build\index.js:275:16)
+        at runTest (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\node_modules\jest-runner\build\index.js:343:7)
+
+    [0m [90m 112 |[39m       }))[33m;[39m
+     [90m 113 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 114 |[39m       console[33m.[39merror([32m'Error generating questions with LLM:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 115 |[39m       [90m// Fall through to fallback questions[39m
+     [90m 116 |[39m     }
+     [90m 117 |[39m   }[0m
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:114:15)
+      at Object.<anonymous> (src/services/__tests__/questionGenerator.test.ts:76:20)
+
+  console.log
+    Using fallback questions (LLM not available or failed)
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:120:11)
+
+  console.error
+    Error generating questions with LLM: Error: Invalid questions format from LLM
+        at generateInterviewQuestions (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\questionGenerator.ts:103:15)
+        at Object.<anonymous> (C:\Users\aravi\Documents\AI_LLM\projects\WhyNoInterviews\src\services\__tests__\questionGenerator.test.ts:120:5)
+
+    [0m [90m 112 |[39m       }))[33m;[39m
+     [90m 113 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 114 |[39m       console[33m.[39merror([32m'Error generating questions with LLM:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 115 |[39m       [90m// Fall through to fallback questions[39m
+     [90m 116 |[39m     }
+     [90m 117 |[39m   }[0m
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:114:15)
+      at Object.<anonymous> (src/services/__tests__/questionGenerator.test.ts:120:5)
+
+  console.log
+    Using fallback questions (LLM not available or failed)
+
+      at generateInterviewQuestions (src/services/questionGenerator.ts:120:11)
+
+PASS src/services/__tests__/questionGenerator.test.ts
+  Question Generator Service
+    ΓêÜ should generate questions using LLM when available (2 ms)
+    ΓêÜ should use fallback questions when LLM is unavailable (4 ms)
+    ΓêÜ should use fallback questions when LLM generation fails (9 ms)
+    ΓêÜ should parse LLM response containing markdown code blocks (2 ms)
+    ΓêÜ should calculate question count based on duration (4 ms)
+
+FAIL src/middleware/__tests__/fileUpload.property.test.ts
+  ΓùÅ Test suite failed to run
+
+    src/middleware/__tests__/fileUpload.property.test.ts:1:16 - error TS2307: Cannot find module 'fast-check' or its corresponding type declarations.
+
+    1 import fc from 'fast-check';
+                     ~~~~~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:8:3 - error TS2614: Module '"../fileUpload"' has no exported member 'encryptFileContent'. Did you mean to use 'import encryptFileContent from "../fileUpload"' instead?
+
+    8   encryptFileContent,
+        ~~~~~~~~~~~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:9:3 - error TS2614: Module '"../fileUpload"' has no exported member 'decryptFileContent'. Did you mean to use 'import decryptFileContent from "../fileUpload"' instead?
+
+    9   decryptFileContent,
+        ~~~~~~~~~~~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:50:23 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    50                 .map((s) => `${s.trim().replace(/[^a-zA-Z0-9]/g, 'a')}.pdf`),
+                             ~
+    src/middleware/__tests__/fileUpload.property.test.ts:53:23 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    53                 .map((s) => `${s.trim().replace(/[^a-zA-Z0-9]/g, 'a')}.doc`),
+                             ~
+    src/middleware/__tests__/fileUpload.property.test.ts:56:23 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    56                 .map((s) => `${s.trim().replace(/[^a-zA-Z0-9]/g, 'a')}.docx`),
+                             ~
+    src/middleware/__tests__/fileUpload.property.test.ts:64:68 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    64             path: fc.string({ minLength: 10, maxLength: 50 }).map((s) => `/tmp/${s}`),
+                                                                          ~
+    src/middleware/__tests__/fileUpload.property.test.ts:66:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    66           async (fileData) => {
+                        ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:116:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    116               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.txt'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:117:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    117               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.jpg'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:118:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    118               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.exe'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:119:63 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    119               fc.string({ minLength: 1, maxLength: 50 }).map((s) => s + '.zip'),
+                                                                      ~
+    src/middleware/__tests__/fileUpload.property.test.ts:128:68 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    128             path: fc.string({ minLength: 10, maxLength: 50 }).map((s) => `/tmp/${s}`),
+                                                                           ~
+    src/middleware/__tests__/fileUpload.property.test.ts:130:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    130           async (fileData) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:168:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    168           async (fileData) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:201:18 - error TS7006: Parameter 'testData' implicitly has an 'any' type.
+
+    201           async (testData) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:236:60 - error TS7006: Parameter 's' implicitly has an 'any' type.
+
+    236           fc.string({ minLength: 5, maxLength: 100 }).map((s) => `/tmp/test_${s}`),
+                                                                   ~
+    src/middleware/__tests__/fileUpload.property.test.ts:237:18 - error TS7006: Parameter 'filePath' implicitly has an 'any' type.
+
+    237           async (filePath) => {
+                         ~~~~~~~~
+    src/middleware/__tests__/fileUpload.property.test.ts:276:18 - error TS7006: Parameter 'fileData' implicitly has an 'any' type.
+
+    276           async (fileData) => {
+                         ~~~~~~~~
+
+FAIL src/database/__tests__/connection.test.ts
+  ΓùÅ Test suite failed to run
+
+    src/database/__tests__/connection.test.ts:1:16 - error TS2307: Cannot find module 'fast-check' or its corresponding type declarations.
+
+    1 import fc from 'fast-check';
+                     ~~~~~~~~~~~~
+    src/database/__tests__/connection.test.ts:117:18 - error TS7006: Parameter 'queryOperations' implicitly has an 'any' type.
+
+    117           async (queryOperations) => {
+                         ~~~~~~~~~~~~~~~
+    src/database/__tests__/connection.test.ts:119:57 - error TS7006: Parameter 'op' implicitly has an 'any' type.
+
+    119             const promises = queryOperations.map(async (op, index) => {
+                                                                ~~
+    src/database/__tests__/connection.test.ts:119:61 - error TS7006: Parameter 'index' implicitly has an 'any' type.
+
+    119             const promises = queryOperations.map(async (op, index) => {
+                                                                    ~~~~~
+    src/database/__tests__/connection.test.ts:155:18 - error TS7006: Parameter 'params' implicitly has an 'any' type.
+
+    155           async (params) => {
+                         ~~~~~~
+    src/database/__tests__/connection.test.ts:183:66 - error TS7006: Parameter 'concurrentRequests' implicitly has an 'any' type.
+
+    183         fc.asyncProperty(fc.integer({ min: 1, max: 20 }), async (concurrentRequests) => {
+                                                                         ~~~~~~~~~~~~~~~~~~
+
+FAIL src/components/__tests__/ResumeParser.test.ts
+  ResumeParser
+    validateFile
+      ΓêÜ should validate PDF files successfully (3 ms)
+      ΓêÜ should validate DOCX files successfully (1 ms)
+      ΓêÜ should reject unsupported file types (2 ms)
+      ΓêÜ should reject empty files (1 ms)
+      ├ù should reject files that are too large (2 ms)
+      ΓêÜ should warn about large files (1 ms)
+      ├ù should reject non-existent files (1 ms)
+    parseResume
+      ΓêÜ should parse PDF resume successfully (6 ms)
+      ΓêÜ should parse DOCX resume successfully (2 ms)
+      ΓêÜ should parse DOC resume successfully (2 ms)
+      ├ù should identify resume sections correctly (2 ms)
+      ├ù should extract bullet points from experience section (2 ms)
+      ├ù should identify achievements with quantification (2 ms)
+      ΓêÜ should calculate extraction confidence correctly (2 ms)
+      ΓêÜ should handle empty PDF gracefully (5 ms)
+      ΓêÜ should handle PDF parsing errors (2 ms)
+      ├ù should handle DOCX parsing errors (3 ms)
+      ├ù should reject unsupported file types (2 ms)
+      ΓêÜ should handle missing files (2 ms)
+    Section Parsing
+      ├ù should identify different section types (10 ms)
+      ├ù should handle resumes with minimal sections (2 ms)
+    Achievement Detection
+      ΓêÜ should detect various types of quantified achievements (2 ms)
+      ΓêÜ should detect strong action verbs (1 ms)
+    Error Handling and Edge Cases
+      ├ù should handle very short resumes (1 ms)
+      ├ù should handle resumes with garbled text (2 ms)
+      ├ù should estimate page count correctly (1 ms)
+
+  ΓùÅ ResumeParser ΓÇ║ validateFile ΓÇ║ should reject files that are too large
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      144 |       const result = parser.validateFile(mockFile);
+      145 |
+    > 146 |       expect(result.isValid).toBe(false);
+          |                              ^
+      147 |       expect(result.errors).toContain('File too large for processing');
+      148 |     });
+      149 |
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:146:30)
+
+  ΓùÅ ResumeParser ΓÇ║ validateFile ΓÇ║ should reject non-existent files
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      162 |       const result = parser.validateFile(mockFile);
+      163 |
+    > 164 |       expect(result.isValid).toBe(false);
+          |                              ^
+      165 |       expect(result.errors).toContain('File not found or inaccessible');
+      166 |     });
+      167 |   });
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:164:30)
+
+  ΓùÅ ResumeParser ΓÇ║ parseResume ΓÇ║ should identify resume sections correctly
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected value: "experience"
+    Received array: ["other", "other", "other", "skills"]
+
+      211 |
+      212 |       const sectionTypes = result.sections.map((s) => s.type);
+    > 213 |       expect(sectionTypes).toContain(SectionType.EXPERIENCE);
+          |                            ^
+      214 |       expect(sectionTypes).toContain(SectionType.EDUCATION);
+      215 |       expect(sectionTypes).toContain(SectionType.SKILLS);
+      216 |     });
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:213:28)
+
+  ΓùÅ ResumeParser ΓÇ║ parseResume ΓÇ║ should extract bullet points from experience section
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      220 |
+      221 |       const experienceSection = result.sections.find((s) => s.type === SectionType.EXPERIENCE);
+    > 222 |       expect(experienceSection).toBeDefined();
+          |                                 ^
+      223 |       expect(experienceSection!.bullets.length).toBeGreaterThan(0);
+      224 |
+      225 |       // Check bullet point structure
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:222:33)
+
+  ΓùÅ ResumeParser ΓÇ║ parseResume ΓÇ║ should identify achievements with quantification
+
+    TypeError: Cannot read properties of undefined (reading 'bullets')
+
+      234 |
+      235 |       const experienceSection = result.sections.find((s) => s.type === SectionType.EXPERIENCE);
+    > 236 |       const bulletsWithAchievements = experienceSection!.bullets.filter(
+          |                                                          ^
+      237 |         (b) => b.achievements.length > 0,
+      238 |       );
+      239 |
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:236:58)
+
+  ΓùÅ ResumeParser ΓÇ║ parseResume ΓÇ║ should handle DOCX parsing errors
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: {"extractedAt": 2026-01-07T18:33:23.927Z, "extractionConfidence": 70, "metadata": {"extractionMethod": "pdf-parse", "fileName": "test-resume.pdf", "fileSize": 1024, "fileType": "pdf", "pageCount": undefined, "processingTime": 1, "warnings": [], "wordCount": 47}, "rawText": "John Doe
+    Software Engineer
+    john.doe@email.com┬╖
+    EXPERIENCE
+    Senior Software Engineer at Tech Corp
+    ΓÇó Developed web applications using React and Node.js
+    ΓÇó Improved system performance by 30%
+    ΓÇó Led team of 5 developers┬╖
+    EDUCATION
+    Bachelor of Science in Computer Science
+    University of Technology┬╖
+    SKILLS
+    JavaScript, Python, React, Node.js", "sections": [{"bullets": [], "content": "John Doe
+    Software Engineer
+    john.doe@email.com", "endIndex": 47, "startIndex": 0, "title": "John Doe
+    Software Engineer", "type": "other"}, {"bullets": [{"achievements": [{"actionVerbs": ["developed"], "hasQuantification": false, "metrics": [], "text": "Developed web applications using React and Node.js"}], "id": "lw3vyk", "text": "Developed web applications using React and Node.js"}, {"achievements": [{"actionVerbs": [], "hasQuantification": true, "metrics": ["30%"], "text": "Improved system performance by 30%"}], "id": "018sfp", "text": "Improved system performance by 30%"}, {"achievements": [{"actionVerbs": ["led"], "hasQuantification": true, "metrics": ["team of 5"], "text": "Led team of 5 developers"}], "id": "d88m7o", "text": "Led team of 5 developers"}], "content": "EXPERIENCE
+    Senior Software Engineer at Tech Corp
+    ΓÇó Developed web applications using React and Node.js
+    ΓÇó Improved system performance by 30%
+    ΓÇó Led team of 5 developers", "endIndex": 214, "startIndex": 47, "title": "EXPERIENCE
+    Senior Software Engineer at Tech Corp", "type": "other"}, {"bullets": [], "content": "EDUCATION
+    Bachelor of Science in Computer Science
+    University of Technology", "endIndex": 290, "startIndex": 214, "title": "EDUCATION
+    Bachelor of Science in Computer Science
+    University of Technology┬╖
+    SKILLS", "type": "other"}, {"bullets": [], "content": "SKILLS
+    JavaScript, Python, React, Node.js", "endIndex": 331, "startIndex": 290, "title": "SKILLS", "type": "skills"}]}
+
+      275 |       mockFile.path = '/tmp/error.docx';
+      276 |
+    > 277 |       await expect(parser.parseResume(mockFile)).rejects.toThrow(
+          |             ^
+      278 |         'Failed to extract text from DOCX',
+      279 |       );
+      280 |     });
+
+      at expect (node_modules/expect/build/index.js:2116:15)
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:277:13)
+
+  ΓùÅ ResumeParser ΓÇ║ parseResume ΓÇ║ should reject unsupported file types
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: {"extractedAt": 2026-01-07T18:33:23.931Z, "extractionConfidence": 70, "metadata": {"extractionMethod": "pdf-parse", "fileName": "test-resume.pdf", "fileSize": 1024, "fileType": "pdf", "pageCount": undefined, "processingTime": 1, "warnings": [], "wordCount": 47}, "rawText": "John Doe
+    Software Engineer
+    john.doe@email.com┬╖
+    EXPERIENCE
+    Senior Software Engineer at Tech Corp
+    ΓÇó Developed web applications using React and Node.js
+    ΓÇó Improved system performance by 30%
+    ΓÇó Led team of 5 developers┬╖
+    EDUCATION
+    Bachelor of Science in Computer Science
+    University of Technology┬╖
+    SKILLS
+    JavaScript, Python, React, Node.js", "sections": [{"bullets": [], "content": "John Doe
+    Software Engineer
+    john.doe@email.com", "endIndex": 47, "startIndex": 0, "title": "John Doe
+    Software Engineer", "type": "other"}, {"bullets": [{"achievements": [{"actionVerbs": ["developed"], "hasQuantification": false, "metrics": [], "text": "Developed web applications using React and Node.js"}], "id": "qx76pk", "text": "Developed web applications using React and Node.js"}, {"achievements": [{"actionVerbs": [], "hasQuantification": true, "metrics": ["30%"], "text": "Improved system performance by 30%"}], "id": "2b7nge", "text": "Improved system performance by 30%"}, {"achievements": [{"actionVerbs": ["led"], "hasQuantification": true, "metrics": ["team of 5"], "text": "Led team of 5 developers"}], "id": "tnaya8", "text": "Led team of 5 developers"}], "content": "EXPERIENCE
+    Senior Software Engineer at Tech Corp
+    ΓÇó Developed web applications using React and Node.js
+    ΓÇó Improved system performance by 30%
+    ΓÇó Led team of 5 developers", "endIndex": 214, "startIndex": 47, "title": "EXPERIENCE
+    Senior Software Engineer at Tech Corp", "type": "other"}, {"bullets": [], "content": "EDUCATION
+    Bachelor of Science in Computer Science
+    University of Technology", "endIndex": 290, "startIndex": 214, "title": "EDUCATION
+    Bachelor of Science in Computer Science
+    University of Technology┬╖
+    SKILLS", "type": "other"}, {"bullets": [], "content": "SKILLS
+    JavaScript, Python, React, Node.js", "endIndex": 331, "startIndex": 290, "title": "SKILLS", "type": "skills"}]}
+
+      283 |       mockFile.mimetype = 'text/plain';
+      284 |
+    > 285 |       await expect(parser.parseResume(mockFile)).rejects.toThrow('Unsupported file type');
+          |             ^
+      286 |     });
+      287 |
+      288 |     test('should handle missing files', async () => {
+
+      at expect (node_modules/expect/build/index.js:2116:15)
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:285:13)
+
+  ΓùÅ ResumeParser ΓÇ║ Section Parsing ΓÇ║ should identify different section types
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected value: "contact"
+    Received array: ["other", "other", "experience", "education", "skills", "other", "certifications"]
+
+      324 |
+      325 |       const sectionTypes = result.sections.map((s) => s.type);
+    > 326 |       expect(sectionTypes).toContain(SectionType.CONTACT);
+          |                            ^
+      327 |       // Note: PROFESSIONAL SUMMARY might be parsed as EXPERIENCE due to pattern matching
+      328 |       // This is acceptable behavior - we're testing that sections are identified
+      329 |       expect(sectionTypes).toContain(SectionType.EXPERIENCE);
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:326:28)
+
+  ΓùÅ ResumeParser ΓÇ║ Section Parsing ΓÇ║ should handle resumes with minimal sections
+
+    Failed to extract text from PDF
+
+      151 |
+      152 |         if (!text || text.trim().length < 50) {
+    > 153 |           throw new Error('Failed to extract text from PDF');
+          |                 ^
+      154 |         }
+      155 |
+      156 |         const sections = this.extractSections(text);
+
+      at src/components/ResumeParser.ts:153:17
+
+  ΓùÅ ResumeParser ΓÇ║ Error Handling and Edge Cases ΓÇ║ should handle very short resumes
+
+    Failed to extract text from PDF
+
+      151 |
+      152 |         if (!text || text.trim().length < 50) {
+    > 153 |           throw new Error('Failed to extract text from PDF');
+          |                 ^
+      154 |         }
+      155 |
+      156 |         const sections = this.extractSections(text);
+
+      at src/components/ResumeParser.ts:153:17
+
+  ΓùÅ ResumeParser ΓÇ║ Error Handling and Edge Cases ΓÇ║ should handle resumes with garbled text
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected value: "Some text may not have been extracted correctly"
+    Received array: ["Resume appears very short - may be missing content"]
+
+      447 |
+      448 |       expect(result.extractionConfidence).toBeLessThan(90);
+    > 449 |       expect(result.metadata.warnings).toContain('Some text may not have been extracted correctly');
+          |                                        ^
+      450 |     });
+      451 |
+      452 |     test('should estimate page count correctly', async () => {
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:449:40)
+
+  ΓùÅ ResumeParser ΓÇ║ Error Handling and Edge Cases ΓÇ║ should estimate page count correctly
+
+    expect(received).toBeGreaterThan(expected)
+
+    Matcher error: received value must be a number or bigint
+
+    Received has value: undefined
+
+      460 |       const result = await parser.parseResume(mockFile);
+      461 |
+    > 462 |       expect(result.metadata.pageCount).toBeGreaterThan(1);
+          |                                         ^
+      463 |       expect(result.metadata.pageCount).toBeLessThan(5);
+      464 |     });
+      465 |   });
+
+      at Object.<anonymous> (src/components/__tests__/ResumeParser.test.ts:462:41)
+
+Test Suites: 6 failed, 2 passed, 8 total
+Tests:       19 failed, 30 passed, 49 total
+Snapshots:   0 total
+Time:        14.3 s
+Ran all test suites.

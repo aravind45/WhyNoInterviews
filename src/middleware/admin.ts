@@ -22,9 +22,13 @@ export const checkAdmin = async (req: Request, res: Response, next: NextFunction
       throw new Error(msg);
     }
 
-    const result = await query(`SELECT email FROM user_sessions WHERE session_id = $1`, [
-      sessionId,
-    ]);
+    const result = await query(
+      `SELECT u.email 
+       FROM user_sessions us 
+       JOIN users u ON us.user_id = u.id 
+       WHERE us.session_id = $1 AND us.is_active = TRUE`,
+      [sessionId]
+    );
 
     if (result.rows.length === 0 || !result.rows[0].email) {
       return res.status(401).json({ success: false, error: 'Unauthorized: Invalid session' });

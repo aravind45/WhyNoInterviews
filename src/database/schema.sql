@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     is_active BOOLEAN DEFAULT TRUE
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(session_token);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_session_id ON user_sessions(session_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_expires ON user_sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_active ON user_sessions(is_active) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);
