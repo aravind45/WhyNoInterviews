@@ -25,6 +25,9 @@
     };
   </script>
 
+  <!-- Google OAuth Library -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <!-- JSON-LD SEO -->
   <script type="application/ld+json">
     {
@@ -3464,146 +3467,7 @@
           switchTab('home');
         }
 
-        // ========== GOOGLE OAUTH ==========
-        let GOOGLE_CLIENT_ID = '';
-
-        // Fetch Google Client ID from backend
-        async function loadGoogleClientId() {
-          try {
-            const response = await fetch('/api/config');
-            const data = await response.json();
-            GOOGLE_CLIENT_ID = data.googleClientId;
-            console.log('Google Client ID loaded from backend');
-            initGoogleSignIn();
-          } catch (error) {
-            console.error('Failed to load Google Client ID:', error);
-          }
-        }
-
-        function initGoogleSignIn() {
-          if (!GOOGLE_CLIENT_ID) {
-            console.warn('Google Client ID not loaded yet');
-            return;
-          }
-          if (typeof google !== 'undefined' && google.accounts) {
-            google.accounts.id.initialize({
-              client_id: GOOGLE_CLIENT_ID,
-              callback: handleGoogleSignIn,
-              auto_select: false
-            });
-
-            // Render the button if the container exists
-            const btnContainer = document.getElementById('g_id_signin_container');
-            if (btnContainer) {
-              google.accounts.id.renderButton(btnContainer, {
-                type: 'standard',
-                shape: 'rectangular',
-                theme: 'outline',
-                text: 'continue_with',
-                size: 'large',
-                logo_alignment: 'left',
-                width: btnContainer.offsetWidth || 340
-              });
-            }
-          }
-        }
-
-        function signInWithGoogle() {
-          if (typeof google !== 'undefined' && google.accounts) {
-            google.accounts.id.prompt((notification) => {
-              if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                // Fallback to popup
-                try {
-                  google.accounts.oauth2.initTokenClient({
-                    client_id: GOOGLE_CLIENT_ID,
-                    scope: 'email profile',
-                    callback: (response) => {
-                      if (response.access_token) {
-                        fetchGoogleUserInfo(response.access_token);
-                      }
-                    }
-                  }).requestAccessToken();
-                } catch (e) {
-                  showToast('Google Sign-In failed. Try again.', 'error');
-                }
-              }
-            });
-          } else {
-            showToast('Google Sign-In loading... Try again in a moment.', 'error');
-          }
-        }
-
-        function handleGoogleSignIn(response) {
-          // Decode JWT token
-          const payload = JSON.parse(atob(response.credential.split('.')[1]));
-          const { email, name, picture, sub: googleId } = payload;
-
-          completeGoogleAuth(email, name, picture, googleId);
-        }
-
-        function fetchGoogleUserInfo(accessToken) {
-          fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          })
-            .then(res => res.json())
-            .then(data => {
-              completeGoogleAuth(data.email, data.name, data.picture, data.id);
-            })
-            .catch(err => {
-              showToast('Failed to get Google user info', 'error');
-            });
-        }
-
-        function completeGoogleAuth(email, name, picture, googleId) {
-          const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
-
-          let user = users[email];
-          if (!user) {
-            // Create new user
-            user = {
-              name,
-              email,
-              picture,
-              googleId,
-              authProvider: 'google',
-              createdAt: Date.now(),
-              savedResumes: [],
-              savedCoverLetters: [],
-              savedProfile: null
-            };
-            users[email] = user;
-            localStorage.setItem('jobmatch_users', JSON.stringify(users));
-            showToast(`Welcome, ${name.split(' ')[0]}! Account created with Google.`, 'success');
-          } else {
-            // Update existing user with Google info
-            user.picture = picture;
-            user.googleId = googleId;
-            user.authProvider = 'google';
-            users[email] = user;
-            localStorage.setItem('jobmatch_users', JSON.stringify(users));
-            showToast(`Welcome back, ${name.split(' ')[0]}!`, 'success');
-          }
-
-          currentUser = user;
-          localStorage.setItem('jobmatch_user', JSON.stringify(user));
-
-          // CRITICAL FIX: Ensure sessionId is created/restored after Google login (stable, based on email only)
-          if (!sessionId) {
-            // Create a stable session tied to the user's email
-            sessionId = 'sess_' + btoa(email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
-            localStorage.setItem('jobmatch_session', sessionId);
-          }
-
-          hideAuthModal();
-          initAuth();
-        }
-
-        // Initialize Google Sign-In when ready
-        if (document.readyState === 'complete') {
-          loadGoogleClientId();
-        } else {
-          window.addEventListener('load', loadGoogleClientId);
-        }
+        // ========== USER DROPDOWN ==========
 
         function toggleUserDropdown() {
           document.getElementById('user-dropdown').classList.toggle('show');
@@ -6984,12 +6848,6 @@
 
           <!-- Google Button Container -->
           <div id="g_id_signin_container" style="width: 100%; margin-bottom: 20px;"></div>
-          <script>
-            // Check if client ID is already loaded and re-initialize if needed
-            if (typeof GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID) {
-              initGoogleSignIn();
-            }
-          </script>
 
           <div
             style="display: flex; align-items: center; gap: 10px; margin: 20px 0; color: #64748b; font-size: 0.8rem;">
@@ -7134,6 +6992,52 @@
           }
         }
 
+        // Initialize Google Sign-In
+        let GOOGLE_CLIENT_ID = null;
+
+        async function initGoogleSignIn() {
+          try {
+            // Fetch Google Client ID from config
+            if (!GOOGLE_CLIENT_ID) {
+              const configRes = await fetch('/api/config');
+              const config = await configRes.json();
+              GOOGLE_CLIENT_ID = config.googleClientId;
+            }
+
+            if (!GOOGLE_CLIENT_ID) {
+              console.error('Google Client ID not configured');
+              return;
+            }
+
+            // Wait for Google library to load
+            if (typeof google === 'undefined' || !google.accounts) {
+              setTimeout(initGoogleSignIn, 100);
+              return;
+            }
+
+            // Initialize Google Sign-In
+            google.accounts.id.initialize({
+              client_id: GOOGLE_CLIENT_ID,
+              callback: handleGoogleCredential,
+              auto_select: false
+            });
+
+            // Render the button
+            google.accounts.id.renderButton(
+              document.getElementById('g_id_signin_container'),
+              {
+                theme: 'filled_blue',
+                size: 'large',
+                width: '100%',
+                text: 'continue_with',
+                shape: 'rectangular'
+              }
+            );
+          } catch (err) {
+            console.error('Failed to initialize Google Sign-In:', err);
+          }
+        }
+
         async function handleGoogleCredential(response) {
           const sessionId = localStorage.getItem('currentSessionId');
 
@@ -7156,11 +7060,15 @@
             currentUser = data.user;
             updateUserDisplay(currentUser);
             closeAuthModal();
+            alert('Welcome ' + currentUser.fullName + '!');
 
           } catch (err) {
             alert('Google Sign-In Error: ' + err.message);
           }
         }
+
+        // Initialize Google Sign-In when page loads
+        window.addEventListener('load', initGoogleSignIn);
 
         function updateUserDisplay(user) {
           const authButtons = document.getElementById('auth-buttons');
