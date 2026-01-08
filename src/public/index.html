@@ -7057,7 +7057,11 @@
               throw new Error(data.error || 'Google Sign-In failed');
             }
 
+            // Save user to memory and localStorage
             currentUser = data.user;
+            localStorage.setItem('jobmatch_user', JSON.stringify(currentUser));
+
+            // Update UI
             updateUserDisplay(currentUser);
             closeAuthModal();
             alert('Welcome ' + currentUser.fullName + '!');
@@ -7068,7 +7072,13 @@
         }
 
         // Initialize Google Sign-In when page loads
-        window.addEventListener('load', initGoogleSignIn);
+        window.addEventListener('load', function () {
+          initGoogleSignIn();
+          // Update user display if already logged in
+          if (currentUser) {
+            updateUserDisplay(currentUser);
+          }
+        });
 
         function updateUserDisplay(user) {
           const authButtons = document.getElementById('auth-buttons');
