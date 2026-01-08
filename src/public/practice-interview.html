@@ -782,11 +782,6 @@
 
             <div class="grid-2">
               <div class="form-group">
-                <label class="form-label">Job Role</label>
-                <input type="text" class="input" id="job-role" placeholder="e.g., Software Engineer" required />
-              </div>
-
-              <div class="form-group">
                 <label class="form-label">Assessment Type</label>
                 <select class="input" id="assessment-type" required>
                   <option value="technical">Technical</option>
@@ -850,10 +845,32 @@
         // Initialize
         loadAssessments();
 
+        // Helper to get session ID
+        function getSessionId() {
+          return localStorage.getItem('jobmatch_session') ||
+            localStorage.getItem('currentSessionId') ||
+            'sess_' + Math.random().toString(36).substring(2);
+        }
+
+        // Helper for headers
+        function getAuthHeaders() {
+          const sessionId = getSessionId();
+          // Ensure it's saved if we just generated a new one
+          if (!localStorage.getItem('jobmatch_session') && !localStorage.getItem('currentSessionId')) {
+            localStorage.setItem('jobmatch_session', sessionId);
+          }
+          return {
+            'Content-Type': 'application/json',
+            'X-Session-Id': sessionId
+          };
+        }
+
         // Load user's assessments
         async function loadAssessments() {
           try {
-            const response = await fetch(`${API_BASE}/assessments`);
+            const response = await fetch(`${API_BASE}/assessments`, {
+              headers: getAuthHeaders()
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -922,7 +939,7 @@
 
             const createResponse = await fetch(`${API_BASE}/create-assessment`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders(),
               body: JSON.stringify(assessmentData),
             });
 
@@ -932,7 +949,6 @@
             // Generate questions
             const questionData = {
               assessmentId: createResult.assessment.id,
-              jobRole: document.getElementById('job-role').value,
               assessmentType: document.getElementById('assessment-type').value,
               questionCount: parseInt(document.getElementById('question-count').value),
               difficulty: document.getElementById('difficulty').value,
@@ -940,7 +956,7 @@
 
             const questionsResponse = await fetch(`${API_BASE}/generate-questions`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders(),
               body: JSON.stringify(questionData),
             });
 
@@ -964,7 +980,9 @@
         async function startPractice(assessmentId) {
           try {
             // Load assessment with questions
-            const assessmentResponse = await fetch(`${API_BASE}/assessment/${assessmentId}`);
+            const assessmentResponse = await fetch(`${API_BASE}/assessment/${assessmentId}`, {
+              headers: getAuthHeaders()
+            });
             const assessmentData = await assessmentResponse.json();
 
             if (!assessmentData.success) throw new Error('Failed to load assessment');
@@ -975,7 +993,7 @@
             // Start session
             const sessionResponse = await fetch(`${API_BASE}/start-session`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders(),
               body: JSON.stringify({ assessmentId }),
             });
 
@@ -1078,7 +1096,7 @@
           try {
             const response = await fetch(`${API_BASE}/submit-answer`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders(),
               body: JSON.stringify({
                 sessionPracticeId: currentSession.id,
                 questionId: question.id,
@@ -1138,7 +1156,7 @@
           try {
             const response = await fetch(`${API_BASE}/complete-session`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders(),
               body: JSON.stringify({ sessionPracticeId: currentSession.id }),
             });
 
@@ -1221,7 +1239,7 @@
           try {
             const response = await fetch(`${API_BASE}/ai-hint`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders(),
               body: JSON.stringify({ questionId: question.id }),
             });
 
@@ -1244,7 +1262,7 @@
           try {
             const response = await fetch(`${API_BASE}/ai-explanation`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders(),
               body: JSON.stringify({ questionId: question.id }),
             });
 

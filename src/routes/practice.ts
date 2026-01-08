@@ -2,27 +2,64 @@ import express from 'express';
 import { practiceService } from '../services/practiceService';
 import { AnalyticsService } from '../services/analyticsService';
 
-// Extend Request to include session
-interface Session {
-  id: string;
-  userId?: string;
-}
-
+// Extend Request to include session data from DB
 interface RequestWithSession extends express.Request {
-  session?: Session;
+  sessionData?: {
+    id: string;      // The session_id token (e.g. 'sess_...')
+    dbId: string;    // The UUID primary key from user_sessions
+    userId?: string; // The linked user_id if logged in
+  };
 }
 
 const router = express.Router();
+
+// Middleware to extract and verify session
+const sessionMiddleware = async (req: RequestWithSession, res: express.Response, next: express.NextFunction) => {
+  try {
+    const sessionId = (req.get('X-Session-Id') || req.body.sessionId || req.query.sessionId) as string;
+
+    if (!sessionId) {
+      return res.status(401).json({ success: false, error: 'Session ID required' });
+    }
+
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT id, user_id FROM user_sessions WHERE session_id = $1 AND is_active = true',
+      [sessionId]
+    );
+
+    if (result.rows.length === 0) {
+      // Create a temporary session if not found? 
+      // Actually, for practice assessments, we should ensure the session exists.
+      // But if it's a new visitor, they might not have a session in DB yet.
+      // For now, let's treat it as unauthorized to force consistent session creation.
+      return res.status(401).json({ success: false, error: 'Invalid or expired session' });
+    }
+
+    req.sessionData = {
+      id: sessionId,
+      dbId: result.rows[0].id,
+      userId: result.rows[0].user_id
+    };
+
+    next();
+  } catch (error) {
+    console.error('Session middleware error:', error);
+    res.status(500).json({ success: false, error: 'Session verification failed' });
+  }
+};
+
+import { getPool } from '../database/connection';
 
 /**
  * Create a new practice assessment
  * POST /api/practice/create-assessment
  */
-router.post('/create-assessment', async (req: RequestWithSession, res: express.Response) => {
+router.post('/create-assessment', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { name, description, assessmentType, icon, color } = req.body;
-    const sessionId = req.session?.id;
-    const userId = req.session?.userId;
+    const sessionId = req.sessionData?.id;
+    const userId = req.sessionData?.userId;
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -69,7 +106,7 @@ router.post('/create-assessment', async (req: RequestWithSession, res: express.R
  * Generate AI questions for an assessment
  * POST /api/practice/generate-questions
  */
-router.post('/generate-questions', async (req: RequestWithSession, res: express.Response) => {
+router.post('/generate-questions', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const {
       assessmentId,
@@ -81,21 +118,32 @@ router.post('/generate-questions', async (req: RequestWithSession, res: express.
       jobDescription,
     } = req.body;
 
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
 
-    if (!assessmentId || !jobRole || !assessmentType) {
+    if (!assessmentId || !assessmentType) {
       return res.status(400).json({
         success: false,
-        error: 'Assessment ID, job role, and assessment type are required',
+        error: 'Assessment ID and assessment type are required',
       });
+    }
+
+    // Default jobRole to assessment name if not provided
+    let finalJobRole = jobRole;
+    if (!finalJobRole) {
+      try {
+        const assessment = await practiceService.getAssessmentWithQuestions(assessmentId);
+        finalJobRole = assessment.name;
+      } catch (e) {
+        finalJobRole = 'Professional';
+      }
     }
 
     // Generate questions using AI
     const questions = await practiceService.generateQuestions({
-      jobRole,
+      jobRole: finalJobRole,
       assessmentType,
       questionCount,
       difficulty,
@@ -117,7 +165,7 @@ router.post('/generate-questions', async (req: RequestWithSession, res: express.
         assessmentId,
         questionCount: questions.length,
         difficulty,
-        jobRole,
+        jobRole: finalJobRole,
       },
     });
   } catch (error: any) {
@@ -130,9 +178,9 @@ router.post('/generate-questions', async (req: RequestWithSession, res: express.
  * Get user's assessments
  * GET /api/practice/assessments
  */
-router.get('/assessments', async (req: RequestWithSession, res: express.Response) => {
+router.get('/assessments', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
@@ -149,10 +197,10 @@ router.get('/assessments', async (req: RequestWithSession, res: express.Response
  * Get specific assessment with questions
  * GET /api/practice/assessment/:id
  */
-router.get('/assessment/:id', async (req: RequestWithSession, res: express.Response) => {
+router.get('/assessment/:id', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { id } = req.params;
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -170,11 +218,11 @@ router.get('/assessment/:id', async (req: RequestWithSession, res: express.Respo
  * Start a practice session
  * POST /api/practice/start-session
  */
-router.post('/start-session', async (req: RequestWithSession, res: express.Response) => {
+router.post('/start-session', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { assessmentId } = req.body;
-    const sessionId = req.session?.id;
-    const userId = req.session?.userId;
+    const sessionId = req.sessionData?.id;
+    const userId = req.sessionData?.userId;
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -212,7 +260,7 @@ router.post('/start-session', async (req: RequestWithSession, res: express.Respo
  * Submit an answer
  * POST /api/practice/submit-answer
  */
-router.post('/submit-answer', async (req: RequestWithSession, res: express.Response) => {
+router.post('/submit-answer', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const {
       sessionPracticeId,
@@ -223,7 +271,7 @@ router.post('/submit-answer', async (req: RequestWithSession, res: express.Respo
       aiExplanationUsed = false,
     } = req.body;
 
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
@@ -270,10 +318,10 @@ router.post('/submit-answer', async (req: RequestWithSession, res: express.Respo
  * Complete a practice session
  * POST /api/practice/complete-session
  */
-router.post('/complete-session', async (req: RequestWithSession, res: express.Response) => {
+router.post('/complete-session', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { sessionPracticeId } = req.body;
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -310,10 +358,10 @@ router.post('/complete-session', async (req: RequestWithSession, res: express.Re
  * Get AI hint for a question
  * POST /api/practice/ai-hint
  */
-router.post('/ai-hint', async (req: RequestWithSession, res: express.Response) => {
+router.post('/ai-hint', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { questionId } = req.body;
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -348,10 +396,10 @@ router.post('/ai-hint', async (req: RequestWithSession, res: express.Response) =
  * Get AI explanation for a question
  * POST /api/practice/ai-explanation
  */
-router.post('/ai-explanation', async (req: RequestWithSession, res: express.Response) => {
+router.post('/ai-explanation', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { questionId } = req.body;
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -386,9 +434,9 @@ router.post('/ai-explanation', async (req: RequestWithSession, res: express.Resp
  * Get user's practice results
  * GET /api/practice/results
  */
-router.get('/results', async (req: RequestWithSession, res: express.Response) => {
+router.get('/results', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
@@ -407,10 +455,10 @@ router.get('/results', async (req: RequestWithSession, res: express.Response) =>
  * Delete an assessment
  * DELETE /api/practice/assessment/:id
  */
-router.delete('/assessment/:id', async (req: RequestWithSession, res: express.Response) => {
+router.delete('/assessment/:id', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { id } = req.params;
-    const sessionId = req.session?.id;
+    const sessionId = req.sessionData?.id;
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
