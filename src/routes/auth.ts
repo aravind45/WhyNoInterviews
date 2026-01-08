@@ -133,39 +133,54 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
 router.post('/google', async (req: AuthRequest, res: Response) => {
   const { credential, sessionId } = req.body;
 
+  console.log('🔵 Google OAuth Request received:', { hasCredential: !!credential, sessionId });
+
   if (!credential) {
+    console.log('❌ No credential provided');
     return res.status(400).json({ success: false, error: 'Google credential required' });
   }
 
   try {
+    console.log('🔵 Verifying Google token...');
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
+    console.log('✅ Token verified, payload received');
 
     if (!payload || !payload.email) {
+      console.log('❌ Invalid payload:', { hasPayload: !!payload, hasEmail: !!payload?.email });
       throw new Error('Invalid Google Token payload');
     }
 
     const { email, sub: googleId, name } = payload;
+    console.log('🔵 User info from Google:', { email, googleId, name });
+
     const pool = getPool();
+    console.log('🔵 Database pool obtained');
 
     // Check if user exists by google_id OR email
+    console.log('🔵 Checking if user exists...');
     let result = await pool.query('SELECT * FROM users WHERE google_id = $1 OR email = $2', [
       googleId,
       email,
     ]);
+    console.log('🔵 User query result:', { rowCount: result.rows.length, exists: result.rows.length > 0 });
 
     let user = result.rows[0];
 
     if (user) {
+      console.log('✅ User found:', { id: user.id, email: user.email, hasGoogleId: !!user.google_id });
       // Update google_id if missing (e.g. existing email user logging in with Google)
       if (!user.google_id) {
+        console.log('🔵 Updating google_id for existing user...');
         await pool.query('UPDATE users SET google_id = $1 WHERE id = $2', [googleId, user.id]);
+        console.log('✅ Google ID updated');
       }
     } else {
       // Create new user
+      console.log('🔵 Creating new user...', { email, googleId, name });
       const newUser = await pool.query(
         `INSERT INTO users (email, google_id, full_name, is_verified) 
                  VALUES ($1, $2, $3, true) 
@@ -173,13 +188,17 @@ router.post('/google', async (req: AuthRequest, res: Response) => {
         [email, googleId, name],
       );
       user = newUser.rows[0];
+      console.log('✅ New user created:', { id: user.id, email: user.email });
     }
 
     // Link session
     if (sessionId) {
+      console.log('🔵 Linking session to user...', { sessionId, userId: user.id });
       await linkSessionToUser(sessionId, user.id);
+      console.log('✅ Session linked');
     }
 
+    console.log('✅ Google OAuth SUCCESS - Sending response');
     res.json({
       success: true,
       user: {
@@ -189,6 +208,12 @@ router.post('/google', async (req: AuthRequest, res: Response) => {
       },
     });
   } catch (error: any) {
+    console.log('❌ Google Auth ERROR:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      stack: error.stack?.split('\n').slice(0, 3),
+    });
     logger.error('Google Auth error', {
       message: error.message,
       stack: error.stack,
