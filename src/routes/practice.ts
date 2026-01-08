@@ -58,8 +58,9 @@ import { getPool } from '../database/connection';
 router.post('/create-assessment', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { name, description, assessmentType, icon, color } = req.body;
-    const sessionId = req.sessionData?.id;
+    const sessionId = req.sessionData?.dbId; // Use UUID for DB
     const userId = req.sessionData?.userId;
+    const token = req.sessionData?.id; // String token for analytics
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -86,7 +87,7 @@ router.post('/create-assessment', sessionMiddleware, async (req: RequestWithSess
 
     // Analytics
     await AnalyticsService.logEvent({
-      sessionId,
+      sessionId: token,
       userId,
       eventName: 'practice_assessment_created',
       eventCategory: 'practice',
@@ -118,7 +119,8 @@ router.post('/generate-questions', sessionMiddleware, async (req: RequestWithSes
       jobDescription,
     } = req.body;
 
-    const sessionId = req.sessionData?.id;
+    const sessionId = req.sessionData?.dbId; // Use UUID for DB
+    const token = req.sessionData?.id; // String token for analytics
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
@@ -158,7 +160,7 @@ router.post('/generate-questions', sessionMiddleware, async (req: RequestWithSes
 
     // Analytics
     await AnalyticsService.logEvent({
-      sessionId,
+      sessionId: token,
       eventName: 'practice_questions_generated',
       eventCategory: 'practice',
       properties: {
@@ -180,7 +182,7 @@ router.post('/generate-questions', sessionMiddleware, async (req: RequestWithSes
  */
 router.get('/assessments', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
-    const sessionId = req.sessionData?.id;
+    const sessionId = req.sessionData?.dbId; // Use UUID for DB
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
@@ -221,8 +223,9 @@ router.get('/assessment/:id', sessionMiddleware, async (req: RequestWithSession,
 router.post('/start-session', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { assessmentId } = req.body;
-    const sessionId = req.sessionData?.id;
+    const sessionId = req.sessionData?.dbId; // Use UUID for DB
     const userId = req.sessionData?.userId;
+    const token = req.sessionData?.id; // String token for analytics
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
@@ -241,7 +244,7 @@ router.post('/start-session', sessionMiddleware, async (req: RequestWithSession,
 
     // Analytics
     await AnalyticsService.logEvent({
-      sessionId,
+      sessionId: token,
       userId,
       eventName: 'practice_session_started',
       eventCategory: 'practice',
@@ -296,7 +299,7 @@ router.post('/submit-answer', sessionMiddleware, async (req: RequestWithSession,
 
     // Analytics
     await AnalyticsService.logEvent({
-      sessionId,
+      sessionId: req.sessionData?.id,
       eventName: 'practice_answer_submitted',
       eventCategory: 'practice',
       properties: {
@@ -339,7 +342,7 @@ router.post('/complete-session', sessionMiddleware, async (req: RequestWithSessi
 
     // Analytics
     await AnalyticsService.logEvent({
-      sessionId,
+      sessionId: req.sessionData?.id,
       eventName: 'practice_session_completed',
       eventCategory: 'practice',
       properties: {
@@ -379,7 +382,7 @@ router.post('/ai-hint', sessionMiddleware, async (req: RequestWithSession, res: 
 
     // Analytics
     await AnalyticsService.logEvent({
-      sessionId,
+      sessionId: req.sessionData?.id,
       eventName: 'practice_ai_hint_used',
       eventCategory: 'practice',
       properties: {
@@ -417,7 +420,7 @@ router.post('/ai-explanation', sessionMiddleware, async (req: RequestWithSession
 
     // Analytics
     await AnalyticsService.logEvent({
-      sessionId,
+      sessionId: req.sessionData?.id,
       eventName: 'practice_ai_explanation_used',
       eventCategory: 'practice',
       properties: {
@@ -436,7 +439,7 @@ router.post('/ai-explanation', sessionMiddleware, async (req: RequestWithSession
  */
 router.get('/results', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
-    const sessionId = req.sessionData?.id;
+    const sessionId = req.sessionData?.dbId; // Use UUID for DB
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
@@ -458,7 +461,7 @@ router.get('/results', sessionMiddleware, async (req: RequestWithSession, res: e
 router.delete('/assessment/:id', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
   try {
     const { id } = req.params;
-    const sessionId = req.sessionData?.id;
+    const sessionId = req.sessionData?.dbId; // Use UUID for DB
 
     if (!sessionId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
