@@ -9,6 +9,7 @@ import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { parseLinkedInCSV, suggestICACategory, ParsedContact } from '../services/linkedinParser';
 import { getPool } from '../database/connection';
+import { AnalyticsService } from '../services/analyticsService';
 
 const router = Router();
 
@@ -213,6 +214,19 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
         parseErrors: parseResult.errors.length,
       },
       errors: importErrors.length > 0 ? importErrors : undefined,
+    });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      eventName: 'linkedin_contacts_uploaded',
+      eventCategory: 'networking',
+      properties: {
+        totalRows: parseResult.totalRows,
+        successfulImports,
+        duplicateContacts,
+        failedImports: importErrors.length,
+      },
     });
   } catch (error) {
     console.error('ICA upload error:', error);
@@ -552,9 +566,23 @@ router.post('/interactions/:sessionId/:contactId', async (req: Request, res: Res
       contactId,
     ]);
 
+
+
     res.json({
       success: true,
       interaction: result.rows[0],
+    });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      eventName: 'networking_interaction_logged',
+      eventCategory: 'networking',
+      properties: {
+        contactId,
+        interactionType,
+        outcome,
+      },
     });
   } catch (error) {
     return res.status(500).json({

@@ -35,6 +35,7 @@ import {
 } from '../types';
 import { paywallMiddleware } from '../middleware/paywall';
 import { checkLifetimeLimit } from '../middleware/rateLimit';
+import { AnalyticsService } from '../services/analyticsService';
 import mockInterviewRouter from './mockInterview';
 
 const router = Router();
@@ -254,6 +255,20 @@ router.post(
           warnings: validation.warnings,
           message: 'Resume uploaded successfully. Ready for analysis.',
         });
+
+        // Analytics
+        await AnalyticsService.logEvent({
+          sessionId: sessionToken,
+          eventName: 'resume_uploaded',
+          eventCategory: 'resume',
+          properties: {
+            fileName: resumeData.metadata.fileName,
+            fileType: resumeData.metadata.fileType,
+            fileSize: resumeData.metadata.fileSize,
+            targetJob: targetJobTitle,
+            processingTime,
+          },
+        });
       } catch (error) {
         // Cleanup on error
         if (tempFilePath) {
@@ -336,6 +351,18 @@ router.post(
       `UPDATE resume_analyses SET status = 'processing', processing_started_at = NOW() WHERE id = $1`,
       [analysis.id],
     );
+
+    // Analytics: Analysis Start
+    await AnalyticsService.logEvent({
+      sessionId: analysis.session_id,
+      eventName: 'analysis_started',
+      eventCategory: 'analysis',
+      properties: {
+        analysisId: analysis.id,
+        provider: selectedProvider,
+        targetJob: targetJobTitle,
+      },
+    });
 
     try {
       // Decrypt resume content
@@ -507,6 +534,21 @@ router.post(
         totalTime,
       });
 
+      // Analytics: Analysis Success
+      await AnalyticsService.logEvent({
+        sessionId: analysis.session_id,
+        eventName: 'analysis_completed',
+        eventCategory: 'analysis',
+        properties: {
+          analysisId: analysis.id,
+          confidence: aiResult.overallConfidence,
+          rootCausesCount: aiResult.rootCauses.length,
+          recommendationsCount: aiResult.recommendations.length,
+          isCompetitive: aiResult.isCompetitive,
+          totalTime,
+        },
+      });
+
       res.json({
         success: true,
         data: diagnosis,
@@ -517,6 +559,18 @@ router.post(
         `UPDATE resume_analyses SET status = 'failed', error_message = $1 WHERE id = $2`,
         [error instanceof Error ? error.message : 'Unknown error', analysis.id],
       );
+
+      // Analytics: Analysis Error
+      await AnalyticsService.logEvent({
+        sessionId: analysis.session_id,
+        eventName: 'analysis_error',
+        eventCategory: 'analysis',
+        properties: {
+          analysisId: analysis.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       throw error;
     }
   }),

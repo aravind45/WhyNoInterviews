@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { getPool } from '../database/connection';
 import { logger } from '../utils/logger';
+import { AnalyticsService } from '../services/analyticsService';
 
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -73,6 +74,13 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
 
     logger.info('User registered', { email: user.email });
 
+    // Analytics
+    await AnalyticsService.logAuthEvent('user_registered', {
+      method: 'email',
+      success: true,
+      hasSessionId: !!sessionId
+    }, sessionId, user.id);
+
     res.json({
       success: true,
       user: {
@@ -102,11 +110,21 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
     const user = result.rows[0];
 
     if (!user || !user.password_hash) {
+      // Analytics for failed login
+      await AnalyticsService.logAuthEvent('login_failure', {
+        reason: 'invalid_credentials',
+        email: email
+      }, sessionId);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
+      // Analytics for failed login
+      await AnalyticsService.logAuthEvent('login_failure', {
+        reason: 'wrong_password',
+        userId: user.id
+      }, sessionId, user.id);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
@@ -123,6 +141,12 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
         fullName: user.full_name,
       },
     });
+
+    // Analytics for successful login
+    await AnalyticsService.logAuthEvent('user_logged_in', {
+      method: 'email',
+      success: true
+    }, sessionId, user.id);
   } catch (error) {
     logger.error('Login error', error);
     res.status(500).json({ success: false, error: 'Login failed' });
@@ -207,6 +231,13 @@ router.post('/google', async (req: AuthRequest, res: Response) => {
         fullName: user.full_name,
       },
     });
+
+    // Analytics for Google login
+    await AnalyticsService.logAuthEvent('user_logged_in', {
+      method: 'google',
+      success: true,
+      isNewUser: !result.rows[0]
+    }, sessionId, user.id);
   } catch (error: any) {
     console.log('❌ Google Auth ERROR:', {
       message: error.message,
@@ -225,6 +256,12 @@ router.post('/google', async (req: AuthRequest, res: Response) => {
       error: 'Google authentication failed',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
+
+    // Analytics for Google failure
+    await AnalyticsService.logAuthEvent('google_auth_failure', {
+      error: error.message,
+      sessionId
+    }, sessionId);
   }
 });
 

@@ -1,5 +1,6 @@
-import { Router, Request, Response } from 'express';
+import express from 'express';
 import { practiceService } from '../services/practiceService';
+import { AnalyticsService } from '../services/analyticsService';
 
 // Extend Request to include session
 interface Session {
@@ -7,17 +8,17 @@ interface Session {
   userId?: string;
 }
 
-interface RequestWithSession extends Request {
+interface RequestWithSession extends express.Request {
   session?: Session;
 }
 
-const router = Router();
+const router = express.Router();
 
 /**
  * Create a new practice assessment
  * POST /api/practice/create-assessment
  */
-router.post('/create-assessment', async (req: RequestWithSession, res: Response) => {
+router.post('/create-assessment', async (req: RequestWithSession, res: express.Response) => {
   try {
     const { name, description, assessmentType, icon, color } = req.body;
     const sessionId = req.session?.id;
@@ -45,6 +46,19 @@ router.post('/create-assessment', async (req: RequestWithSession, res: Response)
     });
 
     res.json({ success: true, assessment });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      userId,
+      eventName: 'practice_assessment_created',
+      eventCategory: 'practice',
+      properties: {
+        assessmentId: assessment.id,
+        assessmentType,
+        name,
+      },
+    });
   } catch (error: any) {
     console.error('Error creating assessment:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -55,7 +69,7 @@ router.post('/create-assessment', async (req: RequestWithSession, res: Response)
  * Generate AI questions for an assessment
  * POST /api/practice/generate-questions
  */
-router.post('/generate-questions', async (req: RequestWithSession, res: Response) => {
+router.post('/generate-questions', async (req: RequestWithSession, res: express.Response) => {
   try {
     const {
       assessmentId,
@@ -93,6 +107,19 @@ router.post('/generate-questions', async (req: RequestWithSession, res: Response
     await practiceService.addQuestionsToAssessment(assessmentId, questions);
 
     res.json({ success: true, questions });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      eventName: 'practice_questions_generated',
+      eventCategory: 'practice',
+      properties: {
+        assessmentId,
+        questionCount: questions.length,
+        difficulty,
+        jobRole,
+      },
+    });
   } catch (error: any) {
     console.error('Error generating questions:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -103,7 +130,7 @@ router.post('/generate-questions', async (req: RequestWithSession, res: Response
  * Get user's assessments
  * GET /api/practice/assessments
  */
-router.get('/assessments', async (req: RequestWithSession, res: Response) => {
+router.get('/assessments', async (req: RequestWithSession, res: express.Response) => {
   try {
     const sessionId = req.session?.id;
     if (!sessionId) {
@@ -122,7 +149,7 @@ router.get('/assessments', async (req: RequestWithSession, res: Response) => {
  * Get specific assessment with questions
  * GET /api/practice/assessment/:id
  */
-router.get('/assessment/:id', async (req: RequestWithSession, res: Response) => {
+router.get('/assessment/:id', async (req: RequestWithSession, res: express.Response) => {
   try {
     const { id } = req.params;
     const sessionId = req.session?.id;
@@ -143,7 +170,7 @@ router.get('/assessment/:id', async (req: RequestWithSession, res: Response) => 
  * Start a practice session
  * POST /api/practice/start-session
  */
-router.post('/start-session', async (req: RequestWithSession, res: Response) => {
+router.post('/start-session', async (req: RequestWithSession, res: express.Response) => {
   try {
     const { assessmentId } = req.body;
     const sessionId = req.session?.id;
@@ -163,6 +190,18 @@ router.post('/start-session', async (req: RequestWithSession, res: Response) => 
     const practiceSession = await practiceService.startSession(assessmentId, userId, sessionId);
 
     res.json({ success: true, session: practiceSession });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      userId,
+      eventName: 'practice_session_started',
+      eventCategory: 'practice',
+      properties: {
+        assessmentId,
+        sessionId: practiceSession.id,
+      },
+    });
   } catch (error: any) {
     console.error('Error starting session:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -173,7 +212,7 @@ router.post('/start-session', async (req: RequestWithSession, res: Response) => 
  * Submit an answer
  * POST /api/practice/submit-answer
  */
-router.post('/submit-answer', async (req: RequestWithSession, res: Response) => {
+router.post('/submit-answer', async (req: RequestWithSession, res: express.Response) => {
   try {
     const {
       sessionPracticeId,
@@ -206,6 +245,21 @@ router.post('/submit-answer', async (req: RequestWithSession, res: Response) => 
     );
 
     res.json({ success: true, ...result });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      eventName: 'practice_answer_submitted',
+      eventCategory: 'practice',
+      properties: {
+        sessionPracticeId,
+        questionId,
+        isCorrect: result.isCorrect,
+        timeSpent,
+        aiHintUsed,
+        aiExplanationUsed,
+      },
+    });
   } catch (error: any) {
     console.error('Error submitting answer:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -216,7 +270,7 @@ router.post('/submit-answer', async (req: RequestWithSession, res: Response) => 
  * Complete a practice session
  * POST /api/practice/complete-session
  */
-router.post('/complete-session', async (req: RequestWithSession, res: Response) => {
+router.post('/complete-session', async (req: RequestWithSession, res: express.Response) => {
   try {
     const { sessionPracticeId } = req.body;
     const sessionId = req.session?.id;
@@ -234,6 +288,18 @@ router.post('/complete-session', async (req: RequestWithSession, res: Response) 
 
     const result = await practiceService.completeSession(sessionPracticeId);
     res.json({ success: true, result });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      eventName: 'practice_session_completed',
+      eventCategory: 'practice',
+      properties: {
+        sessionPracticeId,
+        score: result.score,
+        totalQuestions: result.total_questions,
+      },
+    });
   } catch (error: any) {
     console.error('Error completing session:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -244,7 +310,7 @@ router.post('/complete-session', async (req: RequestWithSession, res: Response) 
  * Get AI hint for a question
  * POST /api/practice/ai-hint
  */
-router.post('/ai-hint', async (req: RequestWithSession, res: Response) => {
+router.post('/ai-hint', async (req: RequestWithSession, res: express.Response) => {
   try {
     const { questionId } = req.body;
     const sessionId = req.session?.id;
@@ -262,6 +328,16 @@ router.post('/ai-hint', async (req: RequestWithSession, res: Response) => {
 
     const hint = await practiceService.generateHint(questionId);
     res.json({ success: true, hint });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      eventName: 'practice_ai_hint_used',
+      eventCategory: 'practice',
+      properties: {
+        questionId,
+      },
+    });
   } catch (error: any) {
     console.error('Error generating hint:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -272,7 +348,7 @@ router.post('/ai-hint', async (req: RequestWithSession, res: Response) => {
  * Get AI explanation for a question
  * POST /api/practice/ai-explanation
  */
-router.post('/ai-explanation', async (req: RequestWithSession, res: Response) => {
+router.post('/ai-explanation', async (req: RequestWithSession, res: express.Response) => {
   try {
     const { questionId } = req.body;
     const sessionId = req.session?.id;
@@ -290,6 +366,16 @@ router.post('/ai-explanation', async (req: RequestWithSession, res: Response) =>
 
     const explanation = await practiceService.getExplanation(questionId);
     res.json({ success: true, explanation });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId,
+      eventName: 'practice_ai_explanation_used',
+      eventCategory: 'practice',
+      properties: {
+        questionId,
+      },
+    });
   } catch (error: any) {
     console.error('Error generating explanation:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -300,7 +386,7 @@ router.post('/ai-explanation', async (req: RequestWithSession, res: Response) =>
  * Get user's practice results
  * GET /api/practice/results
  */
-router.get('/results', async (req: RequestWithSession, res: Response) => {
+router.get('/results', async (req: RequestWithSession, res: express.Response) => {
   try {
     const sessionId = req.session?.id;
     if (!sessionId) {
@@ -321,7 +407,7 @@ router.get('/results', async (req: RequestWithSession, res: Response) => {
  * Delete an assessment
  * DELETE /api/practice/assessment/:id
  */
-router.delete('/assessment/:id', async (req: RequestWithSession, res: Response) => {
+router.delete('/assessment/:id', async (req: RequestWithSession, res: express.Response) => {
   try {
     const { id } = req.params;
     const sessionId = req.session?.id;

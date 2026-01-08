@@ -6,6 +6,109 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================
+-- Helper Functions
+-- ============================================
+
+-- Updated timestamp trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Audit trigger function
+CREATE OR REPLACE FUNCTION audit_trigger_function()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        INSERT INTO audit_log (table_name, operation, record_id, old_values)
+        VALUES (TG_TABLE_NAME, TG_OP, OLD.id, to_jsonb(OLD) - 'encrypted_content');
+        RETURN OLD;
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO audit_log (table_name, operation, record_id, old_values, new_values)
+        VALUES (TG_TABLE_NAME, TG_OP, NEW.id, 
+                to_jsonb(OLD) - 'encrypted_content', 
+                to_jsonb(NEW) - 'encrypted_content');
+        RETURN NEW;
+    ELSIF TG_OP = 'INSERT' THEN
+        INSERT INTO audit_log (table_name, operation, record_id, new_values)
+        VALUES (TG_TABLE_NAME, TG_OP, NEW.id, to_jsonb(NEW) - 'encrypted_content');
+        RETURN NEW;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Cleanup expired data function (Requirement 9: 24-hour deletion)
+CREATE OR REPLACE FUNCTION cleanup_expired_data()
+RETURNS TABLE(sessions_deleted INTEGER, analyses_deleted INTEGER, audit_cleaned INTEGER) AS $$
+DECLARE
+    v_sessions INTEGER := 0;
+    v_analyses INTEGER := 0;
+    v_audit INTEGER := 0;
+BEGIN
+    -- Mark expired analyses as deleted
+    UPDATE resume_analyses 
+    SET deleted_at = NOW(), status = 'deleted', encrypted_content = ''::bytea
+    WHERE expires_at < NOW() AND deleted_at IS NULL;
+    GET DIAGNOSTICS v_analyses = ROW_COUNT;
+    
+    -- Delete expired sessions
+    DELETE FROM user_sessions WHERE expires_at < NOW();
+    GET DIAGNOSTICS v_sessions = ROW_COUNT;
+    
+    -- Clean up old audit logs (keep for 7 days)
+    DELETE FROM audit_log WHERE created_at < NOW() - INTERVAL '7 days';
+    GET DIAGNOSTICS v_audit = ROW_COUNT;
+    
+    RETURN QUERY SELECT v_sessions, v_analyses, v_audit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update question_count when questions are added/removed
+CREATE OR REPLACE FUNCTION update_assessment_question_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE practice_assessments 
+        SET question_count = question_count + 1,
+            updated_at = NOW()
+        WHERE id = NEW.assessment_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE practice_assessments 
+        SET question_count = GREATEST(0, question_count - 1),
+            updated_at = NOW()
+        WHERE id = OLD.assessment_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ensure max 5 root causes per diagnosis (Requirement 4)
+CREATE OR REPLACE FUNCTION check_root_cause_limit()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT COUNT(*) FROM root_causes WHERE diagnosis_id = NEW.diagnosis_id) >= 5 THEN
+        RAISE EXCEPTION 'Maximum of 5 root causes allowed per diagnosis';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ensure max 3 recommendations per diagnosis (Requirement 5)
+CREATE OR REPLACE FUNCTION check_recommendation_limit()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT COUNT(*) FROM recommendations WHERE diagnosis_id = NEW.diagnosis_id) >= 3 THEN
+        RAISE EXCEPTION 'Maximum of 3 recommendations allowed per diagnosis';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
 -- Job Title Normalization Tables
 -- Requirement 2: Job Target Configuration
 -- ============================================
@@ -280,36 +383,6 @@ CREATE INDEX IF NOT EXISTS idx_practice_results_session ON practice_results(sess
 CREATE INDEX IF NOT EXISTS idx_practice_results_assessment ON practice_results(assessment_id);
 CREATE INDEX IF NOT EXISTS idx_practice_results_created ON practice_results(created_at);
 
--- Trigger to update question_count when questions are added/removed
-CREATE OR REPLACE FUNCTION update_assessment_question_count()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF TG_OP = 'INSERT' THEN
-        UPDATE practice_assessments 
-        SET question_count = question_count + 1,
-            updated_at = NOW()
-        WHERE id = NEW.assessment_id;
-    ELSIF TG_OP = 'DELETE' THEN
-        UPDATE practice_assessments 
-        SET question_count = GREATEST(0, question_count - 1),
-            updated_at = NOW()
-        WHERE id = OLD.assessment_id;
-    END IF;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS update_question_count ON practice_questions;
-CREATE TRIGGER update_question_count
-    AFTER INSERT OR DELETE ON practice_questions
-    FOR EACH ROW EXECUTE FUNCTION update_assessment_question_count();
-
--- Trigger for updated_at on practice_assessments
-DROP TRIGGER IF EXISTS update_practice_assessments_updated_at ON practice_assessments;
-CREATE TRIGGER update_practice_assessments_updated_at
-    BEFORE UPDATE ON practice_assessments
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 -- End of Practice Interview Assessment Tables
 
 CREATE INDEX IF NOT EXISTS idx_resume_analyses_session ON resume_analyses(session_id);
@@ -425,63 +498,9 @@ CREATE INDEX IF NOT EXISTS idx_deletion_confirmations_token ON deletion_confirma
 -- Functions and Triggers
 -- ============================================
 
--- Cleanup expired data function (Requirement 9: 24-hour deletion)
-CREATE OR REPLACE FUNCTION cleanup_expired_data()
-RETURNS TABLE(sessions_deleted INTEGER, analyses_deleted INTEGER, audit_cleaned INTEGER) AS $$
-DECLARE
-    v_sessions INTEGER := 0;
-    v_analyses INTEGER := 0;
-    v_audit INTEGER := 0;
-BEGIN
-    -- Mark expired analyses as deleted
-    UPDATE resume_analyses 
-    SET deleted_at = NOW(), status = 'deleted', encrypted_content = ''::bytea
-    WHERE expires_at < NOW() AND deleted_at IS NULL;
-    GET DIAGNOSTICS v_analyses = ROW_COUNT;
-    
-    -- Delete expired sessions
-    DELETE FROM user_sessions WHERE expires_at < NOW();
-    GET DIAGNOSTICS v_sessions = ROW_COUNT;
-    
-    -- Clean up old audit logs (keep for 7 days)
-    DELETE FROM audit_log WHERE created_at < NOW() - INTERVAL '7 days';
-    GET DIAGNOSTICS v_audit = ROW_COUNT;
-    
-    RETURN QUERY SELECT v_sessions, v_analyses, v_audit;
-END;
-$$ LANGUAGE plpgsql;
 
--- Audit trigger function
-CREATE OR REPLACE FUNCTION audit_trigger_function()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF TG_OP = 'DELETE' THEN
-        INSERT INTO audit_log (table_name, operation, record_id, old_values)
-        VALUES (TG_TABLE_NAME, TG_OP, OLD.id, to_jsonb(OLD) - 'encrypted_content');
-        RETURN OLD;
-    ELSIF TG_OP = 'UPDATE' THEN
-        INSERT INTO audit_log (table_name, operation, record_id, old_values, new_values)
-        VALUES (TG_TABLE_NAME, TG_OP, NEW.id, 
-                to_jsonb(OLD) - 'encrypted_content', 
-                to_jsonb(NEW) - 'encrypted_content');
-        RETURN NEW;
-    ELSIF TG_OP = 'INSERT' THEN
-        INSERT INTO audit_log (table_name, operation, record_id, new_values)
-        VALUES (TG_TABLE_NAME, TG_OP, NEW.id, to_jsonb(NEW) - 'encrypted_content');
-        RETURN NEW;
-    END IF;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
 
--- Updated timestamp trigger function
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+
 
 -- Create triggers (drop first if exists to avoid duplicates)
 DROP TRIGGER IF EXISTS audit_resume_analyses ON resume_analyses;
@@ -508,37 +527,18 @@ CREATE TRIGGER update_role_templates_updated_at
 -- Constraints for Requirements Compliance
 -- ============================================
 
--- Ensure max 5 root causes per diagnosis (Requirement 4)
-CREATE OR REPLACE FUNCTION check_root_cause_limit()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF (SELECT COUNT(*) FROM root_causes WHERE diagnosis_id = NEW.diagnosis_id) >= 5 THEN
-        RAISE EXCEPTION 'Maximum of 5 root causes allowed per diagnosis';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+
 
 DROP TRIGGER IF EXISTS enforce_root_cause_limit ON root_causes;
 CREATE TRIGGER enforce_root_cause_limit
     BEFORE INSERT ON root_causes
     FOR EACH ROW EXECUTE FUNCTION check_root_cause_limit();
 
--- Ensure max 3 recommendations per diagnosis (Requirement 5)
-CREATE OR REPLACE FUNCTION check_recommendation_limit()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF (SELECT COUNT(*) FROM recommendations WHERE diagnosis_id = NEW.diagnosis_id) >= 3 THEN
-        RAISE EXCEPTION 'Maximum of 3 recommendations allowed per diagnosis';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 DROP TRIGGER IF EXISTS enforce_recommendation_limit ON recommendations;
 CREATE TRIGGER enforce_recommendation_limit
     BEFORE INSERT ON recommendations
     FOR EACH ROW EXECUTE FUNCTION check_recommendation_limit();
+
 -- Job Search & Tracking Schema Extension
 -- Add to existing schema.sql
 
