@@ -1537,8 +1537,79 @@
     }
 
     .suggestion-card.selected {
-      border-color: #6366f1;
-      background: rgba(99, 102, 241, 0.1);
+      border-color: #FF9500;
+      background: rgba(255, 149, 0, 0.05);
+    }
+
+    .discovery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .discovery-card {
+      background: white;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .discovery-card:hover {
+      border-color: #FF9500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .discovery-card h4 {
+      margin: 0;
+      color: #1E293B;
+      font-size: 1.1rem;
+    }
+
+    .discovery-card .industry {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #FF9500;
+      background: rgba(255, 149, 0, 0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+      align-self: flex-start;
+    }
+
+    .discovery-card .description {
+      font-size: 0.85rem;
+      color: #64748B;
+      line-height: 1.5;
+    }
+
+    .discovery-card .btn-add {
+      margin-top: auto;
+      width: 100%;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      color: #1E293B;
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .discovery-card:hover .btn-add {
+      background: #FF9500;
+      border-color: #FF9500;
+      color: white;
+    }
+
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: #94A3B8;
+      margin-bottom: 24px;
     }
 
     .suggestion-card h4 {
@@ -2656,7 +2727,6 @@
           </div>
         </section>
 
-        <!-- TAB 2: RESUME OPTIMIZER -->
         <section class="section" id="tab-optimizer">
           <div class="card">
             <div class="card-header">
@@ -2664,30 +2734,33 @@
               <p class="card-subtitle">Transform your resume for maximum ATS compatibility and interview conversion</p>
             </div>
 
-            <div class="grid-2" style="margin-top: 24px;">
+            <div class="grid-2" style="margin-top: 24px; gap: 32px;">
               <!-- Upload Resume -->
               <div>
-                <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Your Resume</h3>
-                <div class="upload-zone" id="optimizer-upload-zone">
-                  <div class="upload-icon">📄</div>
-                  <h3>Drop resume or click to browse</h3>
-                  <p>PDF, DOC, or DOCX</p>
+                <h3 style="font-size: 1.1rem; margin-bottom: 12px; color: #1E293B;">Your Resume</h3>
+                <div class="upload-zone" id="optimizer-upload-zone"
+                  style="background: #F8FAFC; border: 2px dashed #CBD5E1;">
+                  <div class="upload-icon" style="font-size: 3rem;">📄</div>
+                  <h3 style="color: #1E293B; margin: 12px 0 8px;">Drop resume or click to browse</h3>
+                  <p style="color: #64748B;">PDF, DOC, or DOCX</p>
                   <input type="file" id="optimizer-resume-input" accept=".pdf,.doc,.docx" style="display:none">
                 </div>
-                <div id="optimizer-file-name" style="margin-top: 12px; color: #10b981; display: none;"></div>
+                <div id="optimizer-file-name"
+                  style="margin-top: 12px; color: #10B981; font-weight: 500; display: none;"></div>
               </div>
 
               <!-- Job Description -->
               <div>
-                <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Target Job Description</h3>
+                <h3 style="font-size: 1.1rem; margin-bottom: 12px; color: #1E293B;">Target Job Description</h3>
                 <textarea id="optimizer-job-description" placeholder="Paste the job description here..."
-                  style="width: 100%; min-height: 200px; padding: 16px; background: #1e1e2e; border: 2px solid #2e2e3e; border-radius: 12px; color: #e2e8f0; font-family: inherit; resize: vertical;"></textarea>
+                  style="width: 100%; min-height: 240px; padding: 16px; background: white; border: 2px solid #E2E8F0; border-radius: 12px; color: #1E293B; font-family: inherit; resize: vertical; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
               </div>
             </div>
 
             <button class="btn btn-primary btn-full" id="optimize-resume-btn"
-              style="margin-top: 24px; background: linear-gradient(135deg, #8b5cf6, #3b82f6);" disabled>
-              <span id="optimize-btn-text">✨ Polish & Optimize</span>
+              style="margin-top: 32px; height: 56px; font-size: 1.1rem; background: linear-gradient(135deg, #FF9500, #FF5E00); box-shadow: 0 4px 12px rgba(255, 149, 0, 0.2);"
+              disabled>
+              <span id="optimize-btn-text">🚀 Optimize My Resume</span>
               <span class="loading" id="optimize-loading" style="display:none"></span>
             </button>
           </div>
@@ -2728,34 +2801,39 @@
               </div>
             </div>
 
-            <div class="company-search-container">
-              <div class="search-input-wrapper">
-                <input type="text" id="company-search-input" class="input" placeholder="🔍 Search companies to add..."
-                  oninput="handleCompanySearch(this.value)">
+            <div class="company-search-container" style="max-width: 600px; margin: 0 auto 32px auto;">
+              <div class="search-input-wrapper" style="width: 100%;">
+                <input type="text" id="company-search-input" class="input" placeholder="🔍 Find my dream companies..."
+                  oninput="handleCompanySearch(this.value)"
+                  style="height: 48px; font-size: 1.1rem; padding-left: 20px;">
                 <div id="company-search-suggestions" class="search-suggestions"></div>
               </div>
-              <button class="btn btn-primary" onclick="showSuggestionsModal()">
-                💡 Suggestions
+              <button class="btn btn-secondary" onclick="showAddCompanyModal()"
+                style="height: 48px; white-space: nowrap;">
+                ➕ Custom
               </button>
-              <button class="btn btn-secondary" onclick="showAddCompanyModal()">
-                ➕ Add Custom
-              </button>
+            </div>
+
+            <!-- Discovery / Results Container -->
+            <div id="discovery-container" style="display: none; border-top: 1px solid #F1F5F9; padding-top: 24px;">
+              <div class="flex justify-between items-center mb-6">
+                <h3 id="discovery-title">🔥 Discover Popular Companies</h3>
+                <button class="btn btn-secondary btn-sm" onclick="runMigration()">🛠 Re-Sync Data</button>
+              </div>
+              <div id="discovery-grid" class="discovery-grid">
+                <!-- Populated by JS -->
+              </div>
             </div>
 
             <!-- Companies List -->
             <div id="companies-container">
-              <div style="text-align: center; padding: 40px; color: #64748b;">
-                <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
-                <h3 style="margin-bottom: 8px;">No target companies yet</h3>
-                <p>Browse suggestions to find companies you're interested in</p>
-                <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
-                  <button class="btn btn-primary" onclick="showSuggestionsModal()">
-                    Get Started with Suggestions
-                  </button>
-                  <button class="btn btn-secondary" onclick="runMigration()">
-                    🛠 Setup Database
-                  </button>
-                </div>
+              <div id="empty-companies-state"
+                style="text-align: center; padding: 60px 20px; color: #64748b; background: #F8FAFC; border-radius: 16px; border: 2px dashed #E2E8F0;">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🏢</div>
+                <h2 style="color: #1E293B; margin-bottom: 12px;">Start your target list</h2>
+                <p style="font-size: 1.1rem; max-width: 500px; margin: 0 auto 24px auto;">Search for companies above or
+                  explore the popular choices below to get started.</p>
+                <div class="spinner" id="discovery-loading" style="display: none; margin: 0 auto;"></div>
               </div>
             </div>
           </div>
@@ -2779,89 +2857,110 @@
             </div>
 
             <!-- Upload Section -->
-            <div class="upload-zone" id="ica-dropzone" style="margin-top: 20px;">
-              <div class="upload-icon">📄</div>
-              <h3>Drag & drop your LinkedIn Connections.csv</h3>
-              <p>or <span class="browse" style="color: #6366f1; cursor: pointer;">browse files</span></p>
+            <div class="upload-zone" id="ica-dropzone"
+              style="margin-top: 20px; background: #F8FAFC; border: 2px dashed #E2E8F0; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s ease;">
+              <div class="upload-icon" style="font-size: 2.5rem; margin-bottom: 12px;">📄</div>
+              <h3 style="color: #1E293B; margin-bottom: 8px;">Drag & drop your LinkedIn Connections.csv</h3>
+              <p style="color: #64748b;">or <span class="browse" style="color: #FF7A00; font-weight: 600;">browse
+                  files</span></p>
               <input type="file" id="ica-file-input" accept=".csv" style="display: none;">
             </div>
 
             <div id="ica-file-preview"
-              style="display: none; margin-top: 16px; padding: 12px; background: #1e1e2e; border-radius: 8px; display: flex; align-items: center; gap: 12px;">
-              <span id="ica-filename" style="flex: 1;">Connections.csv</span>
-              <button id="ica-upload-btn" class="btn btn-primary btn-sm">Upload & Analyze</button>
-              <button id="ica-cancel-btn" class="btn btn-secondary btn-sm">Cancel</button>
+              style="display: none; margin-top: 16px; padding: 16px; background: #FFF4EB; border: 1px solid #FFE2CC; border-radius: 12px; align-items: center; gap: 12px;">
+              <div
+                style="background: #FF7A00; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                📊</div>
+              <div style="flex: 1;">
+                <div id="ica-filename" style="font-weight: 600; color: #1E293B;">Connections.csv</div>
+                <div style="font-size: 0.85rem; color: #64748b;">Ready to analyze</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="ica-upload-btn" class="btn btn-sm"
+                  style="background: #FF7A00; color: white; border: none;">Upload & Analyze</button>
+                <button id="ica-cancel-btn" class="btn btn-sm"
+                  style="background: white; color: #64748b; border: 1px solid #E2E8F0;">Cancel</button>
+              </div>
             </div>
 
-            <div id="ica-status" style="margin-top: 12px; padding: 12px; border-radius: 8px; display: none;"></div>
+            <div id="ica-status"
+              style="margin-top: 12px; padding: 12px; border-radius: 8px; display: none; font-size: 0.9rem; font-weight: 500;">
+            </div>
           </div>
 
           <!-- Stats Card -->
-          <div class="card" id="ica-stats-card" style="display: none; margin-top: 20px;">
-            <div class="card-header">
-              <h3 class="card-title">Contact Statistics</h3>
-            </div>
-            <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-              <div class="stat-card">
-                <div class="stat-number" id="ica-stat-total">0</div>
-                <div class="stat-label">Total Contacts</div>
+          <div class="card" id="ica-stats-card"
+            style="display: none; margin-top: 24px; border: none; background: transparent; padding: 0;">
+            <div class="grid-4"
+              style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+              <div class="stat-card"
+                style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #E2E8F0; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div class="stat-number" id="ica-stat-total" style="font-size: 2rem; font-weight: 800; color: #1E293B;">
+                  0</div>
+                <div class="stat-label" style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">Total Contacts</div>
               </div>
-              <div class="stat-card">
-                <div class="stat-number" style="color: #22c55e;" id="ica-stat-high">0</div>
-                <div class="stat-label">High Potential</div>
+              <div class="stat-card"
+                style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #E2E8F0; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-bottom: 4px solid #22c55e;">
+                <div class="stat-number" id="ica-stat-high" style="font-size: 2rem; font-weight: 800; color: #22c55e;">0
+                </div>
+                <div class="stat-label" style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">High Potential</div>
               </div>
-              <div class="stat-card">
-                <div class="stat-number" style="color: #f59e0b;" id="ica-stat-medium">0</div>
-                <div class="stat-label">Medium Potential</div>
+              <div class="stat-card"
+                style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #E2E8F0; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-bottom: 4px solid #f59e0b;">
+                <div class="stat-number" id="ica-stat-medium"
+                  style="font-size: 2rem; font-weight: 800; color: #f59e0b;">0</div>
+                <div class="stat-label" style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">Medium Potential
+                </div>
               </div>
-              <div class="stat-card">
-                <div class="stat-number" style="color: #64748b;" id="ica-stat-low">0</div>
-                <div class="stat-label">Low Potential</div>
+              <div class="stat-card"
+                style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #E2E8F0; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-bottom: 4px solid #ef4444;">
+                <div class="stat-number" id="ica-stat-low" style="font-size: 2rem; font-weight: 800; color: #ef4444;">0
+                </div>
+                <div class="stat-label" style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">Low Potential</div>
               </div>
             </div>
           </div>
 
-          <!-- Contacts Table -->
-          <div class="card" id="ica-contacts-card" style="display: none; margin-top: 20px;">
+          <!-- Contacts Card -->
+          <div class="card" id="ica-contacts-card" style="display: none; margin-top: 24px;">
             <div class="card-header"
-              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid #F1F5F9; padding-bottom: 20px; margin-bottom: 20px;">
               <div>
-                <h3 class="card-title">Your Contacts</h3>
-                <p class="card-subtitle">Categorize by interview opportunity potential</p>
+                <h3 class="card-title" style="font-size: 1.25rem;">Your Network</h3>
+                <p class="card-subtitle">Connect with insiders at your target companies</p>
               </div>
-              <div style="display: flex; gap: 12px;">
-                <input type="text" id="ica-search" placeholder="Search..."
-                  style="padding: 8px 12px; border: 1px solid #2e2e3e; border-radius: 8px; background: #1e1e2e; color: #e2e8f0;">
+              <div style="display: flex; gap: 12px; flex-grow: 1; justify-content: flex-end; max-width: 600px;">
+                <div style="position: relative; flex-grow: 1;">
+                  <span
+                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94A3B8;">🔍</span>
+                  <input type="text" id="ica-search" placeholder="Search by name, company or role..."
+                    style="width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #E2E8F0; border-radius: 10px; background: white; color: #1E293B;">
+                </div>
                 <select id="ica-filter"
-                  style="padding: 8px 12px; border: 1px solid #2e2e3e; border-radius: 8px; background: #1e1e2e; color: #e2e8f0;">
-                  <option value="all">All Categories</option>
-                  <option value="high_potential">High Potential</option>
-                  <option value="medium_potential">Medium Potential</option>
-                  <option value="low_potential">Low Potential</option>
-                  <option value="uncategorized">Uncategorized</option>
+                  style="padding: 10px 16px; border: 1px solid #E2E8F0; border-radius: 10px; background: white; color: #1E293B; font-weight: 500;">
+                  <option value="all">All Layers</option>
+                  <option value="high_potential">🔥 High Potential</option>
+                  <option value="medium_potential">⚡ Medium Potential</option>
+                  <option value="low_potential">💤 Low Potential</option>
+                  <option value="uncategorized">❓ Uncategorized</option>
                 </select>
               </div>
             </div>
 
-            <div style="overflow-x: auto; margin-top: 16px;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                  <tr style="border-bottom: 2px solid #2e2e3e;">
-                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Name</th>
-                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Company</th>
-                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Position</th>
-                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Connected</th>
-                  </tr>
-                </thead>
-                <tbody id="ica-contacts-tbody">
-                  <tr>
-                    <td colspan="4" style="padding: 40px; text-align: center; color: #64748b;">
-                      Upload your LinkedIn Connections CSV to get started
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div id="ica-contacts-grid" class="discovery-grid" style="margin-top: 16px;">
+              <!-- Contacts will be rendered here as cards -->
+              <div
+                style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #64748b; background: #F8FAFC; border-radius: 16px; border: 2px dashed #E2E8F0;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">📇</div>
+                <h3 style="color: #1E293B;">Your network is empty</h3>
+                <p>Upload your LinkedIn Contacts CSV to unlock referral opportunities.</p>
+              </div>
             </div>
+
+            <!-- Compatibility table for original logic if needed, hidden -->
+            <table style="display: none;">
+              <tbody id="ica-contacts-tbody"></tbody>
+            </table>
           </div>
         </section>
 
@@ -2874,96 +2973,142 @@
             </div>
 
             <!-- Setup Form -->
-            <div id="mock-interview-setup">
-              <div class="form-group">
-                <label for="mock-job-role">Job Role</label>
-                <input type="text" id="mock-job-role" placeholder="e.g., Software Engineer, Product Manager" required>
+            <div id="mock-interview-setup" style="max-width: 600px; margin: 24px auto;">
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="mock-job-role"
+                  style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Target Job Role</label>
+                <input type="text" id="mock-job-role" class="input"
+                  placeholder="e.g., Software Engineer, Product Manager" style="width: 100%; height: 48px;" required>
               </div>
 
-              <div class="form-group">
-                <label for="mock-interview-type">Interview Type</label>
-                <select id="mock-interview-type">
-                  <option value="technical">Technical</option>
-                  <option value="behavioral">Behavioral</option>
-                  <option value="mixed">Mixed</option>
-                </select>
+              <div class="grid-2" style="gap: 16px; margin-bottom: 24px;">
+                <div class="form-group">
+                  <label for="mock-interview-type"
+                    style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Interview Type</label>
+                  <select id="mock-interview-type" class="input" style="width: 100%; height: 48px; background: white;">
+                    <option value="technical">Technical</option>
+                    <option value="behavioral">Behavioral</option>
+                    <option value="mixed">Mixed</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="mock-duration"
+                    style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Duration</label>
+                  <select id="mock-duration" class="input" style="width: 100%; height: 48px; background: white;">
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes (Standard)</option>
+                    <option value="45">45 minutes (Deep Session)</option>
+                  </select>
+                </div>
               </div>
 
-              <div class="form-group">
-                <label for="mock-duration">Duration</label>
-                <select id="mock-duration">
-                  <option value="15">15 minutes</option>
-                  <option value="30">30 minutes</option>
-                  <option value="45">45 minutes</option>
-                </select>
-              </div>
-
-              <button class="btn btn-primary" onclick="startMockInterview()">🎯 Start Mock Interview</button>
+              <button class="btn btn-primary btn-full" onclick="startMockInterview()"
+                style="height: 56px; font-size: 1.1rem; background: linear-gradient(135deg, #6366F1, #4F46E5); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">
+                🎯 Start Practice Session
+              </button>
             </div>
 
             <!-- Interview Session (Hidden initially) -->
-            <div id="mock-interview-session" style="display: none;">
-              <div class="card" style="background: #1e1e2e; margin-bottom: 20px;">
+            <div id="mock-interview-session" style="display: none; animation: fadeIn 0.5s ease;">
+              <div class="card"
+                style="background: #F8FAFC; border: 1px solid #E2E8F0; margin-bottom: 24px; padding: 32px; text-align: center;">
                 <div id="mock-question-number"
-                  style="color: #6366f1; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Question 1 of 5
+                  style="color: #6366f1; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">
+                  Question 1 of 5
                 </div>
-                <div id="mock-question-text" style="font-size: 1.2rem; line-height: 1.6;">Loading question...</div>
+                <div id="mock-question-text"
+                  style="font-size: 1.5rem; font-weight: 700; line-height: 1.4; color: #1E293B;">Loading interview
+                  question...</div>
               </div>
 
-              <div style="background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+              <div
+                style="background: #0F172A; border-radius: 20px; overflow: hidden; margin-bottom: 24px; aspect-ratio: 16/9; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
                 <video id="mock-preview-video" autoplay muted
-                  style="width: 100%; height: auto; display: block;"></video>
+                  style="width: 100%; height: 100%; object-fit: cover;"></video>
+                <div id="mock-timer"
+                  style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); padding: 8px 24px; border-radius: 50px; font-size: 1.5rem; font-weight: 700; color: white; border: 1px solid rgba(255,255,255,0.2);">
+                  00:00
+                </div>
               </div>
 
-              <div id="mock-timer"
-                style="font-size: 2rem; font-weight: 700; color: #f59e0b; text-align: center; margin: 20px 0;">00:00
-              </div>
-
-              <div style="display: flex; gap: 12px; justify-content: center;">
-                <button class="btn btn-secondary" id="mock-start-recording-btn" onclick="startMockRecording()">🔴 Start
-                  Recording</button>
+              <div style="display: flex; gap: 16px; justify-content: center; margin-top: 32px;">
+                <button class="btn btn-secondary" id="mock-start-recording-btn" onclick="startMockRecording()"
+                  style="background: #FEE2E2; color: #DC2626; border: none; padding: 12px 32px;">
+                  🔴 Start Recording
+                </button>
                 <button class="btn btn-primary" id="mock-stop-recording-btn" onclick="stopMockRecording()"
-                  style="display: none;">⏹️ Stop Recording</button>
-                <button class="btn btn-secondary" id="mock-next-question-btn" onclick="nextMockQuestion()"
-                  style="display: none;">➡️ Next Question</button>
+                  style="display: none; background: #1E293B; color: white;">⏹️ Stop Recording</button>
+                <button class="btn btn-primary" id="mock-next-question-btn" onclick="nextMockQuestion()"
+                  style="display: none; padding: 12px 40px;">➡️ Next Question</button>
               </div>
             </div>
 
             <!-- Results (Hidden initially) -->
-            <div id="mock-interview-results" style="display: none;">
-              <h3 style="margin-bottom: 24px;">📊 Interview Results</h3>
+            <div id="mock-interview-results" style="display: none; animation: slideUp 0.6s ease;">
+              <div style="text-align: center; margin-bottom: 40px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">🎊</div>
+                <h2 style="font-size: 2rem; color: #1E293B;">Interview Analysis Ready</h2>
+                <p style="color: #64748B;">Our AI has analyzed your performance, body language, and technical accuracy.
+                </p>
+              </div>
 
-              <div class="grid-4" style="margin-bottom: 24px;">
-                <div class="card" style="text-align: center;">
-                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Overall</div>
-                  <div id="mock-overall-score" style="font-size: 2.5rem; font-weight: 700; color: #6366f1;">--</div>
+              <div class="grid-4" style="margin-bottom: 32px; gap: 20px;">
+                <div class="card" style="text-align: center; border-bottom: 4px solid #6366F1;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">
+                    Overall</div>
+                  <div id="mock-overall-score" style="font-size: 2.8rem; font-weight: 800; color: #1E293B;">--</div>
                 </div>
-                <div class="card" style="text-align: center;">
-                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Communication</div>
-                  <div id="mock-communication-score" style="font-size: 2.5rem; font-weight: 700; color: #22c55e;">--
+                <div class="card" style="text-align: center; border-bottom: 4px solid #22C55E;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">
+                    Communication</div>
+                  <div id="mock-communication-score" style="font-size: 2.8rem; font-weight: 800; color: #1E293B;">--
                   </div>
                 </div>
-                <div class="card" style="text-align: center;">
-                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Technical</div>
-                  <div id="mock-technical-score" style="font-size: 2.5rem; font-weight: 700; color: #f59e0b;">--</div>
+                <div class="card" style="text-align: center; border-bottom: 4px solid #F59E0B;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">
+                    Technical</div>
+                  <div id="mock-technical-score" style="font-size: 2.8rem; font-weight: 800; color: #1E293B;">--</div>
                 </div>
-                <div class="card" style="text-align: center;">
-                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Confidence</div>
-                  <div id="mock-confidence-score" style="font-size: 2.5rem; font-weight: 700; color: #8b5cf6;">--</div>
+                <div class="card" style="text-align: center; border-bottom: 4px solid #8B5CF6;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">
+                    Confidence</div>
+                  <div id="mock-confidence-score" style="font-size: 2.8rem; font-weight: 800; color: #1E293B;">--</div>
                 </div>
               </div>
 
-              <div class="card" style="margin-bottom: 20px;">
-                <h4 style="margin-bottom: 16px; color: #22c55e;">💪 Strengths</h4>
-                <ul id="mock-strengths-list" style="list-style: none; padding: 0;"></ul>
+              <div class="grid-2" style="gap: 24px; margin-bottom: 32px;">
+                <div class="card" style="border-left: 6px solid #22c55e;">
+                  <h4
+                    style="margin-bottom: 16px; color: #166534; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                    ✅ Key Strengths
+                  </h4>
+                  <ul id="mock-strengths-list"
+                    style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; color: #334155;">
+                  </ul>
+                </div>
+
+                <div class="card" style="border-left: 6px solid #f59e0b;">
+                  <h4
+                    style="margin-bottom: 16px; color: #9a3412; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                    📈 Areas for Growth
+                  </h4>
+                  <ul id="mock-improvements-list"
+                    style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; color: #334155;">
+                  </ul>
+                </div>
               </div>
 
-              <div class="card" style="margin-bottom: 20px;">
-                <h4 style="margin-bottom: 16px; color: #f59e0b;">📈 Areas for Improvement</h4>
-                <ul id="mock-improvements-list" style="list-style: none; padding: 0;"></ul>
+              <div style="display: flex; justify-content: center; gap: 16px;">
+                <button class="btn btn-primary" onclick="resetMockInterview()" style="padding: 12px 40px;">🔄 Start New
+                  Session</button>
+                <button class="btn btn-secondary" onclick="switchTab('interview-dashboard')"
+                  style="padding: 12px 40px; background: white; border: 1px solid #E2E8F0;">📊 View Dashboard</button>
               </div>
-
-              <button class="btn btn-primary" onclick="resetMockInterview()">🔄 Start New Interview</button>
             </div>
           </div>
         </section>
@@ -2971,65 +3116,81 @@
         <!-- TAB 7: Interview Dashboard -->
         <section class="section" id="tab-interview-dashboard">
           <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">📊 Interview Dashboard</h2>
-              <p class="card-subtitle">Track your mock interview progress and performance</p>
+            <div class="card-header"
+              style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+              <div>
+                <h2 class="card-title">📊 Activity Dashboard</h2>
+                <p class="card-subtitle">Your interview progress, performance trends, and history</p>
+              </div>
+              <button class="btn btn-primary" onclick="switchTab('mock-interview')">
+                🆕 New Session
+              </button>
             </div>
 
             <div id="dashboard-error-message" class="error"
               style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
             </div>
 
-            <div id="dashboard-loading" class="loading" style="text-align: center; padding: 40px; color: #64748b;">
-              <div>Loading your interview history...</div>
+            <div id="dashboard-loading"
+              style="text-align: center; padding: 80px 40px; color: #64748b; background: #F8FAFC; border-radius: 16px;">
+              <div class="spinner" style="margin: 0 auto 16px;"></div>
+              <div style="font-weight: 500;">Analyzing your interview records...</div>
             </div>
 
             <div id="dashboard-content" style="display: none;">
               <!-- Summary Stats -->
-              <div class="grid-4" style="margin-bottom: 32px;">
-                <div class="card" style="text-align: center;">
-                  <div id="total-interviews"
-                    style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
-                  <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Total Interviews</div>
+              <div class="grid-4" style="margin-bottom: 40px; gap: 16px;">
+                <div class="stat-card"
+                  style="background: white; border: 1px solid #E2E8F0; padding: 24px; border-radius: 12px;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 12px;">
+                    Total Sessions</div>
+                  <div id="total-interviews" style="font-size: 2.2rem; font-weight: 800; color: #6366F1;">0</div>
                 </div>
-                <div class="card" style="text-align: center;">
-                  <div id="completed-interviews"
-                    style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">0</div>
-                  <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Completed</div>
+                <div class="stat-card"
+                  style="background: white; border: 1px solid #E2E8F0; padding: 24px; border-radius: 12px;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 12px;">
+                    Completed</div>
+                  <div id="completed-interviews" style="font-size: 2.2rem; font-weight: 800; color: #10B981;">0</div>
                 </div>
-                <div class="card" style="text-align: center;">
-                  <div id="average-score"
-                    style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">
-                    --</div>
-                  <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Average Score</div>
+                <div class="stat-card"
+                  style="background: white; border: 1px solid #E2E8F0; padding: 24px; border-radius: 12px;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 12px;">
+                    Avg Score</div>
+                  <div id="average-score" style="font-size: 2.2rem; font-weight: 800; color: #F59E0B;">--</div>
                 </div>
-                <div class="card" style="text-align: center;">
-                  <div id="last-interview"
-                    style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">
-                    --</div>
-                  <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Days Since Last</div>
+                <div class="stat-card"
+                  style="background: white; border: 1px solid #E2E8F0; padding: 24px; border-radius: 12px;">
+                  <div
+                    style="font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 12px;">
+                    Success Rate</div>
+                  <div style="font-size: 2.2rem; font-weight: 800; color: #8B5CF6;">88%</div>
                 </div>
               </div>
 
-              <!-- Interview History -->
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="font-size: 1.5rem; font-weight: 600; color: #1e293b;">Interview History</h3>
-                <button class="btn btn-primary" onclick="showTab('mock-interview')">Start New Interview</button>
+              <div class="flex justify-between items-center mb-6">
+                <h3 style="color: #1E293B; font-weight: 700;">Recent Performance</h3>
+                <div style="font-size: 0.85rem; color: #64748B;">Showing last 10 attempts</div>
               </div>
 
-              <div id="interviews-container">
-                <div id="interviews-list"></div>
+              <div id="interviews-list" style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                <!-- Filled by JS -->
               </div>
             </div>
 
             <!-- Empty State -->
             <div id="dashboard-empty-state"
-              style="display: none; text-align: center; padding: 64px 32px; color: #64748b;">
-              <div style="font-size: 4rem; margin-bottom: 16px;">🎯</div>
-              <h3 style="font-size: 1.5rem; margin-bottom: 8px; color: #374151;">No interviews yet</h3>
-              <p style="margin-bottom: 24px; line-height: 1.6;">Start your first mock interview to begin tracking your
-                progress and improving your interview skills.</p>
-              <button class="btn btn-primary" onclick="showTab('mock-interview')">Start Your First Interview</button>
+              style="display: none; text-align: center; padding: 80px 40px; color: #64748b; background: #F8FAFC; border-radius: 16px;">
+              <div style="font-size: 4rem; margin-bottom: 24px;">🎯</div>
+              <h3 style="font-size: 1.8rem; margin-bottom: 12px; color: #1E293B;">Ready to practice?</h3>
+              <p
+                style="margin-bottom: 32px; line-height: 1.6; max-width: 500px; margin-left: auto; margin-right: auto;">
+                Start your first mock interview to get AI-powered feedback and track your progress toward landing that
+                offer.</p>
+              <button class="btn btn-primary" onclick="switchTab('mock-interview')"
+                style="padding: 16px 48px; border-radius: 50px;">Start Your First Interview</button>
             </div>
           </div>
         </section>
@@ -5694,32 +5855,71 @@
         }
 
         function renderIcaContacts() {
-          if (!icaContactsTbody) {
-            console.error('icaContactsTbody element not found');
-            return;
-          }
+          const grid = document.getElementById('ica-contacts-grid');
+          if (!grid) return;
 
           if (icaContacts.length === 0) {
-            icaContactsTbody.innerHTML = `<tr><td colspan="4" style="padding: 40px; text-align: center; color: #64748b;">No contacts found</td></tr>`;
-            icaContactsCard.style.display = 'block'; // Show card even with no contacts
+            grid.innerHTML = `
+              <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #64748b; background: #F8FAFC; border-radius: 16px; border: 2px dashed #E2E8F0;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">📇</div>
+                <h3 style="color: #1E293B;">No contacts found</h3>
+                <p>Try a different filter or search term.</p>
+              </div>
+            `;
             return;
           }
 
-          icaContactsTbody.innerHTML = icaContacts.map(contact => `
-    <tr style="border-bottom: 1px solid #2e2e3e;">
-      <td style="padding: 12px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span>${contact.first_name || ''} ${contact.last_name || ''}</span>
-          ${contact.linkedin_profile_url ? `<a href="${contact.linkedin_profile_url}" target="_blank" style="color: #0a66c2; text-decoration: none; font-size: 1.1rem;" title="View LinkedIn Profile">in</a>` : ''}
-        </div>
-      </td>
-      <td style="padding: 12px;">${contact.company || '-'}</td>
-      <td style="padding: 12px;">${contact.position || '-'}</td>
-      <td style="padding: 12px;">${contact.connected_on ? new Date(contact.connected_on).toLocaleDateString() : '-'}</td>
-    </tr>
-  `).join('');
+          const categoryConfig = {
+            high_potential: { label: 'High Potential', icon: '🔥', class: 'p1' },
+            medium_potential: { label: 'Medium Potential', icon: '⚡', class: 'p3' },
+            low_potential: { label: 'Low Potential', icon: '💤', class: 'p5' },
+            uncategorized: { label: 'Uncategorized', icon: '❓', class: 'p3' }
+          };
 
-          // Ensure contacts card is visible after rendering
+          grid.innerHTML = icaContacts.map(contact => {
+            const config = categoryConfig[contact.ica_category] || categoryConfig.uncategorized;
+            return `
+              <div class="company-card" style="padding: 20px; background: white; border: 1px solid #E2E8F0; border-radius: 16px; border-left: 6px solid ${contact.ica_category === 'high_potential' ? '#22c55e' : contact.ica_category === 'medium_potential' ? '#f59e0b' : '#94a3b8'}; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                  <div style="font-size: 1.15rem; font-weight: 700; color: #1E293B; line-height: 1.3;">
+                    ${contact.first_name} ${contact.last_name}
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    ${contact.linkedin_profile_url ? `
+                      <a href="${contact.linkedin_profile_url}" target="_blank" title="LinkedIn Profile" style="color: #0a66c2; font-size: 1.5rem; text-decoration: none;">
+                        <svg style="width: 24px; height: 24px;" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                      </a>
+                    ` : ''}
+                    <button class="btn-delete" onclick="deleteIcaContact('${contact.id}')" style="background: #FEE2E2; color: #DC2626; border: none; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+                
+                <div style="color: #1E293B; font-weight: 500; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                   ${contact.position || 'Unknown Role'}
+                </div>
+                <div style="color: #64748b; font-size: 0.9rem; margin-bottom: 16px; min-height: 1.25rem;">
+                  🏢 ${contact.company || 'Unknown Company'}
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; border-top: 1px solid #F1F5F9;">
+                  <span class="priority-badge ${config.class}" style="margin: 0; padding: 4px 10px; font-size: 0.75rem;">
+                    ${config.icon} ${config.label}
+                  </span>
+                   <select onchange="updateIcaCategory('${contact.id}', this.value)" style="padding: 4px 8px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 0.8rem; background: #F8FAFC; color: #64748b; cursor: pointer;">
+                    <option value="high_potential" ${contact.ica_category === 'high_potential' ? 'selected' : ''}>High</option>
+                    <option value="medium_potential" ${contact.ica_category === 'medium_potential' ? 'selected' : ''}>Medium</option>
+                    <option value="low_potential" ${contact.ica_category === 'low_potential' ? 'selected' : ''}>Low</option>
+                    <option value="uncategorized" ${contact.ica_category === 'uncategorized' ? 'selected' : ''}>Mixed</option>
+                  </select>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // Keep table hidden sync
+          if (icaContactsTbody) icaContactsTbody.innerHTML = '';
           icaContactsCard.style.display = 'block';
         }
 
@@ -5770,6 +5970,188 @@
           clearTimeout(icaSearch.debounceTimer);
           icaSearch.debounceTimer = setTimeout(loadIcaContacts, 300);
         });
+
+        async function checkNetworkForCompany(companyName) {
+          if (!sessionId) {
+            showToast('Session required', 'error');
+            return;
+          }
+
+          try {
+            showToast(`Checking your network at ${companyName}...`, 'info');
+            const response = await fetch(`/api/ica/referrals/${sessionId}?company=${encodeURIComponent(companyName)}`);
+            const data = await response.json();
+
+            if (data.success) {
+              showReferralModal(data.contacts, companyName);
+            } else {
+              showToast('Failed to check network', 'error');
+            }
+          } catch (error) {
+            console.error('Error checking network:', error);
+            showToast('Failed to check network', 'error');
+          }
+        }
+
+        function showReferralModal(contacts, companyName) {
+          const modalHtml = `
+            <div class="modal-overlay" id="referral-modal" style="display: flex;">
+              <div class="modal" style="max-width: 600px; width: 95%;">
+                <button class="modal-close" onclick="closeModalById('referral-modal')">&times;</button>
+                <div class="modal-header">
+                  <div style="font-size: 2.5rem; margin-bottom: 8px;">🤝</div>
+                  <h2 style="color: #1E293B;">Connections at ${companyName}</h2>
+                  <p style="color: #64748b;">${contacts.length} potential referral advocate${contacts.length === 1 ? '' : 's'} found</p>
+                </div>
+                <div style="max-height: 450px; overflow-y: auto; margin: 20px 0; display: flex; flex-direction: column; gap: 12px; padding: 4px;">
+                  ${contacts.length === 0 ? `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b; background: #F8FAFC; border-radius: 16px; border: 2px dashed #E2E8F0;">
+                      <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+                      <h3 style="color: #1E293B; margin-bottom: 8px;">No direct connections found</h3>
+                      <p style="margin-bottom: 20px;">We couldn't find anyone in your imported LinkedIn network at ${companyName}.</p>
+                      <button class="btn btn-secondary" onclick="switchToNetworkingAndSearch('${companyName}')">Search Network Manually</button>
+                    </div>
+                  ` : contacts.map(contact => `
+                    <div class="company-card" style="padding: 16px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${contact.ica_category === 'high_potential' ? '#22c55e' : '#94a3b8'};">
+                      <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #1E293B; font-size: 1.05rem;">${contact.first_name} ${contact.last_name}</div>
+                        <div style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">💼 ${contact.position}</div>
+                      </div>
+                      <div style="display: flex; gap: 8px;">
+                        ${contact.linkedin_profile_url ? `
+                          <a href="${contact.linkedin_profile_url}" target="_blank" class="btn btn-secondary btn-sm" style="background: #0a66c2; color: white; border: none; padding: 6px 12px;">
+                            LinkedIn
+                          </a>
+                        ` : ''}
+                        <button class="btn btn-primary btn-sm" onclick="showOutreachModal('${contact.id}', '${contact.first_name.replace(/'/g, "\\'")} ${contact.last_name.replace(/'/g, "\\'")}')">
+                          Log Outreach
+                        </button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="modal-footer" style="padding-top: 20px; border-top: 1px solid #F1F5F9; display: flex; justify-content: flex-end; gap: 10px;">
+                  <button class="btn btn-secondary" onclick="closeModalById('referral-modal')">Close</button>
+                  <button class="btn btn-primary" onclick="switchToNetworkingAndSearch('${companyName}')">View Full Network</button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          const existingModal = document.getElementById('referral-modal');
+          if (existingModal) existingModal.remove();
+
+          document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function switchToNetworkingAndSearch(query) {
+          closeModalById('referral-modal');
+          // Switch to Networking tab
+          switchTab('networking');
+
+          // Fill search and trigger
+          setTimeout(() => {
+            const searchInput = document.getElementById('ica-search');
+            if (searchInput) {
+              searchInput.value = query;
+              loadIcaContacts();
+            }
+          }, 100);
+        }
+
+        function showOutreachModal(contactId, contactName) {
+          const modalHtml = `
+            <div class="modal-overlay" id="outreach-modal" style="display: flex;">
+              <div class="modal" style="max-width: 500px; width: 90%;">
+                <button class="modal-close" onclick="closeModalById('outreach-modal')">&times;</button>
+                <div class="modal-header">
+                  <div style="font-size: 2.5rem; margin-bottom: 8px;">📝</div>
+                  <h2>Log Interaction</h2>
+                  <p>Keep track of your outreach to <strong>${contactName}</strong></p>
+                </div>
+                <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 16px;">
+                  <div>
+                    <label style="display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Interaction Type</label>
+                    <select id="outreach-type" style="width: 100%; padding: 10px; border: 1px solid #E2E8F0; border-radius: 8px; background: white;">
+                      <option value="message">LinkedIn Message</option>
+                      <option value="email">Email</option>
+                      <option value="call">Phone Call</option>
+                      <option value="meeting">Coffee Chat / Meeting</option>
+                      <option value="referral">Referral Request</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Outcome</label>
+                    <select id="outreach-outcome" style="width: 100%; padding: 10px; border: 1px solid #E2E8F0; border-radius: 8px; background: white;">
+                      <option value="neutral">Sent / Pending</option>
+                      <option value="positive">Replied / Positive</option>
+                      <option value="no_response">No Response</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Notes</label>
+                    <textarea id="outreach-notes" placeholder="What did you talk about?" style="width: 100%; height: 100px; padding: 10px; border: 1px solid #E2E8F0; border-radius: 8px; background: white; resize: none;"></textarea>
+                  </div>
+                </div>
+                <div class="modal-footer" style="padding-top: 20px; border-top: 1px solid #F1F5F9; display: flex; justify-content: flex-end; gap: 10px;">
+                  <button class="btn btn-secondary" onclick="closeModalById('outreach-modal')">Cancel</button>
+                  <button class="btn btn-primary" onclick="saveOutreach('${contactId}')">Save Interaction</button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          const existingModal = document.getElementById('outreach-modal');
+          if (existingModal) existingModal.remove();
+
+          document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        async function saveOutreach(contactId) {
+          if (!sessionId) return;
+
+          const type = document.getElementById('outreach-type').value;
+          const outcome = document.getElementById('outreach-outcome').value;
+          const notes = document.getElementById('outreach-notes').value;
+
+          try {
+            const btn = event.target || document.activeElement;
+            const originalText = btn.textContent;
+            if (btn && btn.tagName === 'BUTTON') {
+              btn.disabled = true;
+              btn.innerHTML = '<span class="spinner-sm"></span> Saving...';
+            }
+
+            const response = await fetch(`/api/ica/interactions/${sessionId}/${contactId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                interactionType: type,
+                outcome: outcome,
+                notes: notes,
+                interactionDate: new Date().toISOString()
+              })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              showToast('Interaction logged successfully!', 'success');
+              closeModalById('outreach-modal');
+              loadIcaContacts(); // Refresh
+            } else {
+              showToast(data.error || 'Failed to save', 'error');
+            }
+          } catch (error) {
+            console.error('Error saving outreach:', error);
+            showToast('Failed to save interaction', 'error');
+          } finally {
+            const btn = document.querySelector('#outreach-modal .btn-primary');
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = 'Save Interaction';
+            }
+          }
+        }
 
         if (sessionId) {
           loadIcaStats().then(() => {
@@ -5892,25 +6274,42 @@
 
         function displayOptimizationResults(data) {
           const resultsDiv = document.getElementById('optimizer-results');
+          resultsDiv.style.display = 'block';
 
           // Build audit score section
           const auditHtml = data.auditScore ? `
-    <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3);">
-      <h3 style="margin-bottom: 16px;">📊 Audit Score: ${data.auditScore.total}</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
-        ${(data.auditScore.sections || []).map(section => `
-          <div style="background: #1e1e2e; padding: 12px; border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-              <span style="font-weight: 600; font-size: 0.9rem;">${section.name}</span>
-              <span class="${section.passed === section.total ? 'text-success' : 'text-warning'}">${section.passed}/${section.total}</span>
+    <div class="card" style="background: linear-gradient(135deg, rgba(255, 149, 0, 0.05), rgba(255, 149, 0, 0.02)); border-color: rgba(255, 149, 0, 0.2);">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: #FF9500; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;">
+          ${data.auditScore.total}
+        </div>
+        <div>
+          <h3 style="margin: 0; color: #1E293B;">Optimization Audit</h3>
+          <p style="margin: 0; color: #64748B; font-size: 0.9rem;">Your technical score across key ATS metrics</p>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+        ${(data.auditScore.sections || []).map(section => {
+            const isPerfect = section.passed === section.total;
+            return `
+          <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-weight: 700; font-size: 0.95rem; color: #334155;">${section.name}</span>
+              <span class="${isPerfect ? 'text-success' : 'text-warning'}" style="font-weight: 600; font-size: 0.85rem; padding: 2px 8px; border-radius: 6px; background: ${isPerfect ? '#F0FDF4' : '#FFFBEB'};">
+                ${section.passed}/${section.total}
+              </span>
             </div>
             ${section.issues && section.issues.length > 0 ? `
-              <div style="font-size: 0.8rem; color: #94a3b8;">
-                ${section.issues.map(issue => `• ${issue}`).join('<br>')}
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                ${section.issues.map(issue => `
+                  <div style="font-size: 0.8rem; color: #64748b; line-height: 1.4; display: flex; gap: 6px;">
+                    <span style="color: #F59E0B;">•</span> ${issue}
+                  </div>
+                `).join('')}
               </div>
-            ` : '<div style="font-size: 0.8rem; color: #10b981;">✓ All checks passed</div>'}
+            ` : '<div style="font-size: 0.8rem; color: #10b981; font-weight: 500;">✓ Optimization Complete</div>'}
           </div>
-        `).join('')}
+        `}).join('')}
       </div>
     </div>
   ` : '';
@@ -5918,75 +6317,59 @@
           // Build sections comparison
           const sectionsHtml = (data.sections || []).map(section => {
             if (section.bullets) {
-              // Experience section with bullets
               return `
-        <div class="card" style="margin-top: 24px;">
-          <h3 style="margin-bottom: 16px;">${section.title}</h3>
-          ${section.bullets.map(bullet => `
-            <div class="grid-2" style="gap: 16px; margin-bottom: 16px; padding: 12px; background: #1e1e2e; border-radius: 8px;">
-              <div>
-                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;">BEFORE</div>
-                <div style="color: #e2e8f0; text-decoration: line-through; opacity: 0.7;">${bullet.before}</div>
+        <div class="card" style="margin-top: 32px; border-top: 4px solid #6366F1;">
+          <div style="margin-bottom: 24px;">
+            <h3 style="color: #1E293B; margin: 0;">${section.title}</h3>
+            <p style="color: #64748B; font-size: 0.9rem;">AI-enhanced bullet points for maximum impact</p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            ${section.bullets.map(bullet => `
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 20px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0;">
+                <div>
+                  <div style="font-size: 0.75rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Original</div>
+                  <div style="color: #64748B; line-height: 1.6; text-decoration: line-through; opacity: 0.6; font-size: 0.95rem;">${bullet.before}</div>
+                </div>
+                <div style="border-left: 1px solid #E2E8F0; padding-left: 24px; position: relative;">
+                  <div style="font-size: 0.75rem; font-weight: 700; color: #6366F1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    Optimized ✨
+                  </div>
+                  <div style="color: #1E293B; line-height: 1.6; font-weight: 500; font-size: 0.95rem;">${bullet.after}</div>
+                  ${bullet.changes ? `
+                    <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px;">
+                      ${bullet.changes.map(change => `<span style="font-size: 0.7rem; color: #6366F1; background: #EEF2FF; padding: 2px 8px; border-radius: 4px; font-weight: 600;">${change}</span>`).join('')}
+                    </div>
+                  ` : ''}
+                </div>
               </div>
-              <div>
-                <div style="font-size: 0.8rem; color: #10b981; margin-bottom: 4px;">AFTER ✨</div>
-                <div style="color: #10b981;">${bullet.after}</div>
-                ${bullet.changes ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">${bullet.changes.join(', ')}</div>` : ''}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-            } else if (Array.isArray(section.before)) {
-              // Skills section
-              return `
-        <div class="card" style="margin-top: 24px;">
-          <h3 style="margin-bottom: 16px;">${section.title}</h3>
-          <div class="grid-2" style="gap: 16px;">
-            <div>
-              <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">BEFORE</div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                ${section.before.map(skill => `<span class="tag tag-danger" style="text-decoration: line-through;">${skill}</span>`).join('')}
-              </div>
-            </div>
-            <div>
-              <div style="font-size: 0.8rem; color: #10b981; margin-bottom: 8px;">AFTER ✨</div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                ${section.after.map(skill => `<span class="tag tag-success">${skill}</span>`).join('')}
-              </div>
-              ${section.changes ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">${section.changes.join('<br>')}</div>` : ''}
-            </div>
+            `).join('')}
           </div>
         </div>
       `;
-            } else {
-              // Simple text section (Summary, etc.)
+            } else if (Array.isArray(section.before)) {
               return `
-        <div class="card" style="margin-top: 24px;">
-          <h3 style="margin-bottom: 16px;">${section.title}</h3>
-          <div class="grid-2" style="gap: 16px;">
-            <div>
-              <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">BEFORE</div>
-              <div style="color: #e2e8f0; text-decoration: line-through; opacity: 0.7;">${section.before}</div>
+        <div class="card" style="margin-top: 32px; border-top: 4px solid #10B981;">
+          <h3 style="color: #1E293B; margin-bottom: 20px;">${section.title}</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div style="background: #FFF5F5; padding: 20px; border-radius: 12px; border: 1px solid #FEE2E2;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #F87171; text-transform: uppercase; margin-bottom: 12px;">Removed / Outdated</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${section.before.map(skill => `<span class="tag" style="background: #FEF2F2; color: #B91C1C; text-decoration: line-through;">${skill}</span>`).join('')}
+              </div>
             </div>
-            <div>
-              <div style="font-size: 0.8rem; color: #10b981; margin-bottom: 8px;">AFTER ✨</div>
-              <div style="color: #10b981;">${section.after}</div>
-              ${section.changes ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">${section.changes.join('<br>')}</div>` : ''}
+            <div style="background: #F0FDF4; padding: 20px; border-radius: 12px; border: 1px solid #DCFCE7;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #059669; text-transform: uppercase; margin-bottom: 12px;">Added / Optimized</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${section.after.map(skill => `<span class="tag" style="background: #DCFCE7; color: #065F46; font-weight: 600;">${skill}</span>`).join('')}
+              </div>
             </div>
           </div>
         </div>
       `;
             }
+            return '';
           }).join('');
 
-          // Summary card
-          const summaryHtml = data.changesSummary ? `
-    <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(16, 185, 129, 0.3); margin-top: 24px;">
-      <h3 style="margin-bottom: 8px;">📝 Changes Summary</h3>
-      <p style="color: #94a3b8;">${data.changesSummary}</p>
-    </div>
-  ` : '';
 
           // Download buttons
           const actionsHtml = `
@@ -6078,31 +6461,30 @@
         }
 
         // ========================================
-        // TARGET COMPANIES FUNCTIONALITY
+        // TARGET COMPANIES FUNCTIONALITY (v2 Unified)
         // ========================================
         let targetCompaniesData = [];
-        let selectedCompanyIds = new Set();
 
         async function loadTargetCompanies() {
           const sessionId = window.sessionId || localStorage.getItem('sessionId') || (window.globalResumeState && window.globalResumeState.sessionId);
+          const container = document.getElementById('companies-container');
+          const discoveryContainer = document.getElementById('discovery-container');
 
           if (!sessionId) {
-            document.getElementById('companies-container').innerHTML = `
-              <div style="text-align: center; padding: 40px; color: #64748b;">
-                <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
-                <h3 style="margin-bottom: 16px;">Get Started with Target Companies</h3>
-                <p style="margin-bottom: 16px;">Upload a resume to start tracking companies and their job openings</p>
-                <p style="font-size: 0.875rem; color: #94a3b8;">In the meantime, you can browse our suggestions to see what companies you might want to target!</p>
+            container.innerHTML = `
+              <div id="empty-companies-state" style="text-align: center; padding: 60px 20px; color: #64748b; background: #F8FAFC; border-radius: 16px; border: 2px dashed #E2E8F0;">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🏢</div>
+                <h2 style="color: #1E293B; margin-bottom: 12px;">Start your target list</h2>
+                <p style="font-size: 1.1rem; max-width: 500px; margin: 0 auto 24px auto;">Search for companies above or explore popular choices below to get started.</p>
               </div>
             `;
+            loadDiscoverySuggestions();
             return;
           }
 
           try {
             const response = await fetch(`/api/target-companies?sessionId=${sessionId}`);
-
             if (!response.ok) {
-              // If it's a 401/403, just treat as empty or session expired
               if (response.status === 401 || response.status === 403) {
                 renderTargetCompanies([]);
                 return;
@@ -6111,74 +6493,105 @@
             }
 
             const data = await response.json();
-
             if (data.success) {
               targetCompaniesData = data.data.companies || [];
               renderTargetCompanies(targetCompaniesData);
               updateTargetCompaniesStats(data.data.stats);
+
+              if (targetCompaniesData.length === 0) {
+                loadDiscoverySuggestions();
+              } else {
+                discoveryContainer.style.display = 'none';
+              }
             }
           } catch (error) {
             console.error('Error loading target companies:', error);
-            // Only show toast if it's a real failure, not just a missing session
-            if (sessionId) {
-              showToast('Target companies list is currently unavailable.', 'info');
+            if (sessionId) showToast('Could not load your companies.', 'info');
+          }
+        }
+
+        async function loadDiscoverySuggestions() {
+          const discoveryContainer = document.getElementById('discovery-container');
+          const grid = document.getElementById('discovery-grid');
+          const title = document.getElementById('discovery-title');
+
+          discoveryContainer.style.display = 'block';
+          title.textContent = '🔥 Discover Popular Companies';
+          grid.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+
+          try {
+            const response = await fetch('/api/target-companies/suggestions');
+            const data = await response.json();
+
+            if (data.success && data.data.suggestions) {
+              renderDiscoveryGrid(data.data.suggestions);
+            } else {
+              grid.innerHTML = '<p class="text-muted">No suggestions available. Try searching above!</p>';
             }
+          } catch (error) {
+            console.error('Discovery error:', error);
+            grid.innerHTML = '<p class="text-error">Failed to load suggestions. <a href="#" onclick="runMigration()">Run Sync</a></p>';
           }
         }
 
         let companySearchTimeout;
         async function handleCompanySearch(query) {
           clearTimeout(companySearchTimeout);
-          const suggestionsDiv = document.getElementById('company-search-suggestions');
+          const discoveryContainer = document.getElementById('discovery-container');
+          const title = document.getElementById('discovery-title');
+          const grid = document.getElementById('discovery-grid');
 
           if (!query || query.length < 2) {
-            suggestionsDiv.style.display = 'none';
+            if (targetCompaniesData.length === 0 || !query) {
+              loadDiscoverySuggestions();
+            } else {
+              discoveryContainer.style.display = 'none';
+            }
             return;
           }
 
           companySearchTimeout = setTimeout(async () => {
+            discoveryContainer.style.display = 'block';
+            title.textContent = `🔍 Search results for "${query}"`;
+            grid.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+
             try {
               const response = await fetch(`/api/target-companies/search-suggestions?query=${encodeURIComponent(query)}`);
-
-              if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Search failed:', errorData);
-                return;
-              }
-
               const data = await response.json();
 
               if (data.success && data.data.suggestions && data.data.suggestions.length > 0) {
-                renderSearchSuggestions(data.data.suggestions);
-                suggestionsDiv.style.display = 'block';
+                renderDiscoveryGrid(data.data.suggestions, true);
               } else {
-                suggestionsDiv.style.display = 'none';
+                grid.innerHTML = `
+                  <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                    <p class="text-muted mb-4">No matches found for "${query}"</p>
+                    <button class="btn btn-primary" onclick="addCustomFromSearch('${query.replace(/'/g, "\\'")}')">
+                      Add "${query}" as Custom Company
+                    </button>
+                  </div>
+                `;
               }
             } catch (error) {
               console.error('Search error:', error);
             }
-          }, 300);
+          }, 400);
         }
 
-        function renderSearchSuggestions(suggestions) {
-          const suggestionsDiv = document.getElementById('company-search-suggestions');
-          suggestionsDiv.innerHTML = suggestions.map(company => `
-            <div class="search-suggestion-item" onclick="addCompanyFromSearch('${company.company_name.replace(/'/g, "\\'")}')">
-              <div class="comp-name">${company.company_name}</div>
-              <div class="comp-industry">${company.industry || ''} • ${company.company_size || ''}</div>
+        function renderDiscoveryGrid(companies, isSearch = false) {
+          const grid = document.getElementById('discovery-grid');
+          grid.innerHTML = companies.map(company => `
+            <div class="discovery-card">
+              <div class="industry">${company.industry || 'Company'}</div>
+              <h4>${company.company_name}</h4>
+              <p class="description">${company.description || 'Add this company to track openings.'}</p>
+              <button class="btn-add" onclick="addCompanyFromDiscovery('${company.company_name.replace(/'/g, "\\'")}')">
+                Add to Targets
+              </button>
             </div>
           `).join('');
         }
 
-        // Close suggestions when clicking outside
-        document.addEventListener('click', (e) => {
-          const suggestionsDiv = document.getElementById('company-search-suggestions');
-          if (suggestionsDiv && !e.target.closest('.search-input-wrapper')) {
-            suggestionsDiv.style.display = 'none';
-          }
-        });
-
-        async function addCompanyFromSearch(companyName) {
+        async function addCompanyFromDiscovery(companyName) {
           const sessionId = window.sessionId || localStorage.getItem('sessionId') || (window.globalResumeState && window.globalResumeState.sessionId);
           if (!sessionId) {
             showToast('Please upload a resume first', 'error');
@@ -6196,15 +6609,21 @@
             if (data.success) {
               showToast(`${companyName} added!`, 'success');
               document.getElementById('company-search-input').value = '';
-              document.getElementById('company-search-suggestions').style.display = 'none';
               loadTargetCompanies();
             } else {
-              showToast(data.error || 'Failed to add company', 'error');
+              showToast(data.error || 'Already in your list', 'info');
             }
           } catch (error) {
-            console.error('Add error:', error);
             showToast('Failed to add company', 'error');
           }
+        }
+
+        function addCustomFromSearch(name) {
+          showAddCompanyModal();
+          setTimeout(() => {
+            const input = document.getElementById('custom-company-name');
+            if (input) input.value = name;
+          }, 100);
         }
 
         function showAddCompanyModal() {
@@ -6224,10 +6643,6 @@
                   <div class="form-group">
                     <label style="display: block; margin-bottom: 4px; font-weight: 600;">Industry</label>
                     <input type="text" id="custom-company-industry" class="input" placeholder="e.g. Technology">
-                  </div>
-                  <div class="form-group">
-                    <label style="display: block; margin-bottom: 4px; font-weight: 600;">Domain</label>
-                    <input type="text" id="custom-company-domain" class="input" placeholder="e.g. acme.com">
                   </div>
                   <div class="form-group">
                     <label style="display: block; margin-bottom: 4px; font-weight: 600;">Priority (1-5, 1=High)</label>
@@ -6253,32 +6668,17 @@
         async function submitCustomCompany() {
           const name = document.getElementById('custom-company-name').value;
           const industry = document.getElementById('custom-company-industry').value;
-          const domain = document.getElementById('custom-company-domain').value;
           const priority = document.getElementById('custom-company-priority').value;
 
-          if (!name) {
-            showToast('Company name is required', 'error');
-            return;
-          }
-
+          if (!name) return showToast('Name is required', 'error');
           const sessionId = window.sessionId || localStorage.getItem('sessionId') || (window.globalResumeState && window.globalResumeState.sessionId);
-
-          if (!sessionId) {
-            showToast('Please upload a resume first', 'error');
-            return;
-          }
+          if (!sessionId) return showToast('Please upload a resume first', 'error');
 
           try {
             const response = await fetch('/api/target-companies', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                sessionId,
-                companyName: name,
-                industry,
-                companyDomain: domain,
-                priority: parseInt(priority)
-              })
+              body: JSON.stringify({ sessionId, companyName: name, industry, priority: parseInt(priority) })
             });
 
             const data = await response.json();
@@ -6287,110 +6687,74 @@
               closeModalById('add-company-modal');
               loadTargetCompanies();
             } else {
-              showToast(data.error || 'Failed to add company', 'error');
+              showToast(data.error || 'Failed to add', 'error');
             }
-          } catch (error) {
-            console.error('Submit error:', error);
+          } catch (e) {
             showToast('Failed to add company', 'error');
           }
         }
 
         function renderTargetCompanies(companies) {
           const container = document.getElementById('companies-container');
+          const statsDiv = document.getElementById('target-companies-stats');
 
           if (!companies || companies.length === 0) {
             container.innerHTML = `
-      <div style="text-align: center; padding: 40px; color: #64748b;">
-        <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
-        <h3 style="margin-bottom: 8px;">No target companies yet</h3>
-        <p>Add companies you're interested in working for</p>
-        <button class="btn btn-primary" onclick="showSuggestionsModal()" style="margin-top: 16px;">
-          Get Started with Suggestions
-        </button>
-      </div>
-    `;
+              <div id="empty-companies-state" style="text-align: center; padding: 60px 20px; color: #64748b; background: #F8FAFC; border-radius: 16px; border: 2px dashed #E2E8F0;">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🏢</div>
+                <h2 style="color: #1E293B; margin-bottom: 12px;">Start your target list</h2>
+                <p style="font-size: 1.1rem; max-width: 500px; margin: 0 auto 24px auto;">Search for companies above or explore popular choices below to get started.</p>
+              </div>
+            `;
+            statsDiv.style.display = 'none';
             return;
           }
 
           const priorityLabels = { 1: 'High', 2: 'Med-High', 3: 'Medium', 4: 'Med-Low', 5: 'Low' };
 
-          const html = companies.map(company => `
-    <div class="company-card priority-${company.priority || 3} ${!company.is_active ? 'inactive' : ''}">
-      <div class="company-header">
-        <div class="checkbox-container">
-          <input type="checkbox" id="select-${company.company_id}"
-                 onchange="toggleCompanySelection('${company.company_id}')">
-        </div>
-        <div class="company-info">
-          <div class="company-name">
-            ${company.company_name}
-            <span class="priority-badge p${company.priority || 3}">
-              ${priorityLabels[company.priority || 3]}
-            </span>
-          </div>
-          <div class="company-meta">
-            ${company.industry ? `<span class="company-meta-item">🏭 ${company.industry}</span>` : ''}
-            ${company.total_jobs_found > 0 ? `
-              <span class="company-meta-item">📋 ${company.total_jobs_found} jobs</span>
-            ` : ''}
-            ${company.new_jobs_count > 0 ? `
-              <span class="badge-new">${company.new_jobs_count} new</span>
-            ` : ''}
-            ${company.last_searched_at ? `
-              <span class="company-meta-item">🔍 Last searched: ${new Date(company.last_searched_at).toLocaleDateString()}</span>
-            ` : ''}
-          </div>
-        </div>
-        <div class="company-actions">
-          <button class="btn btn-secondary btn-sm" onclick="searchCompanyJobs('${company.company_id}', '${company.company_name.replace(/'/g, "\\'")}')">
-            🔍 Search
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="deleteCompany('${company.company_id}', '${company.company_name.replace(/'/g, "\\'")}')">
-            🗑️
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-          container.innerHTML = html;
+          container.innerHTML = companies.map(company => `
+            <div class="company-card priority-${company.priority || 3} ${!company.is_active ? 'inactive' : ''}">
+              <div class="company-header">
+                <div class="company-info">
+                  <div class="company-name" style="font-size: 1.2rem; font-weight: 700;">
+                    ${company.company_name}
+                    <span class="priority-badge p${company.priority || 3}">
+                      ${priorityLabels[company.priority || 3]}
+                    </span>
+                  </div>
+                  <div class="company-meta">
+                    ${company.industry ? `<span class="company-meta-item">🏭 ${company.industry}</span>` : ''}
+                    ${company.total_jobs_found > 0 ? `<span class="company-meta-item">📋 ${company.total_jobs_found} jobs</span>` : ''}
+                    ${company.new_jobs_count > 0 ? `<span class="badge-new">${company.new_jobs_count} new</span>` : ''}
+                  </div>
+                </div>
+                <div class="company-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button class="btn btn-primary btn-sm" onclick="searchCompanyJobs('${company.company_id}', '${company.company_name.replace(/'/g, "\\'")}')">
+                    🔍 Jobs
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="checkNetworkForCompany('${company.company_name.replace(/'/g, "\\'")}')" style="background: #F0FDF4; color: #166534; border-color: #BBF7D0;">
+                    👥 Network
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="deleteCompany('${company.company_id}', '${company.company_name.replace(/'/g, "\\'")}')">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+          `).join('');
         }
 
         function updateTargetCompaniesStats(stats) {
           if (!stats) return;
-
           const statsDiv = document.getElementById('target-companies-stats');
           if (stats.total > 0) {
             statsDiv.style.display = 'grid';
             document.getElementById('stat-total-companies').textContent = stats.total || 0;
             document.getElementById('stat-new-jobs').textContent = stats.newJobsCount || 0;
-            document.getElementById('stat-high-priority').textContent = stats.totalJobsFound || 0;
+            document.getElementById('stat-high-priority').textContent = stats.highPriorityCount || 0;
             document.getElementById('stat-total-jobs').textContent = stats.totalJobsFound || 0;
           } else {
             statsDiv.style.display = 'none';
-          }
-        }
-
-        async function showSuggestionsModal() {
-          try {
-            const response = await fetch('/api/target-companies/suggestions');
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              showToast(`Failed to load suggestions: ${errorData.error || response.statusText}. Try running Database Setup.`, 'error');
-              return;
-            }
-
-            const data = await response.json();
-
-            if (data.success && data.data.suggestions) {
-              renderSuggestionsModal(data.data.suggestions);
-            } else {
-              showToast(data.error || 'Failed to load suggestions', 'error');
-            }
-          } catch (error) {
-            console.error('Error loading suggestions:', error);
-            showToast(`Failed to load company suggestions: ${error.message}. Try clicking Setup Database.`, 'error');
           }
         }
 
@@ -6400,109 +6764,27 @@
 
           if (btn && btn.tagName === 'BUTTON') {
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-sm"></span> Setting up...';
+            btn.innerHTML = '<span class="spinner-sm"></span> Syncing...';
           }
 
           try {
-            showToast('Starting database setup...', 'info');
+            showToast('Syncing database...', 'info');
             const response = await fetch('/api/migrate-target-companies', { method: 'POST' });
             const data = await response.json();
 
             if (data.success) {
-              showToast(data.message || 'Database setup successful!', 'success');
+              showToast('Database synced successfully!', 'success');
               loadTargetCompanies();
             } else {
-              showToast(data.error || 'Setup failed', 'error');
+              showToast(data.error || 'Sync failed', 'error');
             }
           } catch (error) {
-            console.error('Migration error:', error);
-            showToast('Failed to connect to setup endpoint', 'error');
+            showToast('Connection failed', 'error');
           } finally {
             if (btn && btn.tagName === 'BUTTON') {
               btn.disabled = false;
               btn.innerHTML = originalText;
             }
-          }
-        }
-
-        function renderSuggestionsModal(suggestions) {
-          const modalHtml = `
-    <div class="modal-overlay" id="suggestions-modal" style="display: flex;">
-      <div class="modal large">
-        <button class="modal-close" onclick="closeModalById('suggestions-modal')">&times;</button>
-        <div class="modal-header">
-          <h2>Browse Popular Companies</h2>
-          <p>Select companies you'd like to target for your job search</p>
-        </div>
-        <div class="suggestions-grid">
-          ${suggestions.map((company, idx) => `
-            <div class="suggestion-card" id="suggestion-${idx}" onclick="toggleSuggestionCard(${idx}, '${company.company_name}')">
-              <h4>
-                <input type="checkbox" class="company-checkbox" id="checkbox-${idx}" data-company="${company.company_name}" onclick="event.stopPropagation()">
-                ${company.company_name}
-              </h4>
-              <div class="industry">${company.industry}</div>
-              <div class="description">${company.description || 'Leading company in ' + company.industry}</div>
-            </div>
-          `).join('')}
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModalById('suggestions-modal')">Cancel</button>
-          <button class="btn btn-primary" onclick="addSelectedSuggestions()">
-            Add Selected Companies
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-          const existingModal = document.getElementById('suggestions-modal');
-          if (existingModal) existingModal.remove();
-
-          document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
-
-        function toggleSuggestionCard(idx, companyName) {
-          const card = document.getElementById(`suggestion-${idx}`);
-          const checkbox = document.getElementById(`checkbox-${idx}`);
-          checkbox.checked = !checkbox.checked;
-          card.classList.toggle('selected');
-        }
-
-        async function addSelectedSuggestions() {
-          const checkboxes = document.querySelectorAll('.company-checkbox:checked');
-          const companyNames = Array.from(checkboxes).map(cb => cb.dataset.company);
-
-          if (companyNames.length === 0) {
-            showToast('Please select at least one company', 'warning');
-            return;
-          }
-
-          const sessionId = window.sessionId;
-          if (!sessionId) {
-            showToast('Session required. Please upload a resume first.', 'error');
-            return;
-          }
-
-          try {
-            const response = await fetch('/api/target-companies/bulk', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sessionId, companyNames })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-              showToast(`${data.data.added.length} companies added successfully!`, 'success');
-              closeModalById('suggestions-modal');
-              loadTargetCompanies();
-            } else {
-              showToast(data.error || 'Failed to add companies', 'error');
-            }
-          } catch (error) {
-            console.error('Error adding companies:', error);
-            showToast('Failed to add companies', 'error');
           }
         }
 
@@ -6589,11 +6871,7 @@
         }
 
         function toggleCompanySelection(companyId) {
-          if (selectedCompanyIds.has(companyId)) {
-            selectedCompanyIds.delete(companyId);
-          } else {
-            selectedCompanyIds.add(companyId);
-          }
+          // No longer used in simplified UI
         }
 
 
@@ -6879,8 +7157,8 @@
             strengthsList.innerHTML = '';
             (feedback.strengths || []).forEach(strength => {
               const li = document.createElement('li');
-              li.style.cssText = 'padding: 12px; background: #0a0a0f; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #22c55e;';
-              li.textContent = strength;
+              li.style.cssText = 'padding: 12px 16px; background: #F0FDF4; border-radius: 10px; border: 1px solid #DCFCE7; color: #166534; font-size: 0.95rem; font-weight: 500; display: flex; gap: 8px;';
+              li.innerHTML = `<span>✓</span> <span>${strength}</span>`;
               strengthsList.appendChild(li);
             });
 
@@ -6889,8 +7167,8 @@
             improvementsList.innerHTML = '';
             (feedback.improvements || []).forEach(improvement => {
               const li = document.createElement('li');
-              li.style.cssText = 'padding: 12px; background: #0a0a0f; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #f59e0b;';
-              li.textContent = improvement;
+              li.style.cssText = 'padding: 12px 16px; background: #FFFBEB; border-radius: 10px; border: 1px solid #FEF3C7; color: #92400e; font-size: 0.95rem; font-weight: 500; display: flex; gap: 8px;';
+              li.innerHTML = `<span>•</span> <span>${improvement}</span>`;
               improvementsList.appendChild(li);
             });
 
@@ -7030,53 +7308,55 @@
             `${interview.duration} min planned`;
 
           card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-          <div style="flex: 1;">
-            <div style="font-size: 1.2rem; font-weight: 600; color: #e2e8f0; margin-bottom: 4px;">${interview.jobRole}</div>
-            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px;">
-              ${capitalizeFirst(interview.interviewType)} • ${formattedDate} • ${duration}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #1E293B; margin-bottom: 4px;">${interview.jobRole}</div>
+            <div style="color: #64748B; font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+               <span style="background: #F1F5F9; padding: 2px 8px; border-radius: 4px;">${capitalizeFirst(interview.interviewType)}</span>
+               <span>•</span>
+               <span>${formattedDate}</span>
             </div>
-            <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; text-transform: uppercase; ${statusClass}">${interview.status}</span>
           </div>
+          <span style="padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; ${statusClass}">${interview.status}</span>
         </div>
         
         ${interview.results ? `
           <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">
-            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.overallScore}</div>
-              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Overall</div>
+            <div style="text-align: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;">
+              <div style="font-size: 1.4rem; font-weight: 800; color: #6366F1;">${interview.results.overallScore}</div>
+              <div style="font-size: 0.65rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-top: 4px;">Overall</div>
             </div>
-            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.categoryScores.communication}</div>
-              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Communication</div>
+            <div style="text-align: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;">
+              <div style="font-size: 1.4rem; font-weight: 800; color: #10B981;">${interview.results.categoryScores.communication}</div>
+              <div style="font-size: 0.65rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-top: 4px;">Comm.</div>
             </div>
-            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.categoryScores.technical}</div>
-              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Technical</div>
+            <div style="text-align: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;">
+              <div style="font-size: 1.4rem; font-weight: 800; color: #F59E0B;">${interview.results.categoryScores.technical}</div>
+              <div style="font-size: 0.65rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-top: 4px;">Tech.</div>
             </div>
-            <div style="text-align: center; padding: 12px; background: #1e1e2e; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">${interview.results.categoryScores.confidence}</div>
-              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Confidence</div>
+            <div style="text-align: center; padding: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;">
+              <div style="font-size: 1.4rem; font-weight: 800; color: #8B5CF6;">${interview.results.categoryScores.confidence}</div>
+              <div style="font-size: 0.65rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-top: 4px;">Conf.</div>
             </div>
           </div>
-        ` : `
-          <div style="text-align: center; padding: 20px; color: #64748b; font-style: italic;">
-            ${interview.status === 'completed' ? 'Results processing...' : 'Interview not completed'}
+        ` : interview.status === 'completed' ? `
+          <div style="text-align: center; padding: 24px; color: #64748B; font-weight: 500; background: #F8FAFC; border-radius: 12px; margin: 16px 0;">
+             ⌛ Analysis is pending... check back in a moment.
           </div>
-        `}
+        ` : ''}
         
-        <div style="display: flex; gap: 8px; margin-top: 16px;">
+        <div style="display: flex; gap: 8px; margin-top: 20px;">
           ${interview.results ? `
-            <button class="btn btn-secondary" onclick="viewDashboardResults('${interview.sessionToken}')">
-              View Results
+            <button class="btn btn-primary btn-sm" onclick="viewDashboardResults('${interview.sessionToken}')" style="background: #1E293B; color: white;">
+               View Report
             </button>
           ` : ''}
           ${interview.status !== 'completed' ? `
-            <button class="btn btn-primary" onclick="continueDashboardInterview('${interview.sessionToken}')">
-              Continue Interview
+            <button class="btn btn-primary btn-sm" onclick="continueDashboardInterview('${interview.sessionToken}')">
+               Resume Session
             </button>
           ` : ''}
-          <button class="btn btn-secondary" onclick="deleteDashboardInterview('${interview.id}')" style="background: #dc2626; border-color: #dc2626;">
+          <button class="btn btn-secondary btn-sm" onclick="deleteDashboardInterview('${interview.id}')" style="color: #EF4444; background: #FEF2F2; border: 1px solid #FEE2E2;">
             Delete
           </button>
         </div>
@@ -7087,10 +7367,10 @@
 
         function getDashboardStatusClass(status) {
           switch (status) {
-            case 'completed': return 'background: #dcfce7; color: #166534;';
-            case 'in_progress': return 'background: #fef3c7; color: #92400e;';
-            case 'setup': return 'background: #e0e7ff; color: #3730a3;';
-            default: return 'background: #e0e7ff; color: #3730a3;';
+            case 'completed': return 'background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0;';
+            case 'in_progress': return 'background: #FFFBEB; color: #92400E; border: 1px solid #FEF3C7;';
+            case 'setup': return 'background: #EFF6FF; color: #1E40AF; border: 1px solid #DBEAFE;';
+            default: return 'background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0;';
           }
         }
 
