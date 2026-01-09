@@ -145,11 +145,123 @@ export async function generateInterviewFeedback(sessionId: string): Promise<Inte
   return generateRuleBasedFeedback(session, responses);
 }
 
+/**
+ * Helper function to count filler words in transcript
+ */
+function countFillerWords(transcript: string | null): number {
+  if (!transcript) return 0;
+
+  const fillers = [
+    /\bum\b/gi,
+    /\buh\b/gi,
+    /\blike\b/gi,
+    /\byou know\b/gi,
+    /\bsort of\b/gi,
+    /\bkind of\b/gi,
+    /\bbasically\b/gi,
+    /\bactually\b/gi,
+  ];
+
+  let count = 0;
+  fillers.forEach(pattern => {
+    const matches = transcript.match(pattern);
+    if (matches) count += matches.length;
+  });
+
+  return count;
+}
+
+/**
+ * Helper function to analyze vocal patterns
+ */
+function analyzeVocalPatterns(transcript: string | null, durationSeconds: number) {
+  if (!transcript || durationSeconds === 0) {
+    return {
+      wordsPerMinute: 0,
+      wordCount: 0,
+      fillerWordCount: 0,
+      fillerWordPercentage: 0,
+      pacingAssessment: 'Unable to assess',
+    };
+  }
+
+  const words = transcript.trim().split(/\s+/);
+  const wordCount = words.length;
+  const wordsPerMinute = Math.round((wordCount / durationSeconds) * 60);
+  const fillerWordCount = countFillerWords(transcript);
+  const fillerWordPercentage = Math.round((fillerWordCount / wordCount) * 100);
+
+  let pacingAssessment = 'Good';
+  if (wordsPerMinute < 120) pacingAssessment = 'Too slow';
+  else if (wordsPerMinute > 170) pacingAssessment = 'Too fast';
+
+  return {
+    wordsPerMinute,
+    wordCount,
+    fillerWordCount,
+    fillerWordPercentage,
+    pacingAssessment,
+  };
+}
+
+/**
+ * Helper function to extract key requirements from job description
+ */
+function extractKeyRequirements(jobDescription: string): string[] {
+  // Simple extraction - look for common patterns
+  const requirements: string[] = [];
+
+  // Look for years of experience
+  const yearsMatch = jobDescription.match(/(\d+)[-+]?\s*years?\s+(?:of\s+)?experience/i);
+  if (yearsMatch) requirements.push(`${yearsMatch[1]}+ years of experience`);
+
+  // Look for required skills (technologies, frameworks, etc.)
+  const techKeywords = [
+    'AWS', 'GCP', 'Azure', 'Kubernetes', 'Docker', 'Python', 'Java', 'JavaScript',
+    'React', 'Node.js', 'SQL', 'NoSQL', 'MongoDB', 'PostgreSQL', 'Redis',
+    'LangChain', 'TensorFlow', 'PyTorch', 'Agentic AI', 'GenAI', 'Machine Learning',
+    'TOGAF', 'Blockchain', 'Microservices', 'REST API', 'GraphQL',
+    'HIPAA', 'GDPR', 'SOX', 'PCI DSS',
+  ];
+
+  techKeywords.forEach(keyword => {
+    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+    if (regex.test(jobDescription)) {
+      requirements.push(keyword);
+    }
+  });
+
+  // Look for certifications
+  const certMatch = jobDescription.match(/\b(AWS Certified|GCP Professional|TOGAF|PMP|CISSP)\b/gi);
+  if (certMatch) requirements.push(...certMatch);
+
+  return [...new Set(requirements)]; // Remove duplicates
+}
+
 async function generateAIFeedback(
   session: any,
   responses: any[],
   provider: any,
 ): Promise<InterviewFeedback> {
+  // Analyze each response for vocal patterns
+  const responseAnalysis = responses.map((r, i) => {
+    const vocalPatterns = analyzeVocalPatterns(r.transcript, r.response_duration_seconds || 0);
+    return {
+      questionNumber: i + 1,
+      questionType: r.question_type,
+      questionText: r.question_text,
+      duration: r.response_duration_seconds || 0,
+      transcript: r.transcript || '',
+      ...vocalPatterns,
+    };
+  });
+
+  // Calculate total filler words across all responses
+  const totalFillerWords = responseAnalysis.reduce((sum, r) => sum + r.fillerWordCount, 0);
+  const avgWordsPerMinute = responseAnalysis.length > 0
+    ? Math.round(responseAnalysis.reduce((sum, r) => sum + r.wordsPerMinute, 0) / responseAnalysis.length)
+    : 0;
+
   const feedbackPrompt = `You are an expert interview coach from LHH (Lee Hecht Harrison) with 15+ years of experience in executive coaching and talent development. Analyze this mock interview performance and provide detailed, structured feedback following professional coaching standards.
 
 INTERVIEW CONTEXT:
@@ -158,16 +270,23 @@ INTERVIEW CONTEXT:
 - Duration: ${session.duration_minutes} minutes
 - Number of Responses: ${responses.length}
 
-CANDIDATE RESPONSES:
-${responses
-  .map(
-    (r, i) => `
-QUESTION ${i + 1} (${r.question_type}): ${r.question_text}
-Response Duration: ${r.response_duration_seconds || 'Not recorded'} seconds
+VOCAL PERFORMANCE METRICS:
+- Total Filler Words: ${totalFillerWords} (Target: < 10 for entire interview)
+- Average Speaking Rate: ${avgWordsPerMinute} WPM (Optimal: 140-160 WPM)
+
+CANDIDATE RESPONSES WITH ANALYSIS:
+${responseAnalysis
+      .map(
+        (r) => `
+QUESTION ${r.questionNumber} (${r.questionType}): ${r.questionText}
+Duration: ${r.duration}s (Optimal: 90-150s) ${r.duration > 180 ? '⚠️ TOO LONG' : r.duration < 60 ? '⚠️ TOO SHORT' : '✓'}
+Word Count: ${r.wordCount} words
+Speaking Rate: ${r.wordsPerMinute} WPM ${r.pacingAssessment !== 'Good' ? `⚠️ ${r.pacingAssessment.toUpperCase()}` : '✓'}
+Filler Words: ${r.fillerWordCount} (${r.fillerWordPercentage}% of response) ${r.fillerWordCount > 5 ? '⚠️ HIGH' : '✓'}
 Transcript: ${r.transcript || 'No transcript available'}
 `,
-  )
-  .join('\n')}
+      )
+      .join('\n')}
 
 EVALUATION FRAMEWORK - Use 1-5 scale for each rubric:
 
@@ -209,12 +328,40 @@ PROBLEM SOLVING (1-5):
 
 FEEDBACK STRUCTURE REQUIREMENTS:
 
-1. RUBRIC SCORES: Provide specific 1-5 scores with detailed feedback
-2. STRENGTHS: 2-3 specific positive observations with examples
-3. GROWTH AREAS: 2-4 specific improvement areas with actionable advice
-4. DETAILED FEEDBACK: Per-question analysis with tone assessment
+1. RUBRIC SCORES: Provide specific 1-5 scores with detailed, evidence-based feedback
+   - Quote actual phrases from the candidate's responses
+   - Explain WHY you gave each score with specific examples
+   - Compare to what a higher score would look like
+
+2. STRENGTHS: 2-3 specific positive observations with CONCRETE EXAMPLES
+   - Quote exact phrases that worked well
+   - Explain WHY they were effective
+   - Reference specific question numbers
+   - Example: "Strong STAR Framework (Q3): Your response about migrating the system showed excellent structure with clear metrics: '95% reduction in login failures'"
+
+3. GROWTH AREAS: 2-4 specific improvement areas with ACTIONABLE ADVICE
+   - Identify the specific issue with evidence
+   - Provide a BEFORE/AFTER example showing how to improve
+   - Include specific practice exercises
+   - Example: "Reduce Filler Words (Q1: 8 'um's in 45 seconds): Practice pausing 1-2 seconds instead. Record yourself answering this question 5 times, aiming for < 3 filler words."
+
+4. DETAILED FEEDBACK: Per-question analysis with specific improvements
+   - For each question, provide:
+     * What worked well (with quotes)
+     * What needs improvement (with specific examples)
+     * A rewritten "improved version" of a key portion of their response
+     * Tone assessment based on actual language used
+
 5. SUMMARY: Key accomplishments and themes from the interview
-6. NEXT STEPS: 5-6 specific, actionable recommendations
+   - Reference specific examples from responses
+   - Identify patterns across multiple questions
+   - Connect to role requirements if available
+
+6. NEXT STEPS: 5-6 SPECIFIC, ACTIONABLE recommendations
+   - Not generic advice like "practice more"
+   - Concrete actions: "Record yourself answering Q1 and Q3, aiming to reduce duration from 4:30 to 2:30"
+   - Include measurable goals: "Reduce filler words from ${totalFillerWords} to < 10"
+   - Prioritize top 3 improvements that will have biggest impact
 
 Return feedback in this exact JSON format:
 {
@@ -242,37 +389,37 @@ Return feedback in this exact JSON format:
       "showInsights": false
     },
     "communication": {
-      "score": 3,
+      "score": 3.5,
       "maxScore": 5,
-      "feedback": "Your communication was generally clear and professional, with good structure in your responses. You presented information in a logical flow that was easy to follow.",
-      "improvements": "Work on reducing filler words and varying your vocal tone to project more confidence. Practice pausing briefly instead of using 'um' or 'uh' when collecting your thoughts.",
+      "feedback": "Your communication was generally clear and professional. In Q2, you said 'I led a team of 15 engineers to migrate our authentication system,' which was direct and specific. However, filler words reduced clarity - Q1 had 8 'um's in the first 45 seconds.",
+      "improvements": "SPECIFIC ISSUE: ${totalFillerWords} filler words total (Target: < 10). Q1 had the most at 8 instances. PRACTICE: Record yourself answering Q1 five times. Each time, pause 1-2 seconds instead of saying 'um.' Goal: Reduce to < 3 filler words. BEFORE: 'So, um, I've been working in, like, enterprise architecture for, um, about 8 years...' AFTER: 'I have 8 years of enterprise architecture experience [PAUSE] most recently at a Fortune 500 insurance company.'",
       "showInsights": true
     },
     "technicalKnowledge": {
       "score": 4,
       "maxScore": 5,
-      "feedback": "You demonstrated strong technical knowledge with relevant examples and current industry awareness. Your explanations were clear and showed practical experience.",
-      "improvements": "Consider providing more specific technical details when explaining implementation decisions, and relate your technical knowledge more directly to the role requirements.",
+      "feedback": "Strong technical depth! In Q5, you mentioned 'LangChain and Vertex AI for Agentic AI implementation' - directly addressing the job requirement. You explained the agent orchestration pattern clearly, showing practical experience.",
+      "improvements": "ADD MORE CONTEXT: When you mentioned LangChain, add WHY you chose it. Example: 'We chose LangChain over Google ADK because it offered better Python integration and had a more mature ecosystem for our use case.' This shows decision-making, not just knowledge.",
       "showInsights": false
     },
     "problemSolving": {
-      "score": 3,
+      "score": 3.5,
       "maxScore": 5,
-      "feedback": "You showed good problem-solving approach with structured thinking and practical solutions. Your examples demonstrated analytical skills and learning from experience.",
-      "improvements": "Focus on presenting a more systematic problem-solving framework. Start with problem identification, then solution options, decision criteria, and measurable outcomes.",
+      "feedback": "Good structured thinking in Q4 when you described the migration challenge. You outlined the problem, your approach, and results. The '95% reduction in login failures' metric was excellent.",
+      "improvements": "STRENGTHEN FRAMEWORK: Use this structure consistently: 1) Problem identification with metrics, 2) Solution options considered, 3) Decision criteria, 4) Implementation approach, 5) Measurable results. Q3 was missing step 2 (options considered). PRACTICE: Rewrite Q3 response adding: 'We evaluated three approaches: lift-and-shift, refactor, or rebuild. We chose refactor because...'",
       "showInsights": true
     }
   },
   "strengths": [
-    "You shared a variety of strong examples showcasing your leadership abilities and creative problem-solving. Nice job!",
-    "Demonstrated excellent use of the STAR method in your project management examples, providing clear context and measurable results.",
-    "Showed strong self-awareness and ability to learn from challenging situations, particularly in your conflict resolution example."
+    "Strong STAR Framework (Q2): Your migration example was excellent - 'When our authentication system hit 10k concurrent users (Situation), I led the migration to OAuth 2.0 (Task), implemented in 3 sprints with zero downtime (Action), reducing login failures by 95% (Result).' This is textbook STAR method with specific metrics.",
+    "Technical Depth (Q5): You demonstrated current knowledge by mentioning 'LangChain and Vertex AI for Agentic AI implementation' - directly addressing the job requirement. Your explanation of agent orchestration showed practical, hands-on experience.",
+    "Quantifiable Impact (Q2, Q4): You consistently included metrics - '20% cost reduction,' '3-month timeline,' '15-person team.' This makes your accomplishments concrete and credible, setting you apart from candidates who speak in generalities."
   ],
   "growthAreas": [
-    "Prioritize clarity and conciseness: Many of your answers could be more succinct. Focus on key takeaways and avoid unnecessary repetition to make your responses more impactful.",
-    "Engage with the interviewer by asking follow-up questions: Create more interactive dialogue throughout the conversation to demonstrate active listening and deeper engagement.",
-    "Use quantifiable impact wherever possible: Include specific metrics and measurable outcomes in your examples to make them more concrete and compelling.",
-    "Frame complex stories with clearer structure: Use intentional frameworks like STAR method consistently to make your responses easier to follow and more impactful."
+    "Reduce Filler Words (${totalFillerWords} total, target < 10): Q1 had 8 'um's in 45 seconds. PRACTICE: Record yourself answering Q1 five times, pausing 1-2 seconds instead of saying 'um.' BEFORE: 'So, um, I've been working in, like...' AFTER: 'I have 8 years of enterprise architecture experience [PAUSE] most recently at...'",
+    "Tighten Technical Explanations (Q5 ran 4:30, optimal: 2:30): Your Agentic AI explanation was thorough but could be 40% shorter. BEFORE: 'So basically what we did was we looked at different frameworks and we evaluated LangChain and also Google's ADK...' AFTER: 'We evaluated LangChain and Google ADK. We chose LangChain because it offered better integration with our existing Python stack.'",
+    "Add Compliance Context (Q4): You mentioned HIPAA once but didn't explain HOW you ensured compliance. ADD: 'We implemented field-level encryption for PHI, conducted quarterly audits, and maintained detailed access logs per HIPAA requirements.' This shows depth beyond just knowing the acronym.",
+    "Improve Pacing (Q1: ${responseAnalysis[0]?.wordsPerMinute || 0} WPM, Q3: ${responseAnalysis[2]?.wordsPerMinute || 0} WPM): Optimal is 140-160 WPM. ${responseAnalysis[0]?.wordsPerMinute > 160 ? 'Slow down in Q1 by 10%' : responseAnalysis[0]?.wordsPerMinute < 140 ? 'Speed up slightly in Q1' : 'Good pacing in Q1'}. Practice with a metronome or timer to maintain consistent pace."
   ],
   "detailedFeedback": [
     {
@@ -305,12 +452,12 @@ Return feedback in this exact JSON format:
     ]
   },
   "nextSteps": [
-    "Practice the STAR method with 3-5 prepared stories covering different competencies relevant to your target role",
-    "Work on reducing filler words by recording yourself and practicing pausing instead of using 'um' or 'uh'",
-    "Prepare specific questions about team dynamics, technical challenges, and growth opportunities for each interview",
-    "Practice explaining technical concepts concisely while including specific metrics and outcomes",
-    "Develop a systematic approach to discussing problem-solving: problem identification → solution options → decision criteria → results",
-    "Schedule regular mock interviews to build confidence and consistency in your delivery"
+    "PRIORITY 1 - Reduce Filler Words (This Week): Record yourself answering Q1 and Q3 five times each. Count filler words in each attempt. Goal: Reduce from ${totalFillerWords} total to < 10 in your next mock interview. Practice pausing 1-2 seconds instead of saying 'um.'",
+    "PRIORITY 2 - Tighten Long Responses (Next 3 Days): Q5 ran 4:30 (optimal: 2:30). Rewrite your Q5 response to be 40% shorter while keeping all key points. Practice delivering it in under 2:30. Use the formula: Problem → Solution → Impact.",
+    "PRIORITY 3 - Add Compliance Details (Tomorrow): For Q4, prepare a 30-second addition explaining HOW you ensured HIPAA compliance: 'We implemented field-level encryption for PHI, conducted quarterly audits, and maintained detailed access logs.' Practice adding this naturally.",
+    "Prepare 7 STAR Stories (Next Week): Write out 7 complete STAR examples covering: Leadership, Technical Problem, Conflict, Failure, Innovation, Cross-functional Collaboration, Measurable Impact. Each should be deliverable in 90-120 seconds.",
+    "Practice Pacing (Daily - 10 min): Read technical articles aloud at 150 WPM (use a timer). This will help you maintain optimal pacing. Your current average is ${avgWordsPerMinute} WPM.",
+    "Schedule 2 More Mock Interviews (Next 2 Weeks): Practice with different interviewers. Request specific feedback on filler words and pacing. Aim for 85+ overall score and < 10 total filler words."
   ]
 }
 
@@ -529,12 +676,12 @@ function generateRuleBasedFeedback(session: any, responses: any[]): InterviewFee
     },
     conciseness: hasTranscripts
       ? {
-          timestamp: '0:30',
-          originalText: 'Sample of original response text...',
-          improvedText: 'More concise version of the response...',
-          explanation:
-            'This revision removes redundancy and focuses on key points for greater impact.',
-        }
+        timestamp: '0:30',
+        originalText: 'Sample of original response text...',
+        improvedText: 'More concise version of the response...',
+        explanation:
+          'This revision removes redundancy and focuses on key points for greater impact.',
+      }
       : undefined,
   }));
 
