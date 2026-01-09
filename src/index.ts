@@ -4,6 +4,7 @@ dotenv.config();
 
 import express from 'express';
 import { checkLifetimeLimit } from './middleware/rateLimit';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
 import cors from 'cors';
 import multer from 'multer';
@@ -1990,10 +1991,11 @@ OUTPUT FORMAT (JSON):
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
+// Use Error Handler (MUST BE AFTER ROUTES)
+app.use(errorHandler);
+
 // 404 Handler - Must be last
-app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
-});
+app.use(notFoundHandler);
 
 const PORT = process.env.PORT || 3000;
 console.log('Checking startup conditions - VERCEL:', process.env.VERCEL, 'PORT:', PORT);

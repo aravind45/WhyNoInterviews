@@ -2071,7 +2071,6 @@
 
       <!-- INTERVIEW Section -->
       <div class="nav-section">
-        <div class="section-header">INTERVIEW</div>
         <a href="/practice-interview.html" class="nav-item">
           <span class="nav-icon">🎯</span>
           <span class="nav-label">Practice Interview</span>
@@ -2749,9 +2748,14 @@
                 <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
                 <h3 style="margin-bottom: 8px;">No target companies yet</h3>
                 <p>Browse suggestions to find companies you're interested in</p>
-                <button class="btn btn-primary" onclick="showSuggestionsModal()" style="margin-top: 16px;">
-                  Get Started with Suggestions
-                </button>
+                <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+                  <button class="btn btn-primary" onclick="showSuggestionsModal()">
+                    Get Started with Suggestions
+                  </button>
+                  <button class="btn btn-secondary" onclick="runMigration()">
+                    🛠 Setup Database
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -6135,9 +6139,16 @@
           companySearchTimeout = setTimeout(async () => {
             try {
               const response = await fetch(`/api/target-companies/search-suggestions?query=${encodeURIComponent(query)}`);
+
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Search failed:', errorData);
+                return;
+              }
+
               const data = await response.json();
 
-              if (data.success && data.data.suggestions.length > 0) {
+              if (data.success && data.data.suggestions && data.data.suggestions.length > 0) {
                 renderSearchSuggestions(data.data.suggestions);
                 suggestionsDiv.style.display = 'block';
               } else {
@@ -6363,14 +6374,54 @@
         async function showSuggestionsModal() {
           try {
             const response = await fetch('/api/target-companies/suggestions');
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              showToast(`Failed to load suggestions: ${errorData.error || response.statusText}. Try running Database Setup.`, 'error');
+              return;
+            }
+
             const data = await response.json();
 
             if (data.success && data.data.suggestions) {
               renderSuggestionsModal(data.data.suggestions);
+            } else {
+              showToast(data.error || 'Failed to load suggestions', 'error');
             }
           } catch (error) {
             console.error('Error loading suggestions:', error);
-            showToast(`Failed to load company suggestions: ${error.message || 'Unknown error'}. Try running the migration.`, 'error');
+            showToast(`Failed to load company suggestions: ${error.message}. Try clicking Setup Database.`, 'error');
+          }
+        }
+
+        async function runMigration() {
+          const btn = event.currentTarget || document.activeElement;
+          const originalText = btn ? btn.innerHTML : '🛠 Setup Database';
+
+          if (btn && btn.tagName === 'BUTTON') {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-sm"></span> Setting up...';
+          }
+
+          try {
+            showToast('Starting database setup...', 'info');
+            const response = await fetch('/api/migrate-target-companies', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.success) {
+              showToast(data.message || 'Database setup successful!', 'success');
+              loadTargetCompanies();
+            } else {
+              showToast(data.error || 'Setup failed', 'error');
+            }
+          } catch (error) {
+            console.error('Migration error:', error);
+            showToast('Failed to connect to setup endpoint', 'error');
+          } finally {
+            if (btn && btn.tagName === 'BUTTON') {
+              btn.disabled = false;
+              btn.innerHTML = originalText;
+            }
           }
         }
 
