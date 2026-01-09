@@ -71,9 +71,11 @@ app.use('/api/admin', adminRouter);
 import mockInterviewRouter from './routes/mockInterview';
 import configRouter from './routes/config';
 import practiceRouter from './routes/practice';
+import communityRouter from './routes/community';
 app.use('/api', mockInterviewRouter); // Routes in file are like /interview-session
 app.use('/api', configRouter); // Config endpoint
 app.use('/api/practice', practiceRouter); // Practice interview routes
+app.use('/api/community', communityRouter); // Community routes
 
 const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
 

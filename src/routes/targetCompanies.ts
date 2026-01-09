@@ -58,6 +58,7 @@ router.get(
                 (sum: number, c: any) => sum + (c.new_jobs_count || 0),
                 0,
               ),
+              highPriorityCount: result.rows.filter((c: any) => (c.priority || 3) <= 2).length,
             }
             : null,
       },

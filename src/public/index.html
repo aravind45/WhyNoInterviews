@@ -2133,6 +2133,10 @@
           <span class="nav-icon">🤝</span>
           <span class="nav-label">Networking</span>
         </a>
+        <a href="#" class="nav-item" data-tab="community">
+          <span class="nav-icon">💬</span>
+          <span class="nav-label">Community</span>
+        </a>
         <button class="nav-item" onclick="showMyLibrary()"
           style="width: calc(100% - 16px); margin: 2px 8px; border: none; background: transparent; text-align: left; font-family: inherit;">
           <span class="nav-icon">📚</span>
@@ -2964,6 +2968,74 @@
           </div>
         </section>
 
+        <!-- TAB: Community -->
+        <section class="section" id="tab-community">
+          <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h2 class="card-title">💬 Community</h2>
+                <p class="card-subtitle">Connect, share experiences, and support each other on your job search journey
+                </p>
+              </div>
+              <button class="btn btn-primary" onclick="showCreatePostModal()" style="white-space: nowrap;">
+                ➕ New Post
+              </button>
+            </div>
+
+            <!-- Filter and Sort Controls -->
+            <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; flex: 1;">
+                <button class="btn btn-sm" onclick="filterCommunity('all')" id="filter-all"
+                  style="background: #FF9500; color: white;">All</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('success_story')"
+                  id="filter-success_story">🎉 Success</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('question')" id="filter-question">❓
+                  Questions</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('advice')" id="filter-advice">💡
+                  Advice</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('vent')" id="filter-vent">😤
+                  Venting</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('resource')" id="filter-resource">📚
+                  Resources</button>
+              </div>
+              <select id="community-sort" onchange="loadCommunityPosts()" class="input"
+                style="width: auto; height: 40px; background: white;">
+                <option value="recent">📅 Recent</option>
+                <option value="popular">🔥 Popular</option>
+                <option value="trending">⚡ Trending</option>
+              </select>
+            </div>
+
+            <!-- Posts Feed -->
+            <div id="community-feed" style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Posts will be loaded here -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="community-loading" style="text-align: center; padding: 60px; display: none;">
+              <div class="spinner" style="margin: 0 auto 16px;"></div>
+              <p style="color: #64748B;">Loading posts...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="community-empty"
+              style="text-align: center; padding: 80px 40px; color: #64748b; background: #F8FAFC; border-radius: 16px; display: none;">
+              <div style="font-size: 4rem; margin-bottom: 24px;">💬</div>
+              <h3 style="font-size: 1.8rem; margin-bottom: 12px; color: #1E293B;">Start the conversation</h3>
+              <p
+                style="margin-bottom: 32px; line-height: 1.6; max-width: 500px; margin-left: auto; margin-right: auto;">
+                Be the first to share your experience, ask a question, or offer advice to fellow job seekers.</p>
+              <button class="btn btn-primary" onclick="showCreatePostModal()"
+                style="padding: 16px 48px; border-radius: 50px;">Create First Post</button>
+            </div>
+
+            <!-- Load More -->
+            <div id="community-load-more" style="text-align: center; margin-top: 24px; display: none;">
+              <button class="btn btn-secondary" onclick="loadMorePosts()">Load More Posts</button>
+            </div>
+          </div>
+        </section>
+
         <!-- TAB 6: Mock Interview -->
         <section class="section" id="tab-mock-interview">
           <div class="card">
@@ -3194,6 +3266,90 @@
             </div>
           </div>
         </section>
+      </div>
+
+      <!-- Create Post Modal -->
+      <div class="modal-overlay" id="create-post-modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal"
+          style="max-width: 700px; background: white; border-radius: 16px; padding: 0; max-height: 90vh; overflow-y: auto;">
+          <button class="modal-close" onclick="closeCreatePostModal()"
+            style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 2rem; cursor: pointer; color: #64748B;">&times;</button>
+          <div class="modal-header" style="padding: 24px; border-bottom: 1px solid #E2E8F0;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 4px;">✍️ Create New Post</h2>
+            <p style="color: #64748B;">Share your experience, ask questions, or offer advice</p>
+          </div>
+          <div class="modal-body" style="padding: 24px;">
+            <form id="create-post-form" onsubmit="submitCommunityPost(event)">
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Category</label>
+                <select id="post-category" class="input" required style="width: 100%; height: 48px; background: white;">
+                  <option value="">Select a category...</option>
+                  <option value="success_story">🎉 Success Story</option>
+                  <option value="question">❓ Question</option>
+                  <option value="advice">💡 Advice</option>
+                  <option value="vent">😤 Venting</option>
+                  <option value="resource">📚 Resource</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Title</label>
+                <input type="text" id="post-title" class="input" placeholder="Give your post a clear title..." required
+                  style="width: 100%; height: 48px;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Content</label>
+                <textarea id="post-content" class="input"
+                  placeholder="Share your thoughts, experiences, or questions..." required
+                  style="width: 100%; min-height: 200px; padding: 16px; background: white; border: 2px solid #E2E8F0; border-radius: 12px; color: #1E293B; font-family: inherit; resize: vertical;"></textarea>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Tags
+                  (optional)</label>
+                <input type="text" id="post-tags" class="input"
+                  placeholder="e.g., resume, interview, networking (comma-separated)"
+                  style="width: 100%; height: 48px;">
+                <small style="color: #64748B; font-size: 0.85rem;">Add tags to help others find your post</small>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 24px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="post-anonymous" style="width: 18px; height: 18px;">
+                  <span style="font-weight: 500; color: #475569;">Post anonymously</span>
+                </label>
+                <small style="color: #64748B; font-size: 0.85rem; margin-left: 26px;">Your name will be hidden from
+                  other users</small>
+              </div>
+
+              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeCreatePostModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="submit-post-btn">
+                  <span id="submit-post-text">Publish Post</span>
+                  <span class="loading" id="submit-post-loading" style="display:none"></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post Detail Modal -->
+      <div class="modal-overlay" id="post-detail-modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal"
+          style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; background: white; border-radius: 16px; overflow: hidden;">
+          <button class="modal-close" onclick="closePostDetailModal()"
+            style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 2rem; cursor: pointer; color: #64748B; z-index: 10;">&times;</button>
+          <div class="modal-header" style="flex-shrink: 0; padding: 24px; border-bottom: 1px solid #E2E8F0;">
+            <h2 id="detail-post-title" style="font-size: 1.5rem; font-weight: 700;">Post Title</h2>
+          </div>
+          <div class="modal-body" id="post-detail-content" style="overflow-y: auto; flex-grow: 1; padding: 24px;">
+            <!-- Post detail will be loaded here -->
+          </div>
+        </div>
       </div>
 
       <!-- Cover Letter Modal -->
@@ -7458,6 +7614,524 @@
             showToast('Failed to delete interview. Please try again.', 'error');
           }
         }
+
+        // ========== COMMUNITY FEATURE FUNCTIONS ==========
+
+        // Community state
+        let communityCurrentFilter = 'all';
+        let communityCurrentOffset = 0;
+        const communityPageSize = 20;
+        let communityHasMore = false;
+
+        // Initialize community when tab is shown
+        function initializeCommunity() {
+          loadCommunityPosts();
+        }
+
+        // Load community posts
+        async function loadCommunityPosts(append = false) {
+          const feedEl = document.getElementById('community-feed');
+          const loadingEl = document.getElementById('community-loading');
+          const emptyEl = document.getElementById('community-empty');
+          const loadMoreEl = document.getElementById('community-load-more');
+          const sortEl = document.getElementById('community-sort');
+
+          if (!append) {
+            communityCurrentOffset = 0;
+            feedEl.innerHTML = '';
+          }
+
+          loadingEl.style.display = 'block';
+          emptyEl.style.display = 'none';
+          loadMoreEl.style.display = 'none';
+
+          try {
+            const params = new URLSearchParams({
+              category: communityCurrentFilter,
+              sort: sortEl.value,
+              limit: communityPageSize.toString(),
+              offset: communityCurrentOffset.toString(),
+            });
+
+            const response = await fetch(`/api/community/posts?${params}`, {
+              headers: {
+                'x-user-id': currentUser?.id || localStorage.getItem('jobmatch_session') || '',
+              },
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || 'Failed to load posts');
+            }
+
+            loadingEl.style.display = 'none';
+
+            if (data.posts.length === 0 && !append) {
+              emptyEl.style.display = 'block';
+              return;
+            }
+
+            data.posts.forEach(post => {
+              feedEl.appendChild(createPostCard(post));
+            });
+
+            communityHasMore = data.hasMore;
+            communityCurrentOffset += data.posts.length;
+
+            if (communityHasMore) {
+              loadMoreEl.style.display = 'block';
+            }
+          } catch (error) {
+            console.error('Error loading posts:', error);
+            loadingEl.style.display = 'none';
+            showToast('Failed to load posts. Please try again.', 'error');
+          }
+        }
+
+        // Create post card
+        function createPostCard(post) {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.cssText = 'cursor: pointer; transition: all 0.2s ease; border-left: 4px solid ' + getCategoryColor(post.category);
+
+          const categoryEmoji = getCategoryEmoji(post.category);
+          const timeAgo = getTimeAgo(new Date(post.created_at));
+
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                  <span style="background: ${getCategoryBg(post.category)}; color: ${getCategoryColor(post.category)}; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                    ${categoryEmoji} ${post.category.replace('_', ' ')}
+                  </span>
+                  ${post.is_anonymous ? '<span style="color: #64748B; font-size: 0.85rem;">Anonymous</span>' : `<span style="color: #64748B; font-size: 0.85rem;">by ${post.author_name}</span>`}
+                  <span style="color: #94A3B8; font-size: 0.85rem;">• ${timeAgo}</span>
+                </div>
+                <h3 style="font-size: 1.2rem; font-weight: 700; color: #1E293B; margin-bottom: 8px;">${escapeHtml(post.title)}</h3>
+                <p style="color: #475569; line-height: 1.6; margin-bottom: 12px;">${truncateText(escapeHtml(post.content), 200)}</p>
+                ${post.tags && post.tags.length > 0 ? `
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+                    ${post.tags.map(tag => `<span class="tag" style="background: #F1F5F9; color: #475569; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem;">#${tag}</span>`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px; color: #64748B; font-size: 0.9rem;">
+              <span onclick="event.stopPropagation(); togglePostLike('${post.id}')" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span id="like-icon-${post.id}">${post.user_has_liked ? '❤️' : '🤍'}</span>
+                <span id="like-count-${post.id}">${post.like_count || 0}</span>
+              </span>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                💬 ${post.comment_count || 0}
+              </span>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                👁️ ${post.view_count || 0}
+              </span>
+            </div>
+          `;
+
+          card.onclick = () => openPostDetail(post.id);
+
+          return card;
+        }
+
+        // Filter community posts
+        function filterCommunity(category) {
+          communityCurrentFilter = category;
+
+          // Update button states
+          document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+            btn.style.background = '';
+            btn.style.color = '';
+          });
+
+          const activeBtn = document.getElementById(`filter-${category}`);
+          if (activeBtn) {
+            activeBtn.classList.remove('btn-secondary');
+            activeBtn.classList.add('btn-primary');
+            activeBtn.style.background = '#FF9500';
+            activeBtn.style.color = 'white';
+          }
+
+          loadCommunityPosts();
+        }
+
+        // Load more posts
+        function loadMorePosts() {
+          loadCommunityPosts(true);
+        }
+
+        // Show create post modal
+        function showCreatePostModal() {
+          if (!currentUser && !localStorage.getItem('jobmatch_session')) {
+            showToast('Please sign in to create a post', 'error');
+            openAuthModal('login');
+            return;
+          }
+
+          const modal = document.getElementById('create-post-modal');
+          if (modal) {
+            modal.style.display = 'flex';
+            // Reset form
+            document.getElementById('create-post-form').reset();
+          }
+        }
+
+        // Close create post modal
+        function closeCreatePostModal() {
+          const modal = document.getElementById('create-post-modal');
+          if (modal) {
+            modal.style.display = 'none';
+          }
+        }
+
+        // Submit community post
+        async function submitCommunityPost(event) {
+          event.preventDefault();
+
+          const title = document.getElementById('post-title').value;
+          const content = document.getElementById('post-content').value;
+          const category = document.getElementById('post-category').value;
+          const tagsInput = document.getElementById('post-tags').value;
+          const isAnonymous = document.getElementById('post-anonymous').checked;
+
+          const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+
+          const submitBtn = document.getElementById('submit-post-btn');
+          const submitText = document.getElementById('submit-post-text');
+          const submitLoading = document.getElementById('submit-post-loading');
+
+          submitBtn.disabled = true;
+          submitText.style.display = 'none';
+          submitLoading.style.display = 'inline-block';
+
+          try {
+            const response = await fetch('/api/community/posts', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': currentUser?.id || localStorage.getItem('jobmatch_session') || '',
+              },
+              body: JSON.stringify({
+                title,
+                content,
+                category,
+                tags,
+                isAnonymous,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || 'Failed to create post');
+            }
+
+            showToast('Post created successfully!', 'success');
+            closeCreatePostModal();
+            loadCommunityPosts(); // Reload feed
+          } catch (error) {
+            console.error('Error creating post:', error);
+            showToast(error.message || 'Failed to create post', 'error');
+          } finally {
+            submitBtn.disabled = false;
+            submitText.style.display = 'inline';
+            submitLoading.style.display = 'none';
+          }
+        }
+
+        // Open post detail
+        async function openPostDetail(postId) {
+          const modal = document.getElementById('post-detail-modal');
+          const titleEl = document.getElementById('detail-post-title');
+          const contentEl = document.getElementById('post-detail-content');
+
+          if (!modal) return;
+
+          modal.style.display = 'flex';
+          contentEl.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spinner"></div></div>';
+
+          try {
+            const response = await fetch(`/api/community/posts/${postId}`, {
+              headers: {
+                'x-user-id': currentUser?.id || localStorage.getItem('jobmatch_session') || '',
+              },
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || 'Failed to load post');
+            }
+
+            const post = data.post;
+            const comments = data.comments || [];
+
+            titleEl.textContent = post.title;
+
+            const categoryEmoji = getCategoryEmoji(post.category);
+            const timeAgo = getTimeAgo(new Date(post.created_at));
+
+            contentEl.innerHTML = `
+              <div style="margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                  <span style="background: ${getCategoryBg(post.category)}; color: ${getCategoryColor(post.category)}; padding: 6px 14px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
+                    ${categoryEmoji} ${post.category.replace('_', ' ')}
+                  </span>
+                  ${post.is_anonymous ? '<span style="color: #64748B;">Anonymous</span>' : `<span style="color: #64748B;">by ${post.author_name}</span>`}
+                  <span style="color: #94A3B8;">• ${timeAgo}</span>
+                </div>
+                <div style="color: #1E293B; line-height: 1.8; white-space: pre-wrap;">${escapeHtml(post.content)}</div>
+                ${post.tags && post.tags.length > 0 ? `
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px;">
+                    ${post.tags.map(tag => `<span class="tag" style="background: #F1F5F9; color: #475569; padding: 6px 12px; border-radius: 50px; font-size: 0.85rem;">#${tag}</span>`).join('')}
+                  </div>
+                ` : ''}
+                <div style="display: flex; align-items: center; gap: 24px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
+                  <button onclick="togglePostLike('${post.id}')" class="btn btn-sm" style="display: flex; align-items: center; gap: 8px;">
+                    <span id="like-icon-${post.id}">${post.user_has_liked ? '❤️' : '🤍'}</span>
+                    <span id="like-count-${post.id}">${post.like_count || 0} Likes</span>
+                  </button>
+                  <span style="color: #64748B;">💬 ${post.comment_count || 0} Comments</span>
+                  <span style="color: #64748B;">👁️ ${post.view_count || 0} Views</span>
+                </div>
+              </div>
+
+              <div style="border-top: 2px solid #E2E8F0; padding-top: 24px;">
+                <h3 style="margin-bottom: 20px; color: #1E293B;">Comments (${comments.length})</h3>
+                
+                <form onsubmit="submitComment(event, '${postId}')" style="margin-bottom: 24px;">
+                  <textarea id="comment-input-${postId}" placeholder="Add a comment..." required
+                    style="width: 100%; min-height: 80px; padding: 12px; background: white; border: 2px solid #E2E8F0; border-radius: 12px; color: #1E293B; font-family: inherit; resize: vertical; margin-bottom: 12px;"></textarea>
+                  <button type="submit" class="btn btn-primary">Post Comment</button>
+                </form>
+
+                <div id="comments-list-${postId}" style="display: flex; flex-direction: column; gap: 16px;">
+                  ${comments.length === 0 ? '<p style="text-align: center; color: #94A3B8; padding: 40px;">No comments yet. Be the first to comment!</p>' : comments.map(comment => createCommentHTML(comment, postId)).join('')}
+                </div>
+              </div>
+            `;
+          } catch (error) {
+            console.error('Error loading post:', error);
+            contentEl.innerHTML = '<div style="text-align: center; padding: 40px; color: #EF4444;">Failed to load post details</div>';
+          }
+        }
+
+        // Close post detail modal
+        function closePostDetailModal() {
+          const modal = document.getElementById('post-detail-modal');
+          if (modal) {
+            modal.style.display = 'none';
+          }
+        }
+
+        // Create comment HTML
+        function createCommentHTML(comment, postId) {
+          const timeAgo = getTimeAgo(new Date(comment.created_at));
+          return `
+            <div class="card" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1E293B;">${comment.author_name}</div>
+                <div style="color: #94A3B8; font-size: 0.85rem;">${timeAgo}</div>
+              </div>
+              <div style="color: #475569; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(comment.content)}</div>
+              <div style="margin-top: 12px; display: flex; align-items: center; gap: 16px;">
+                <button onclick="toggleCommentLike('${comment.id}')" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; color: #64748B; font-size: 0.9rem;">
+                  <span id="comment-like-icon-${comment.id}">${comment.user_has_liked ? '❤️' : '🤍'}</span>
+                  <span id="comment-like-count-${comment.id}">${comment.like_count || 0}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        // Submit comment
+        async function submitComment(event, postId) {
+          event.preventDefault();
+
+          const input = document.getElementById(`comment-input-${postId}`);
+          const content = input.value.trim();
+
+          if (!content) return;
+
+          if (!currentUser && !localStorage.getItem('jobmatch_session')) {
+            showToast('Please sign in to comment', 'error');
+            openAuthModal('login');
+            return;
+          }
+
+          try {
+            const response = await fetch(`/api/community/posts/${postId}/comments`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': currentUser?.id || localStorage.getItem('jobmatch_session') || '',
+              },
+              body: JSON.stringify({ content }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || 'Failed to add comment');
+            }
+
+            showToast('Comment added!', 'success');
+            input.value = '';
+
+            // Reload post detail to show new comment
+            openPostDetail(postId);
+          } catch (error) {
+            console.error('Error adding comment:', error);
+            showToast(error.message || 'Failed to add comment', 'error');
+          }
+        }
+
+        // Toggle post like
+        async function togglePostLike(postId) {
+          if (!currentUser && !localStorage.getItem('jobmatch_session')) {
+            showToast('Please sign in to like posts', 'error');
+            openAuthModal('login');
+            return;
+          }
+
+          try {
+            const response = await fetch(`/api/community/posts/${postId}/like`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': currentUser?.id || localStorage.getItem('jobmatch_session') || '',
+              },
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || 'Failed to toggle like');
+            }
+
+            // Update UI
+            const iconEl = document.getElementById(`like-icon-${postId}`);
+            const countEl = document.getElementById(`like-count-${postId}`);
+
+            if (iconEl && countEl) {
+              iconEl.textContent = data.liked ? '❤️' : '🤍';
+              const currentCount = parseInt(countEl.textContent) || 0;
+              countEl.textContent = data.liked ? currentCount + 1 : Math.max(0, currentCount - 1);
+            }
+          } catch (error) {
+            console.error('Error toggling like:', error);
+            showToast('Failed to update like', 'error');
+          }
+        }
+
+        // Toggle comment like
+        async function toggleCommentLike(commentId) {
+          if (!currentUser && !localStorage.getItem('jobmatch_session')) {
+            showToast('Please sign in to like comments', 'error');
+            openAuthModal('login');
+            return;
+          }
+
+          try {
+            const response = await fetch(`/api/community/comments/${commentId}/like`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': currentUser?.id || localStorage.getItem('jobmatch_session') || '',
+              },
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || 'Failed to toggle like');
+            }
+
+            // Update UI
+            const iconEl = document.getElementById(`comment-like-icon-${commentId}`);
+            const countEl = document.getElementById(`comment-like-count-${commentId}`);
+
+            if (iconEl && countEl) {
+              iconEl.textContent = data.liked ? '❤️' : '🤍';
+              const currentCount = parseInt(countEl.textContent) || 0;
+              countEl.textContent = data.liked ? currentCount + 1 : Math.max(0, currentCount - 1);
+            }
+          } catch (error) {
+            console.error('Error toggling like:', error);
+            showToast('Failed to update like', 'error');
+          }
+        }
+
+        // Helper functions
+        function getCategoryColor(category) {
+          const colors = {
+            success_story: '#10B981',
+            question: '#3B82F6',
+            advice: '#F59E0B',
+            vent: '#8B5CF6',
+            resource: '#06B6D4',
+          };
+          return colors[category] || '#64748B';
+        }
+
+        function getCategoryBg(category) {
+          const bgs = {
+            success_story: '#D1FAE5',
+            question: '#DBEAFE',
+            advice: '#FEF3C7',
+            vent: '#EDE9FE',
+            resource: '#CFFAFE',
+          };
+          return bgs[category] || '#F1F5F9';
+        }
+
+        function getCategoryEmoji(category) {
+          const emojis = {
+            success_story: '🎉',
+            question: '❓',
+            advice: '💡',
+            vent: '😤',
+            resource: '📚',
+          };
+          return emojis[category] || '💬';
+        }
+
+        function getTimeAgo(date) {
+          const seconds = Math.floor((new Date() - date) / 1000);
+
+          if (seconds < 60) return 'just now';
+          if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+          if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+          if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+
+          return date.toLocaleDateString();
+        }
+
+        function truncateText(text, maxLength) {
+          if (text.length <= maxLength) return text;
+          return text.substring(0, maxLength) + '...';
+        }
+
+        function escapeHtml(text) {
+          const div = document.createElement('div');
+          div.textContent = text;
+          return div.innerHTML;
+        }
+
+        // Initialize community when switching to the tab
+        const originalSwitchTab = window.switchTab;
+        window.switchTab = function (tabName) {
+          if (originalSwitchTab) {
+            originalSwitchTab(tabName);
+          }
+          if (tabName === 'community') {
+            initializeCommunity();
+          }
+        };
 
       </script>
 

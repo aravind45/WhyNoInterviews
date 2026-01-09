@@ -1,0 +1,146 @@
+<!-- TAB: Community -->
+<section class="section" id="tab-community">
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h2 class="card-title">💬 Community</h2>
+                <p class="card-subtitle">Connect, share experiences, and support each other on your job search journey
+                </p>
+            </div>
+            <button class="btn btn-primary" onclick="showCreatePostModal()" style="white-space: nowrap;">
+                ➕ New Post
+            </button>
+        </div>
+
+        <!-- Filter and Sort Controls -->
+        <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; flex: 1;">
+                <button class="btn btn-sm" onclick="filterCommunity('all')" id="filter-all"
+                    style="background: #FF9500; color: white;">All</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('success_story')"
+                    id="filter-success_story">🎉 Success</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('question')" id="filter-question">❓
+                    Questions</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('advice')" id="filter-advice">💡
+                    Advice</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('vent')" id="filter-vent">😤
+                    Venting</button>
+                <button class="btn btn-secondary btn-sm" onclick="filterCommunity('resource')" id="filter-resource">📚
+                    Resources</button>
+            </div>
+            <select id="community-sort" onchange="loadCommunityPosts()" class="input"
+                style="width: auto; height: 40px; background: white;">
+                <option value="recent">📅 Recent</option>
+                <option value="popular">🔥 Popular</option>
+                <option value="trending">⚡ Trending</option>
+            </select>
+        </div>
+
+        <!-- Posts Feed -->
+        <div id="community-feed" style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Posts will be loaded here -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="community-loading" style="text-align: center; padding: 60px; display: none;">
+            <div class="spinner" style="margin: 0 auto 16px;"></div>
+            <p style="color: #64748B;">Loading posts...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="community-empty"
+            style="text-align: center; padding: 80px 40px; color: #64748b; background: #F8FAFC; border-radius: 16px; display: none;">
+            <div style="font-size: 4rem; margin-bottom: 24px;">💬</div>
+            <h3 style="font-size: 1.8rem; margin-bottom: 12px; color: #1E293B;">Start the conversation</h3>
+            <p style="margin-bottom: 32px; line-height: 1.6; max-width: 500px; margin-left: auto; margin-right: auto;">
+                Be the first to share your experience, ask a question, or offer advice to fellow job seekers.</p>
+            <button class="btn btn-primary" onclick="showCreatePostModal()"
+                style="padding: 16px 48px; border-radius: 50px;">Create First Post</button>
+        </div>
+
+        <!-- Load More -->
+        <div id="community-load-more" style="text-align: center; margin-top: 24px; display: none;">
+            <button class="btn btn-secondary" onclick="loadMorePosts()">Load More Posts</button>
+        </div>
+    </div>
+</section>
+
+<!-- Create Post Modal -->
+<div class="modal-overlay" id="create-post-modal">
+    <div class="modal" style="max-width: 700px;">
+        <button class="modal-close" onclick="closeCreatePostModal()">&times;</button>
+        <div class="modal-header">
+            <h2>✍️ Create New Post</h2>
+            <p>Share your experience, ask questions, or offer advice</p>
+        </div>
+        <div class="modal-body">
+            <form id="create-post-form" onsubmit="submitCommunityPost(event)">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label
+                        style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Category</label>
+                    <select id="post-category" class="input" required
+                        style="width: 100%; height: 48px; background: white;">
+                        <option value="">Select a category...</option>
+                        <option value="success_story">🎉 Success Story</option>
+                        <option value="question">❓ Question</option>
+                        <option value="advice">💡 Advice</option>
+                        <option value="vent">😤 Venting</option>
+                        <option value="resource">📚 Resource</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Title</label>
+                    <input type="text" id="post-title" class="input" placeholder="Give your post a clear title..."
+                        required style="width: 100%; height: 48px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Content</label>
+                    <textarea id="post-content" class="input"
+                        placeholder="Share your thoughts, experiences, or questions..." required
+                        style="width: 100%; min-height: 200px; padding: 16px; background: white; border: 2px solid #E2E8F0; border-radius: 12px; color: #1E293B; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">Tags
+                        (optional)</label>
+                    <input type="text" id="post-tags" class="input"
+                        placeholder="e.g., resume, interview, networking (comma-separated)"
+                        style="width: 100%; height: 48px;">
+                    <small style="color: #64748B; font-size: 0.85rem;">Add tags to help others find your post</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="post-anonymous" style="width: 18px; height: 18px;">
+                        <span style="font-weight: 500; color: #475569;">Post anonymously</span>
+                    </label>
+                    <small style="color: #64748B; font-size: 0.85rem; margin-left: 26px;">Your name will be hidden from
+                        other users</small>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreatePostModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submit-post-btn">
+                        <span id="submit-post-text">Publish Post</span>
+                        <span class="loading" id="submit-post-loading" style="display:none"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Post Detail Modal -->
+<div class="modal-overlay" id="post-detail-modal">
+    <div class="modal" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+        <button class="modal-close" onclick="closePostDetailModal()">&times;</button>
+        <div class="modal-header" style="flex-shrink: 0;">
+            <h2 id="detail-post-title">Post Title</h2>
+        </div>
+        <div class="modal-body" id="post-detail-content" style="overflow-y: auto; flex-grow: 1;">
+            <!-- Post detail will be loaded here -->
+        </div>
+    </div>
+</div>
