@@ -1769,7 +1769,7 @@
       font-size: 0.7rem;
       font-weight: 600;
       color: #94A3B8;
-      padding: 4px 16px;
+      padding: 6px 16px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       transition: opacity 0.2s;
@@ -6096,6 +6096,16 @@
 
           try {
             const response = await fetch(`/api/target-companies?sessionId=${sessionId}`);
+
+            if (!response.ok) {
+              // If it's a 401/403, just treat as empty or session expired
+              if (response.status === 401 || response.status === 403) {
+                renderTargetCompanies([]);
+                return;
+              }
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
             if (data.success) {
@@ -6105,7 +6115,10 @@
             }
           } catch (error) {
             console.error('Error loading target companies:', error);
-            showToast('Failed to load target companies. Try refreshing or re-uploading your resume.', 'error');
+            // Only show toast if it's a real failure, not just a missing session
+            if (sessionId) {
+              showToast('Target companies list is currently unavailable.', 'info');
+            }
           }
         }
 
