@@ -3053,6 +3053,20 @@
                   placeholder="e.g., Software Engineer, Product Manager" style="width: 100%; height: 48px;" required>
               </div>
 
+              <!-- Job Description Field -->
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="mock-job-description"
+                  style="display: block; font-weight: 600; color: #475569; margin-bottom: 8px;">
+                  Job Description <span style="color: #94a3b8; font-weight: 400; font-size: 0.9rem;">(Optional)</span>
+                </label>
+                <textarea id="mock-job-description" class="input"
+                  placeholder="Paste the job description here to get more tailored interview questions..."
+                  style="width: 100%; min-height: 120px; padding: 12px; background: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 12px; color: #1E293B; font-family: inherit; resize: vertical; font-size: 0.95rem; line-height: 1.5;"></textarea>
+                <small style="color: #64748B; font-size: 0.85rem; display: block; margin-top: 6px;">
+                  💡 Adding a job description helps generate questions specific to the role's requirements
+                </small>
+              </div>
+
               <div class="grid-2" style="gap: 16px; margin-bottom: 24px;">
                 <div class="form-group">
                   <label for="mock-interview-type"
@@ -3095,11 +3109,11 @@
               </div>
 
               <div
-                style="background: #0F172A; border-radius: 20px; overflow: hidden; margin-bottom: 24px; aspect-ratio: 16/9; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                style="background: #0F172A; border-radius: 16px; overflow: hidden; margin: 0 auto 24px auto; max-width: 500px; max-height: 350px; position: relative; box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);">
                 <video id="mock-preview-video" autoplay muted
                   style="width: 100%; height: 100%; object-fit: cover;"></video>
                 <div id="mock-timer"
-                  style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); padding: 8px 24px; border-radius: 50px; font-size: 1.5rem; font-weight: 700; color: white; border: 1px solid rgba(255,255,255,0.2);">
+                  style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); padding: 6px 20px; border-radius: 50px; font-size: 1.2rem; font-weight: 700; color: white; border: 1px solid rgba(255,255,255,0.2);">
                   00:00
                 </div>
               </div>
@@ -7094,6 +7108,7 @@
           const jobRole = document.getElementById('mock-job-role').value;
           const interviewType = document.getElementById('mock-interview-type').value;
           const duration = parseInt(document.getElementById('mock-duration').value);
+          const jobDescription = document.getElementById('mock-job-description').value.trim();
 
           if (!jobRole) {
             showToast('Please enter a job role', 'error');
@@ -7103,16 +7118,23 @@
           try {
             showToast('Generating interview questions...', 'info');
 
-            // Generate questions
+            // Generate questions with optional job description
+            const questionPayload = {
+              jobRole,
+              interviewType,
+              experienceLevel: 'mid',
+              duration
+            };
+
+            // Only include jobDescription if it's not empty
+            if (jobDescription) {
+              questionPayload.jobDescription = jobDescription;
+            }
+
             const questionsResponse = await fetch('/api/mock-interview/generate-interview-questions', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                jobRole,
-                interviewType,
-                experienceLevel: 'mid',
-                duration
-              })
+              body: JSON.stringify(questionPayload)
             });
 
             if (!questionsResponse.ok) throw new Error('Failed to generate questions');
