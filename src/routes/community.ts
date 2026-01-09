@@ -16,7 +16,7 @@ const requireAuth = (req: Request, res: Response, next: any) => {
 
 // ========== POST ROUTES ==========
 
-// Get all posts with filtering and sorting
+// Get all posts with filtering and sorting (no auth required for browsing)
 router.get('/posts', async (req: Request, res: Response) => {
     const { category, tags, sort = 'recent', limit = 20, offset = 0 } = req.query;
 
