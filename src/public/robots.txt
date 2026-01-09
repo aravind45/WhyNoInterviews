@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
 Sitemap: https://whynointerviews.vercel.app/sitemap.xml

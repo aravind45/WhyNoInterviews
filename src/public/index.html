@@ -4,7 +4,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JobMatch AI - Resume Analyzer + Job Search</title>
+  <title>JobMatch AI - AI-Powered Resume Analyzer & Job Matching Platform</title>
+  <meta name="description"
+    content="Optimize your career with JobMatch AI. Our AI-powered resume analyzer, mock interviews, and job matching tools help you land your dream job faster.">
+  <meta name="keywords"
+    content="resume analyzer, job matching, mock interview, AI career tools, resume optimizer, cover letter generator">
+  <link rel="canonical" href="https://whynointerviews.vercel.app/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://whynointerviews.vercel.app/">
+  <meta property="og:title" content="JobMatch AI - AI-Powered Resume Analyzer & Job Matching Platform">
+  <meta property="og:description"
+    content="Optimize your career with JobMatch AI. Our AI-powered resume analyzer, mock interviews, and job matching tools help you land your dream job faster.">
+  <meta property="og:image" content="https://whynointerviews.vercel.app/favicon.ico">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://whynointerviews.vercel.app/">
+  <meta property="twitter:title" content="JobMatch AI - AI-Powered Resume Analyzer & Job Matching Platform">
+  <meta property="twitter:description"
+    content="Optimize your career with JobMatch AI. Our AI-powered resume analyzer, mock interviews, and job matching tools help you land your dream job faster.">
+  <meta property="twitter:image" content="https://whynointerviews.vercel.app/favicon.ico">
 
   <!-- Google Analytics (GA4) -->
   <!-- REPLACE G-XXXXXXXXXX WITH YOUR ACTUAL MEASUREMENT ID -->
@@ -35,6 +56,7 @@
       "@type": "WebSite",
       "name": "JobMatch AI",
       "url": "https://whynointerviews.vercel.app/",
+      "description": "AI-powered resume analyzer, mock interviews, and job matching platform.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://whynointerviews.vercel.app/search?q={search_term_string}",
@@ -49,7 +71,29 @@
       "name": "JobMatch AI",
       "url": "https://whynointerviews.vercel.app/",
       "logo": "https://whynointerviews.vercel.app/favicon.ico",
-      "description": "AI-powered resume analyzer and job matching platform."
+      "sameAs": [
+        "https://www.linkedin.com/company/jobmatch-ai"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "support@jobmatch.ai"
+      }
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "JobMatch AI",
+      "operatingSystem": "All",
+      "applicationCategory": "CareerService",
+      "description": "AI-powered platform to analyze resumes, search jobs, and practice interviews.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "USD"
+      }
     }
   </script>
 
@@ -1273,6 +1317,62 @@
       text-transform: uppercase;
     }
 
+    /* Company Search & Add */
+    .company-search-container {
+      position: relative;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .search-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      margin-top: 4px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .search-suggestion-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #F1F5F9;
+      transition: background 0.2s;
+    }
+
+    .search-suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-suggestion-item:hover {
+      background: #F8FAFC;
+    }
+
+    .search-suggestion-item .comp-name {
+      font-weight: 600;
+      color: #1E293B;
+    }
+
+    .search-suggestion-item .comp-industry {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
     .company-card {
       background: #1e1e2e;
       border-radius: 12px;
@@ -1648,7 +1748,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 16px 0;
+      padding: 12px 0;
     }
 
     .sidebar-nav::-webkit-scrollbar {
@@ -1662,14 +1762,14 @@
 
     /* Nav Section */
     .nav-section {
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
     .section-header {
       font-size: 0.7rem;
       font-weight: 600;
       color: #94A3B8;
-      padding: 8px 16px;
+      padding: 4px 16px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       transition: opacity 0.2s;
@@ -1686,7 +1786,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 16px;
+      padding: 8px 16px;
       margin: 2px 8px;
       color: #64748B;
       text-decoration: none;
@@ -1963,6 +2063,11 @@
           <span class="nav-icon">🤝</span>
           <span class="nav-label">Networking</span>
         </a>
+        <button class="nav-item" onclick="showMyLibrary()"
+          style="width: calc(100% - 16px); margin: 2px 8px; border: none; background: transparent; text-align: left; font-family: inherit;">
+          <span class="nav-icon">📚</span>
+          <span class="nav-label">My Library</span>
+        </button>
       </div>
 
       <!-- INTERVIEW Section -->
@@ -1986,25 +2091,16 @@
     <!-- Sidebar Footer -->
     <div class="sidebar-footer">
       <!-- Help & Support Links -->
-      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+      <div style="display: flex; gap: 4px; margin-bottom: 8px;">
         <a href="/help-guide.html" target="_blank" class="nav-item"
-          style="flex: 1; justify-content: center; margin: 0;">
-          <span class="nav-icon">❓</span>
-          <span class="nav-label">Help</span>
+          style="flex: 1; justify-content: center; margin: 0; padding: 6px; font-size: 0.8rem;">
+          <span class="nav-label">❓ Help</span>
         </a>
         <a href="https://www.buymeacoffee.com/aravind.thiyaga" target="_blank" class="nav-item"
-          style="flex: 1; justify-content: center; margin: 0;">
-          <span class="nav-icon">☕</span>
-          <span class="nav-label">Support</span>
+          style="flex: 1; justify-content: center; margin: 0; padding: 6px; font-size: 0.8rem;">
+          <span class="nav-label">☕ Support</span>
         </a>
       </div>
-
-      <!-- My Library Button (for logged-in users) -->
-      <button class="nav-item" onclick="showMyLibrary()"
-        style="width: 100%; margin: 0 0 8px 0; border: none; background: transparent;">
-        <span class="nav-icon">📚</span>
-        <span class="nav-label">My Library</span>
-      </button>
 
       <!-- Auth Buttons (shown when logged out) -->
       <div id="sidebar-auth-buttons" style="display: flex; gap: 8px; margin-bottom: 8px;">
@@ -2538,7 +2634,10 @@
               <div id="tech-links" class="flex gap-2 flex-wrap mb-4"></div>
 
               <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🏠 Remote Jobs</h4>
-              <div id="remote-links" class="flex gap-2 flex-wrap"></div>
+              <div id="remote-links" class="flex gap-2 flex-wrap mb-4"></div>
+
+              <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🌱 Non-Profit & Social Impact</h4>
+              <div id="non-profit-links" class="flex gap-2 flex-wrap"></div>
             </div>
 
             <!-- AI Suggestions -->
@@ -2631,9 +2730,17 @@
               </div>
             </div>
 
-            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <div class="company-search-container">
+              <div class="search-input-wrapper">
+                <input type="text" id="company-search-input" class="input" placeholder="🔍 Search companies to add..."
+                  oninput="handleCompanySearch(this.value)">
+                <div id="company-search-suggestions" class="search-suggestions"></div>
+              </div>
               <button class="btn btn-primary" onclick="showSuggestionsModal()">
-                💡 Browse Suggestions
+                💡 Suggestions
+              </button>
+              <button class="btn btn-secondary" onclick="showAddCompanyModal()">
+                ➕ Add Custom
               </button>
             </div>
 
@@ -5087,6 +5194,12 @@
               { name: 'FlexJobs', icon: '🧘', url: `https://www.flexjobs.com/search?search=${encode(linkedInQuery)}` },
               { name: 'Remote.co', icon: '💻', url: `https://remote.co/remote-jobs/search/?search_keywords=${encode(domainTerms)}` }
             ],
+            nonProfit: [
+              { name: 'Idealist', icon: '🌱', url: `https://www.idealist.org/en/jobs?q=${encode(domainTerms)}` },
+              { name: 'LinkedIn Non-Profit', icon: '🤝', url: `https://www.linkedin.com/jobs/search/?keywords=${encode(domainTerms)}&f_JT=VOLUNTEER%2COTHER&f_E=1%2C2%2C3` },
+              { name: 'Philanthropy News', icon: '📰', url: `https://philanthropynewsdigest.org/jobs?keyword=${encode(domainTerms)}` },
+              { name: 'NGO Jobs', icon: '🌍', url: `https://www.ngojobs.eu/jobs?search=${encode(domainTerms)}` }
+            ],
             freshJobs: freshJobsIndividual,
             freshJobsAll: freshJobsAllUrl,
             freshJobs24h: freshJobs24hUrl,
@@ -5127,6 +5240,13 @@
           // Remote job boards
           document.getElementById('remote-links').innerHTML = links.remote.map(l => `
     <a href="${l.url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none;">
+      ${l.icon} ${l.name}
+    </a>
+  `).join('');
+
+          // Non-Profit job boards
+          document.getElementById('non-profit-links').innerHTML = links.nonProfit.map(l => `
+    <a href="${l.url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; border-color: #10b981; color: #10b981;">
       ${l.icon} ${l.name}
     </a>
   `).join('');
@@ -5961,16 +6081,17 @@
         let selectedCompanyIds = new Set();
 
         async function loadTargetCompanies() {
-          const sessionId = window.sessionId;
+          const sessionId = window.sessionId || localStorage.getItem('sessionId') || (window.globalResumeState && window.globalResumeState.sessionId);
+
           if (!sessionId) {
             document.getElementById('companies-container').innerHTML = `
-      <div style="text-align: center; padding: 40px; color: #64748b;">
-        <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
-        <h3 style="margin-bottom: 16px;">Get Started with Target Companies</h3>
-        <p style="margin-bottom: 16px;">Upload a resume to start tracking companies and their job openings</p>
-        <p style="font-size: 0.875rem; color: #94a3b8;">In the meantime, you can browse our suggestions to see what companies you might want to target!</p>
-      </div>
-    `;
+              <div style="text-align: center; padding: 40px; color: #64748b;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
+                <h3 style="margin-bottom: 16px;">Get Started with Target Companies</h3>
+                <p style="margin-bottom: 16px;">Upload a resume to start tracking companies and their job openings</p>
+                <p style="font-size: 0.875rem; color: #94a3b8;">In the meantime, you can browse our suggestions to see what companies you might want to target!</p>
+              </div>
+            `;
             return;
           }
 
@@ -5985,7 +6106,169 @@
             }
           } catch (error) {
             console.error('Error loading target companies:', error);
-            showToast('Failed to load target companies', 'error');
+            showToast('Failed to load target companies. Try refreshing or re-uploading your resume.', 'error');
+          }
+        }
+
+        let companySearchTimeout;
+        async function handleCompanySearch(query) {
+          clearTimeout(companySearchTimeout);
+          const suggestionsDiv = document.getElementById('company-search-suggestions');
+
+          if (!query || query.length < 2) {
+            suggestionsDiv.style.display = 'none';
+            return;
+          }
+
+          companySearchTimeout = setTimeout(async () => {
+            try {
+              const response = await fetch(`/api/target-companies/search-suggestions?query=${encodeURIComponent(query)}`);
+              const data = await response.json();
+
+              if (data.success && data.data.suggestions.length > 0) {
+                renderSearchSuggestions(data.data.suggestions);
+                suggestionsDiv.style.display = 'block';
+              } else {
+                suggestionsDiv.style.display = 'none';
+              }
+            } catch (error) {
+              console.error('Search error:', error);
+            }
+          }, 300);
+        }
+
+        function renderSearchSuggestions(suggestions) {
+          const suggestionsDiv = document.getElementById('company-search-suggestions');
+          suggestionsDiv.innerHTML = suggestions.map(company => `
+            <div class="search-suggestion-item" onclick="addCompanyFromSearch('${company.company_name.replace(/'/g, "\\'")}')">
+              <div class="comp-name">${company.company_name}</div>
+              <div class="comp-industry">${company.industry || ''} • ${company.company_size || ''}</div>
+            </div>
+          `).join('');
+        }
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+          const suggestionsDiv = document.getElementById('company-search-suggestions');
+          if (suggestionsDiv && !e.target.closest('.search-input-wrapper')) {
+            suggestionsDiv.style.display = 'none';
+          }
+        });
+
+        async function addCompanyFromSearch(companyName) {
+          const sessionId = window.sessionId || localStorage.getItem('sessionId') || (window.globalResumeState && window.globalResumeState.sessionId);
+          if (!sessionId) {
+            showToast('Please upload a resume first', 'error');
+            return;
+          }
+
+          try {
+            const response = await fetch('/api/target-companies/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId, companyNames: [companyName] })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              showToast(`${companyName} added!`, 'success');
+              document.getElementById('company-search-input').value = '';
+              document.getElementById('company-search-suggestions').style.display = 'none';
+              loadTargetCompanies();
+            } else {
+              showToast(data.error || 'Failed to add company', 'error');
+            }
+          } catch (error) {
+            console.error('Add error:', error);
+            showToast('Failed to add company', 'error');
+          }
+        }
+
+        function showAddCompanyModal() {
+          const modalHtml = `
+            <div class="modal-overlay" id="add-company-modal" style="display: flex;">
+              <div class="modal">
+                <button class="modal-close" onclick="closeModalById('add-company-modal')">&times;</button>
+                <div class="modal-header">
+                  <h2>➕ Add Custom Company</h2>
+                  <p>Enter details for a new target company</p>
+                </div>
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+                  <div class="form-group">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 600;">Company Name *</label>
+                    <input type="text" id="custom-company-name" class="input" placeholder="e.g. Acme Corp">
+                  </div>
+                  <div class="form-group">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 600;">Industry</label>
+                    <input type="text" id="custom-company-industry" class="input" placeholder="e.g. Technology">
+                  </div>
+                  <div class="form-group">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 600;">Domain</label>
+                    <input type="text" id="custom-company-domain" class="input" placeholder="e.g. acme.com">
+                  </div>
+                  <div class="form-group">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 600;">Priority (1-5, 1=High)</label>
+                    <select id="custom-company-priority" class="input">
+                      <option value="1">1 - High Priority</option>
+                      <option value="2">2 - Medium-High</option>
+                      <option value="3" selected>3 - Medium</option>
+                      <option value="4">4 - Medium-Low</option>
+                      <option value="5">5 - Low Priority</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-secondary" onclick="closeModalById('add-company-modal')">Cancel</button>
+                  <button class="btn btn-primary" onclick="submitCustomCompany()">Add Company</button>
+                </div>
+              </div>
+            </div>
+          `;
+          document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        async function submitCustomCompany() {
+          const name = document.getElementById('custom-company-name').value;
+          const industry = document.getElementById('custom-company-industry').value;
+          const domain = document.getElementById('custom-company-domain').value;
+          const priority = document.getElementById('custom-company-priority').value;
+
+          if (!name) {
+            showToast('Company name is required', 'error');
+            return;
+          }
+
+          const sessionId = window.sessionId || localStorage.getItem('sessionId') || (window.globalResumeState && window.globalResumeState.sessionId);
+
+          if (!sessionId) {
+            showToast('Please upload a resume first', 'error');
+            return;
+          }
+
+          try {
+            const response = await fetch('/api/target-companies', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId,
+                companyName: name,
+                industry,
+                companyDomain: domain,
+                priority: parseInt(priority)
+              })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              showToast(`${name} added!`, 'success');
+              closeModalById('add-company-modal');
+              loadTargetCompanies();
+            } else {
+              showToast(data.error || 'Failed to add company', 'error');
+            }
+          } catch (error) {
+            console.error('Submit error:', error);
+            showToast('Failed to add company', 'error');
           }
         }
 

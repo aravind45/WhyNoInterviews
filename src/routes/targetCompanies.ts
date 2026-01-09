@@ -48,17 +48,17 @@ router.get(
         stats:
           result.rows.length > 0
             ? {
-                total: result.rows.length,
-                activeCount: result.rows.filter((c: any) => c.is_active).length,
-                totalJobsFound: result.rows.reduce(
-                  (sum: number, c: any) => sum + (c.total_jobs_found || 0),
-                  0,
-                ),
-                newJobsCount: result.rows.reduce(
-                  (sum: number, c: any) => sum + (c.new_jobs_count || 0),
-                  0,
-                ),
-              }
+              total: result.rows.length,
+              activeCount: result.rows.filter((c: any) => c.is_active).length,
+              totalJobsFound: result.rows.reduce(
+                (sum: number, c: any) => sum + (c.total_jobs_found || 0),
+                0,
+              ),
+              newJobsCount: result.rows.reduce(
+                (sum: number, c: any) => sum + (c.new_jobs_count || 0),
+                0,
+              ),
+            }
             : null,
       },
     });
@@ -85,6 +85,45 @@ router.get(
     WHERE is_popular = TRUE
     ORDER BY company_name ASC
   `);
+
+    res.json({
+      success: true,
+      data: {
+        suggestions: result.rows,
+      },
+    });
+  }),
+);
+
+/**
+ * GET /api/target-companies/search-suggestions
+ * Search global company suggestions by name
+ */
+router.get(
+  '/search-suggestions',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { query: searchQuery } = req.query;
+
+    if (!searchQuery) {
+      res.json({ success: true, data: { suggestions: [] } });
+      return;
+    }
+
+    const result = await query(
+      `
+    SELECT
+      company_name,
+      company_domain,
+      industry,
+      company_size,
+      description
+    FROM global_company_suggestions
+    WHERE company_name ILIKE $1
+    ORDER BY company_name ASC
+    LIMIT 10
+  `,
+      [`%${searchQuery}%`],
+    );
 
     res.json({
       success: true,
@@ -598,6 +637,10 @@ function generateSearchUrls(
     {
       name: 'google',
       url: `https://www.google.com/search?q=${encodeQuery}+jobs+${encodeLocation}&ibp=htl;jobs`,
+    },
+    {
+      name: 'idealist',
+      url: `https://www.idealist.org/en/jobs?q=${encodeURIComponent(companyName)}&search_preciseness=exact`,
     },
   ];
 }
