@@ -47,7 +47,26 @@ export const rateLimitLLM = async (req: Request, res: Response, next: NextFuncti
                 limit: rateLimitResult.limit,
                 remaining: 0,
                 resetAt: rateLimitResult.resetAt,
+                // Paywall/Upgrade information
+                requiresUpgrade: !isPremium,
                 upgradeUrl: isPremium ? undefined : '/pricing',
+                paywall: {
+                    enabled: !isPremium,
+                    title: 'Upgrade to Premium',
+                    message: `You've used all ${rateLimitResult.limit} free LLM calls today. Upgrade to Premium for ${process.env.LLM_RATE_LIMIT_PREMIUM || '10'} calls per day.`,
+                    features: [
+                        `${process.env.LLM_RATE_LIMIT_PREMIUM || '10'} LLM calls per day (vs ${rateLimitResult.limit} free)`,
+                        'Priority support',
+                        'Advanced analytics',
+                        'Early access to new features'
+                    ],
+                    pricing: {
+                        monthly: '$9.99/month',
+                        annual: '$99/year (save 17%)'
+                    },
+                    ctaText: 'Upgrade Now',
+                    ctaUrl: '/pricing'
+                }
             });
         }
 
