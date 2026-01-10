@@ -7324,11 +7324,11 @@
             const data = await response.json();
             const feedback = data.data;
 
-            // Display scores
+            // Display scores - map from backend rubrics structure
             document.getElementById('mock-overall-score').textContent = feedback.overallScore || '--';
-            document.getElementById('mock-communication-score').textContent = feedback.categoryScores?.communication || '--';
-            document.getElementById('mock-technical-score').textContent = feedback.categoryScores?.technical || '--';
-            document.getElementById('mock-confidence-score').textContent = feedback.categoryScores?.confidence || '--';
+            document.getElementById('mock-communication-score').textContent = feedback.rubrics?.communication?.score || '--';
+            document.getElementById('mock-technical-score').textContent = feedback.rubrics?.technicalKnowledge?.score || '--';
+            document.getElementById('mock-confidence-score').textContent = feedback.rubrics?.confidence?.score || '--';
 
             // Display strengths
             const strengthsList = document.getElementById('mock-strengths-list');
@@ -7340,10 +7340,10 @@
               strengthsList.appendChild(li);
             });
 
-            // Display improvements
+            // Display improvements (map from growthAreas)
             const improvementsList = document.getElementById('mock-improvements-list');
             improvementsList.innerHTML = '';
-            (feedback.improvements || []).forEach(improvement => {
+            (feedback.growthAreas || []).forEach(improvement => {
               const li = document.createElement('li');
               li.style.cssText = 'padding: 12px 16px; background: #FFFBEB; border-radius: 10px; border: 1px solid #FEF3C7; color: #92400e; font-size: 0.95rem; font-weight: 500; display: flex; gap: 8px;';
               li.innerHTML = `<span>•</span> <span>${improvement}</span>`;
