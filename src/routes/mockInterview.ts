@@ -335,6 +335,16 @@ router.get(
 
       logger.info('Dashboard: Found interviews', { userId, count: result.rows.length });
 
+      const safeParse = (jsonString: string) => {
+        try {
+          if (!jsonString) return [];
+          return JSON.parse(jsonString);
+        } catch (e) {
+          logger.warn('Dashboard: Failed to parse JSON', { json: jsonString?.substring(0, 100) });
+          return [];
+        }
+      };
+
       const interviews = result.rows.map((row) => ({
         id: row.id,
         sessionToken: row.session_token,
@@ -353,8 +363,8 @@ router.get(
               technical: row.technical_score,
               confidence: row.confidence_score,
             },
-            strengths: row.strengths ? JSON.parse(row.strengths) : [],
-            improvements: row.improvements ? JSON.parse(row.improvements) : [],
+            strengths: safeParse(row.strengths),
+            improvements: safeParse(row.improvements),
           }
           : null,
       }));

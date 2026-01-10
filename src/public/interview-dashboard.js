@@ -5,7 +5,16 @@ document.addEventListener('DOMContentLoaded', loadDashboard);
 
 async function loadDashboard() {
   try {
-    const response = await fetch('/api/mock-interview/interview-dashboard');
+    // Get credentials
+    const sessionId = localStorage.getItem('jobmatch_session');
+    const userStr = localStorage.getItem('jobmatch_user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+
+    const headers = {};
+    if (sessionId) headers['x-session-id'] = sessionId;
+    if (currentUser && currentUser.id) headers['x-user-id'] = currentUser.id;
+
+    const response = await fetch('/api/mock-interview/interview-dashboard', { headers });
     const data = await response.json();
 
     if (!data.success) {
@@ -92,9 +101,8 @@ function createInterviewCard(interview) {
             </div>
         </div>
         
-        ${
-          interview.results
-            ? `
+        ${interview.results
+      ? `
             <div class="interview-scores">
                 <div class="score-item">
                     <div class="score-value">${interview.results.overallScore}</div>
@@ -114,32 +122,30 @@ function createInterviewCard(interview) {
                 </div>
             </div>
         `
-            : `
+      : `
             <div style="text-align: center; padding: 20px; color: #64748b; font-style: italic;">
                 ${interview.status === 'completed' ? 'Results processing...' : 'Interview not completed'}
             </div>
         `
-        }
+    }
         
         <div class="interview-actions">
-            ${
-              interview.results
-                ? `
+            ${interview.results
+      ? `
                 <button class="btn btn-secondary" onclick="viewResults('${interview.sessionToken}')">
                     View Results
                 </button>
             `
-                : ''
-            }
-            ${
-              interview.status !== 'completed'
-                ? `
+      : ''
+    }
+            ${interview.status !== 'completed'
+      ? `
                 <button class="btn btn-primary" onclick="continueInterview('${interview.sessionToken}')">
                     Continue Interview
                 </button>
             `
-                : ''
-            }
+      : ''
+    }
             <button class="btn btn-secondary" onclick="deleteInterview('${interview.id}')">
                 Delete
             </button>

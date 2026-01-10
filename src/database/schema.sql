@@ -756,3 +756,47 @@ DROP TRIGGER IF EXISTS update_linkedin_contacts_updated_at ON linkedin_contacts;
 CREATE TRIGGER update_linkedin_contacts_updated_at
     BEFORE UPDATE ON linkedin_contacts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- Schema Patches (Added for Compatibility)
+-- ============================================
+
+-- Fix: Add missing columns to interview_results
+ALTER TABLE interview_results 
+ADD COLUMN IF NOT EXISTS strengths JSONB,
+ADD COLUMN IF NOT EXISTS improvements JSONB,
+ADD COLUMN IF NOT EXISTS detailed_feedback JSONB;
+
+-- Fix: Add missing user_sessions_log table
+CREATE TABLE IF NOT EXISTS user_sessions_log (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  session_id VARCHAR(255),
+  ip_address VARCHAR(45) NOT NULL,
+  country VARCHAR(100),
+  city VARCHAR(100),
+  user_agent TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_log_user ON user_sessions_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_log_created ON user_sessions_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_log_ip ON user_sessions_log(ip_address);
+
+-- Fix: Add IP tracking columns to users
+ALTER TABLE users 
+ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45),
+ADD COLUMN IF NOT EXISTS country VARCHAR(100),
+ADD COLUMN IF NOT EXISTS last_ip_address VARCHAR(45),
+ADD COLUMN IF NOT EXISTS last_country VARCHAR(100),
+ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
+
+-- Fix: Add IP tracking to analytics_events if exists
+DO $$ 
+BEGIN 
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'analytics_events') THEN
+        ALTER TABLE analytics_events
+        ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45),
+        ADD COLUMN IF NOT EXISTS country VARCHAR(100);
+    END IF;
+END $$;

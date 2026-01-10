@@ -1,0 +1,3573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobMatch AI - AI-Powered Resume Analysis & Job Matching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Design System Tokens */
+    :root {
+      /* Backgrounds */
+      --color-bg-page: #F7F9FC;
+      --color-bg-surface: #FFFFFF;
+      --color-bg-muted: #F1F5F9;
+      
+      /* Text */
+      --color-text-primary: #1F2937;
+      --color-text-secondary: #4B5563;
+      --color-text-muted: #6B7280;
+      
+      /* Borders */
+      --color-border-light: #E5E7EB;
+      --color-border-muted: #D1D5DB;
+      
+      /* Primary Brand (Professional Blue) */
+      --color-primary-50: #EFF6FF;
+      --color-primary-100: #DBEAFE;
+      --color-primary-300: #93C5FD;
+      --color-primary-500: #2563EB;
+      --color-primary-700: #1D4ED8;
+      
+      /* Accent (Optional – use sparingly) */
+      --color-accent: #0EA5E9;
+      
+      /* Status */
+      --color-success: #16A34A;
+      --color-warning: #CA8A04;
+      --color-error: #DC2626;
+      
+      /* Typography */
+      --font-sans: "Inter", "SF Pro Text", "Roboto", system-ui, sans-serif;
+      --font-size-h1: 2.25rem;
+      --font-size-h2: 1.75rem;
+      --font-size-h3: 1.25rem;
+      --font-size-body: 1rem;
+      --font-size-small: 0.875rem;
+      --line-height-heading: 1.2;
+      --line-height-body: 1.6;
+      
+      /* Spacing & Radius */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 40px;
+      
+      /* Shadow (Minimal) */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Reset & Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-bg-page);
+      color: var(--color-text-primary);
+      line-height: var(--line-height-body);
+      font-size: var(--font-size-body);
+    }
+
+    /* Header */
+    .header {
+      background: var(--color-bg-surface);
+      border-bottom: 1px solid var(--color-border-light);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) var(--space-lg);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--color-text-primary);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary-500);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    /* Navigation */
+    .nav-tabs {
+      display: flex;
+      gap: var(--space-xs);
+    }
+
+    .nav-tab {
+      padding: 10px var(--space-md);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      font-size: var(--font-size-small);
+    }
+
+    .nav-tab:hover {
+      color: var(--color-text-primary);
+      background: var(--color-bg-muted);
+    }
+
+    .nav-tab.active {
+      background: var(--color-primary-50);
+      color: var(--color-primary-700);
+      border-color: var(--color-primary-300);
+    }
+
+    /* Buttons */
+    .button-primary {
+      background-color: var(--color-primary-500);
+      color: #ffffff;
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      font-size: var(--font-size-body);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .button-primary:hover {
+      background-color: var(--color-primary-700);
+    }
+
+    .button-secondary {
+      background: transparent;
+      border: 1px solid var(--color-border-muted);
+      color: var(--color-text-primary);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: var(--font-size-body);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .button-secondary:hover {
+      background: var(--color-bg-muted);
+      border-color: var(--color-border-light);
+    }
+
+    .button-full {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      margin-bottom: var(--space-lg);
+    }
+
+    .card-title {
+      font-size: var(--font-size-h2);
+      font-weight: 700;
+      line-height: var(--line-height-heading);
+      margin-bottom: var(--space-sm);
+      color: var(--color-text-primary);
+    }
+
+    .card-subtitle {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body);
+      line-height: var(--line-height-body);
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: var(--space-xl) 0;
+      background: var(--color-bg-surface);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .hero-title {
+      font-size: var(--font-size-h1);
+      font-weight: 700;
+      line-height: var(--line-height-heading);
+      margin-bottom: var(--space-md);
+      color: var(--color-text-primary);
+    }
+
+    .hero-subtitle {
+      font-size: 1.125rem;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-xl);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Process Steps */
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin: var(--space-xl) 0;
+    }
+
+    .process-step {
+      text-align: center;
+      padding: var(--space-lg);
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: var(--color-primary-500);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin: 0 auto var(--space-md);
+    }
+
+    .step-title {
+      font-size: var(--font-size-h3);
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+      color: var(--color-text-primary);
+    }
+
+    .step-description {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-small);
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed var(--color-border-muted);
+      border-radius: var(--radius-md);
+      padding: var(--space-xl);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--color-bg-muted);
+    }
+
+    .upload-zone:hover {
+      border-color: var(--color-primary-500);
+      background: var(--color-primary-50);
+    }
+
+    .upload-zone.has-file {
+      border-color: var(--color-success);
+      background: rgba(22, 163, 74, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 2.5rem;
+      margin-bottom: var(--space-md);
+      color: var(--color-text-muted);
+    }
+
+    .upload-text {
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .upload-subtext {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-small);
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: var(--space-md);
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-sm);
+      font-size: var(--font-size-small);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px var(--space-md);
+      border: 1px solid var(--color-border-muted);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-body);
+      color: var(--color-text-primary);
+      background: var(--color-bg-surface);
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: var(--font-sans);
+    }
+
+    /* Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+    }
+
+    /* Sections */
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* Results */
+    .results-container {
+      margin-top: var(--space-xl);
+    }
+
+    .score-display {
+      text-align: center;
+      padding: var(--space-xl);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .score-ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-md);
+      border: 6px solid var(--color-primary-500);
+      color: var(--color-primary-500);
+    }
+
+    .score-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    .score-label {
+      font-size: var(--font-size-small);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Analysis Items */
+    .analysis-section {
+      margin-bottom: var(--space-lg);
+    }
+
+    .analysis-title {
+      font-size: var(--font-size-h3);
+      font-weight: 600;
+      margin-bottom: var(--space-md);
+      color: var(--color-text-primary);
+    }
+
+    .analysis-item {
+      background: var(--color-bg-muted);
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-sm);
+      border-left: 4px solid var(--color-border-muted);
+    }
+
+    .analysis-item.success {
+      border-left-color: var(--color-success);
+      background: rgba(22, 163, 74, 0.05);
+    }
+
+    .analysis-item.warning {
+      border-left-color: var(--color-warning);
+      background: rgba(202, 138, 4, 0.05);
+    }
+
+    .analysis-item.error {
+      border-left-color: var(--color-error);
+      background: rgba(220, 38, 38, 0.05);
+    }
+
+    .item-title {
+      font-weight: 600;
+      margin-bottom: var(--space-xs);
+      color: var(--color-text-primary);
+    }
+
+    .item-description {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-small);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: var(--space-md);
+      }
+
+      .nav-tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .process-steps {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: var(--space-lg) var(--space-md);
+      }
+    }
+
+    /* Loading State */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-border-light);
+      border-top-color: var(--color-primary-500);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-light);
+      color: var(--color-text-primary);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--color-success);
+      background: rgba(22, 163, 74, 0.05);
+    }
+
+    .toast.error {
+      border-color: var(--color-error);
+      background: rgba(220, 38, 38, 0.05);
+    }
+
+    /* Capability Switcher */
+    .capability-switcher {
+      margin-bottom: var(--space-lg);
+    }
+
+    .switcher-tabs {
+      display: flex;
+      gap: var(--space-xs);
+      border-bottom: 1px solid var(--color-border-light);
+      margin-bottom: var(--space-lg);
+    }
+
+    .switcher-tab {
+      padding: var(--space-md) var(--space-lg);
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-size: var(--font-size-body);
+    }
+
+    .switcher-tab:hover {
+      color: var(--color-text-primary);
+    }
+
+    .switcher-tab.active {
+      color: var(--color-primary-500);
+      border-bottom-color: var(--color-primary-500);
+    }
+
+    .capability-content {
+      display: none;
+    }
+
+    .capability-content.active {
+      display: block;
+    }
+
+    /* Segmented Control */
+    .segmented-control {
+      display: flex;
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-md);
+      padding: var(--space-xs);
+    }
+
+    .segment-option {
+      flex: 1;
+      padding: var(--space-sm) var(--space-md);
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+      font-size: var(--font-size-small);
+    }
+
+    .segment-option:hover {
+      color: var(--color-text-primary);
+    }
+
+    .segment-option.active {
+      background: var(--color-bg-surface);
+      color: var(--color-primary-500);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Radio Group */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      cursor: pointer;
+    }
+
+    .radio-option input[type="radio"] {
+      margin: 0;
+    }
+
+    .radio-label {
+      color: var(--color-text-primary);
+      font-size: var(--font-size-body);
+    }
+
+    /* Card Actions */
+    .card-actions {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    /* Pitch Output */
+    .pitch-output {
+      margin-top: var(--space-lg);
+    }
+
+    .pitch-section {
+      margin-bottom: var(--space-lg);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      background: var(--color-bg-muted);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .section-title {
+      font-size: var(--font-size-body);
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin: 0;
+    }
+
+    .copy-section-btn {
+      padding: var(--space-xs) var(--space-sm);
+      background: var(--color-primary-500);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-small);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-section-btn:hover {
+      background: var(--color-primary-700);
+    }
+
+    .section-content {
+      padding: var(--space-md);
+      background: var(--color-bg-surface);
+      min-height: 60px;
+      line-height: var(--line-height-body);
+    }
+
+    .section-content.editable {
+      outline: none;
+    }
+
+    .section-content.editable:focus {
+      background: var(--color-primary-50);
+      border: 1px solid var(--color-primary-300);
+      margin: -1px;
+    }
+
+    /* Output Variants */
+    
+    /* Generation Output Styles */
+    .generation-output {
+      margin-top: var(--space-lg);
+    }
+
+    .editable-content {
+      padding: var(--space-lg);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      min-height: 200px;
+      line-height: var(--line-height-body);
+      outline: none;
+      white-space: pre-wrap;
+      font-family: var(--font-family-body);
+    }
+
+    .editable-content:focus {
+      background: var(--color-primary-50);
+      border-color: var(--color-primary-300);
+    }
+
+    .output-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--color-bg-muted);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-small);
+      margin-top: var(--space-md);
+    }
+
+    .meta-item {
+      display: flex;
+      gap: var(--space-xs);
+    }
+
+    .meta-label {
+      font-weight: 600;
+      color: var(--color-text-secondary);
+    }
+
+    /* Error State */
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: var(--space-xl);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+    }
+
+    .error-icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .error-message h4 {
+      margin: 0 0 var(--space-sm) 0;
+      color: var(--color-text-primary);
+    }
+
+    .error-message p {
+      margin: 0 0 var(--space-md) 0;
+      color: var(--color-text-secondary);
+    }
+    
+    /* Generation Output Styles */
+    .generation-output {
+      margin-top: var(--space-lg);
+    }
+
+    .output-content {
+      margin-bottom: var(--space-md);
+    }
+
+    .editable-content {
+      padding: var(--space-lg);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      min-height: 200px;
+      line-height: var(--line-height-body);
+      outline: none;
+      white-space: pre-wrap;
+      font-family: var(--font-family-body);
+    }
+
+    .editable-content:focus {
+      background: var(--color-primary-50);
+      border-color: var(--color-primary-300);
+    }
+
+    .output-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--color-bg-muted);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-small);
+    }
+
+    .meta-item {
+      display: flex;
+      gap: var(--space-xs);
+    }
+
+    .meta-label {
+      font-weight: 600;
+      color: var(--color-text-secondary);
+    }
+
+    /* Error State */
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: var(--space-xl);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+    }
+
+    .error-icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .error-message h4 {
+      margin: 0 0 var(--space-sm) 0;
+      color: var(--color-text-primary);
+    }
+
+    .error-message p {
+      margin: 0 0 var(--space-md) 0;
+      color: var(--color-text-secondary);
+    }
+    .output-variants {
+      margin-top: var(--space-xl);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .variant-tabs {
+      display: flex;
+      background: var(--color-bg-muted);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .variant-tab {
+      flex: 1;
+      padding: var(--space-sm) var(--space-md);
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: var(--font-size-small);
+    }
+
+    .variant-tab:hover {
+      color: var(--color-text-primary);
+    }
+
+    .variant-tab.active {
+      background: var(--color-bg-surface);
+      color: var(--color-primary-500);
+    }
+
+    .variant-content {
+      background: var(--color-bg-surface);
+    }
+
+    .variant-section {
+      display: none;
+      padding: var(--space-md);
+    }
+
+    .variant-section.active {
+      display: block;
+    }
+
+    .variant-output {
+      background: var(--color-bg-muted);
+      padding: var(--space-md);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      line-height: var(--line-height-body);
+      white-space: pre-wrap;
+    }
+
+    /* Cross-Feature Actions */
+    .cross-feature-actions {
+      margin-top: var(--space-xl);
+      padding: var(--space-lg);
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-md);
+    }
+
+    .actions-title {
+      font-size: var(--font-size-body);
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-md);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-xl);
+      color: var(--color-text-muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .empty-state h4 {
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    /* Keyword Highlights */
+    .keyword-highlight {
+      background: var(--color-primary-100);
+      color: var(--color-primary-700);
+      padding: 1px 3px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    /* Usage Indicator */
+    .usage-indicator {
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .usage-text {
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-sm);
+      text-align: center;
+    }
+
+    .usage-bar {
+      height: 4px;
+      background: var(--color-border-light);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .usage-fill {
+      height: 100%;
+      background: var(--color-primary-500);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* Inline Soft Gate */
+    .inline-soft-gate {
+      text-align: center;
+      padding: var(--space-xl);
+      background: var(--color-bg-muted);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      margin: var(--space-lg) 0;
+    }
+
+    .gate-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .gate-title {
+      font-size: var(--font-size-h3);
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .gate-message {
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-lg);
+      line-height: var(--line-height-body);
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Paywall Modal */
+    .paywall-modal {
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .paywall-content {
+      margin-top: var(--space-lg);
+    }
+
+    .paywall-benefits {
+      margin-bottom: var(--space-xl);
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .benefit-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-primary-50);
+      border-radius: 50%;
+    }
+
+    .benefit-text h4 {
+      font-size: var(--font-size-body);
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .benefit-text p {
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-body);
+    }
+
+    .paywall-pricing {
+      margin-bottom: var(--space-xl);
+    }
+
+    .pricing-card {
+      background: var(--color-primary-50);
+      border: 2px solid var(--color-primary-300);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      text-align: center;
+    }
+
+    .pricing-header h3 {
+      font-size: var(--font-size-h3);
+      font-weight: 700;
+      color: var(--color-primary-700);
+      margin-bottom: var(--space-sm);
+    }
+
+    .price {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-xs);
+    }
+
+    .price-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    .price-period {
+      font-size: var(--font-size-body);
+      color: var(--color-text-secondary);
+    }
+
+    .price-note {
+      font-size: var(--font-size-small);
+      color: var(--color-text-muted);
+    }
+
+    .paywall-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .paywall-footer {
+      text-align: center;
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--color-border-light);
+    }
+
+    .paywall-footer p {
+      font-size: var(--font-size-small);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    /* Copy Button Variants */
+    .copy-variant-btn {
+      margin-top: var(--space-sm);
+      padding: var(--space-xs) var(--space-sm);
+      background: var(--color-primary-500);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-small);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-variant-btn:hover {
+      background: var(--color-primary-700);
+    }
+
+    .copy-variant-btn:disabled {
+      background: var(--color-border-muted);
+      color: var(--color-text-muted);
+      cursor: not-allowed;
+    }
+
+    /* Pro Badge */
+    .pro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-xs) var(--space-sm);
+      background: var(--color-primary-500);
+      color: white;
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-small);
+      font-weight: 500;
+    }
+
+    /* Disabled State for Free Users */
+    .disabled-for-free {
+      opacity: 0.6;
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .disabled-for-free::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      cursor: not-allowed;
+    }
+
+    /* Modal Overlay Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+  </style>
+
+  <!-- Modal Overlay Styles -->
+  <style>
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+  </style>
+</head>
+
+<style>
+/* Modal Overlay Styles for Paywall */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+</style>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">🎯</div>
+        <span>JobMatch AI</span>
+      </div>
+      
+      <nav class="nav-tabs">
+        <div class="nav-tab active" data-tab="analyze">Resume Analysis</div>
+        <div class="nav-tab" data-tab="optimizer">Resume Optimizer</div>
+        <div class="nav-tab" data-tab="search">Job Matching</div>
+        <div class="nav-tab" data-tab="companies">Target Companies</div>
+        <div class="nav-tab" data-tab="networking">Networking</div>
+      </nav>
+      
+      <div class="auth-section">
+        <button class="button-secondary">Sign In</button>
+        <button class="button-primary">Get Started</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <h1 class="hero-title">AI-Powered Resume Analysis</h1>
+        <p class="hero-subtitle">
+          Get data-driven insights on why your resume isn't getting interviews. 
+          Our AI analyzes your resume against job requirements and provides actionable feedback.
+        </p>
+        
+        <!-- Process Steps -->
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="step-number">1</div>
+            <h3 class="step-title">Upload Resume</h3>
+            <p class="step-description">Upload your resume in PDF or Word format</p>
+          </div>
+          <div class="process-step">
+            <div class="step-number">2</div>
+            <h3 class="step-title">AI Analysis</h3>
+            <p class="step-description">Our AI analyzes content, format, and ATS compatibility</p>
+          </div>
+          <div class="process-step">
+            <div class="step-number">3</div>
+            <h3 class="step-title">Get Insights</h3>
+            <p class="step-description">Receive detailed feedback and improvement recommendations</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <!-- Resume Analysis Tab -->
+      <section class="section active" id="tab-analyze">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Resume Analysis</h2>
+            <p class="card-subtitle">
+              Upload your resume and a target job description to get detailed feedback on your match score and areas for improvement.
+            </p>
+          </div>
+          
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Your Resume</label>
+              <div class="upload-zone" id="analyze-upload-zone">
+                <input type="file" id="analyze-resume-input" accept=".pdf,.doc,.docx" style="display: none;">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Drop your resume here or click to browse</div>
+                <div class="upload-subtext">Supports PDF, DOC, DOCX</div>
+                <div class="file-name" id="analyze-file-name"></div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Target Job Description</label>
+              <textarea 
+                id="job-description" 
+                class="form-input form-textarea" 
+                placeholder="Paste the complete job description here..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">AI Model Selection</label>
+            <select id="llm-provider-select" class="form-input">
+              <option value="">Loading AI models...</option>
+            </select>
+          </div>
+
+          <button class="button-primary button-full" id="analyze-btn" disabled>
+            <span id="analyze-btn-text">Analyze Resume Match</span>
+            <span class="loading" id="analyze-loading" style="display:none"></span>
+          </button>
+        </div>
+        
+        <!-- Analysis Results -->
+        <div id="analysis-results" class="results-container" style="display:none">
+          <!-- Capability Switcher -->
+          <div class="capability-switcher">
+            <div class="switcher-tabs">
+              <button class="switcher-tab active" data-capability="match">Match Analysis</button>
+              <button class="switcher-tab" data-capability="cover-letter">Cover Letter</button>
+              <button class="switcher-tab" data-capability="referral">Referral Message</button>
+              <button class="switcher-tab" data-capability="elevator-pitch">Executive Pitch</button>
+            </div>
+          </div>
+
+          <!-- Match Analysis Tab -->
+          <div id="capability-match" class="capability-content active">
+            <!-- Analysis Results Content -->
+            <div class="analysis-summary">
+              <div class="score-card">
+                <div class="score-circle">
+                  <span id="overall-score" class="score-value">0%</span>
+                </div>
+                <div class="score-details">
+                  <h3 id="match-verdict" class="verdict">Analysis Complete</h3>
+                  <p id="match-summary" class="summary">Analysis completed successfully.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Analysis Sections -->
+            <div class="analysis-sections">
+              <div class="analysis-section">
+                <h4>Six-Second Scan</h4>
+                <div id="six-second-scan" class="section-content">
+                  <p>Analysis results will appear here...</p>
+                </div>
+              </div>
+
+              <div class="analysis-section">
+                <h4>ATS Analysis</h4>
+                <div id="ats-analysis" class="section-content">
+                  <p>ATS analysis results will appear here...</p>
+                </div>
+              </div>
+
+              <div class="analysis-section">
+                <h4>Strengths</h4>
+                <div id="strengths-list" class="section-content">
+                  <p>Strengths will appear here...</p>
+                </div>
+              </div>
+
+              <div class="analysis-section">
+                <h4>Areas for Improvement</h4>
+                <div id="dealbreakers-list" class="section-content">
+                  <p>Areas for improvement will appear here...</p>
+                </div>
+              </div>
+
+              <div class="analysis-section">
+                <h4>Recommendations</h4>
+                <div id="recommendations-list" class="section-content">
+                  <p>Recommendations will appear here...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cover Letter Tab -->
+          <div id="capability-cover-letter" class="capability-content">
+            <div class="grid-2">
+              <!-- Left Column: Cover Letter Controls -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Cover Letter Generator</h3>
+                  <p class="card-subtitle">Generate a tailored cover letter based on your resume and the job description</p>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Company Name (Optional)</label>
+                  <input type="text" id="cover-letter-company" class="form-input" placeholder="Leave blank to auto-detect from job description">
+                </div>
+
+                <button class="button-primary button-full" id="generate-cover-letter-btn">
+                  <span id="generate-cover-letter-text">Generate Cover Letter</span>
+                  <span class="loading" id="generate-cover-letter-loading" style="display:none"></span>
+                </button>
+
+                <!-- Usage Indicator for Free Users -->
+                <div id="cover-letter-usage-indicator" class="usage-indicator" style="display:none">
+                  <div class="usage-text">
+                    <span id="cover-letter-usage-count">0</span> of <span id="cover-letter-usage-limit">1</span> free generations used today
+                  </div>
+                  <div class="usage-bar">
+                    <div class="usage-fill" id="cover-letter-usage-fill"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Generated Cover Letter -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Generated Cover Letter</h3>
+                  <div class="card-actions">
+                    <button class="button-secondary" id="regenerate-cover-letter-btn" style="display:none">Regenerate</button>
+                    <button class="button-secondary" id="copy-cover-letter-btn" style="display:none">Copy</button>
+                  </div>
+                </div>
+
+                <!-- Inline Soft Gate (appears when quota exceeded) -->
+                <div id="cover-letter-inline-gate" class="inline-soft-gate" style="display:none">
+                  <div class="gate-icon">📝</div>
+                  <h4 class="gate-title">Unlock Professional Cover Letters</h4>
+                  <p class="gate-message">Upgrade to generate unlimited, tailored cover letters and reuse them across applications.</p>
+                  <div class="gate-actions">
+                    <button class="button-primary" onclick="showPaywallModal('generate')">Upgrade to Pro</button>
+                    <button class="button-secondary" onclick="hideInlineGate('cover-letter')">Not now</button>
+                  </div>
+                </div>
+
+                <div id="cover-letter-output" class="generation-output" style="display:none">
+                  <div class="output-content">
+                    <div id="cover-letter-content" class="editable-content" contenteditable="true">
+                      <!-- Generated cover letter will appear here -->
+                    </div>
+                  </div>
+                  
+                  <div class="output-meta">
+                    <div class="meta-item">
+                      <span class="meta-label">Company:</span>
+                      <span id="cover-letter-company-name">-</span>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">Generated with:</span>
+                      <span id="cover-letter-model">-</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="cover-letter-error" class="error-state" style="display:none">
+                  <div class="error-icon">⚠️</div>
+                  <div class="error-message">
+                    <h4>Generation Failed</h4>
+                    <p id="cover-letter-error-text">Something went wrong. Please try again.</p>
+                    <button class="button-secondary" onclick="generateCoverLetter()">Retry</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Referral Message Tab -->
+          <div id="capability-referral" class="capability-content">
+            <div class="grid-2">
+              <!-- Left Column: Referral Controls -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Referral Message Generator</h3>
+                  <p class="card-subtitle">Generate a professional referral request message for networking</p>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Referral Contact Name (Optional)</label>
+                  <input type="text" id="referral-contact-name" class="form-input" placeholder="e.g., John Smith">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Company Name (Optional)</label>
+                  <input type="text" id="referral-company" class="form-input" placeholder="Leave blank to auto-detect from job description">
+                </div>
+
+                <button class="button-primary button-full" id="generate-referral-btn">
+                  <span id="generate-referral-text">Generate Referral Message</span>
+                  <span class="loading" id="generate-referral-loading" style="display:none"></span>
+                </button>
+
+                <!-- Usage Indicator for Free Users -->
+                <div id="referral-usage-indicator" class="usage-indicator" style="display:none">
+                  <div class="usage-text">
+                    <span id="referral-usage-count">0</span> of <span id="referral-usage-limit">1</span> free generations used today
+                  </div>
+                  <div class="usage-bar">
+                    <div class="usage-fill" id="referral-usage-fill"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Generated Referral Message -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Generated Referral Message</h3>
+                  <div class="card-actions">
+                    <button class="button-secondary" id="regenerate-referral-btn" style="display:none">Regenerate</button>
+                    <button class="button-secondary" id="copy-referral-btn" style="display:none">Copy</button>
+                  </div>
+                </div>
+
+                <!-- Inline Soft Gate (appears when quota exceeded) -->
+                <div id="referral-inline-gate" class="inline-soft-gate" style="display:none">
+                  <div class="gate-icon">🤝</div>
+                  <h4 class="gate-title">Unlock Professional Networking</h4>
+                  <p class="gate-message">Upgrade to generate unlimited referral messages and networking templates.</p>
+                  <div class="gate-actions">
+                    <button class="button-primary" onclick="showPaywallModal('generate')">Upgrade to Pro</button>
+                    <button class="button-secondary" onclick="hideInlineGate('referral')">Not now</button>
+                  </div>
+                </div>
+
+                <div id="referral-output" class="generation-output" style="display:none">
+                  <div class="output-content">
+                    <div id="referral-content" class="editable-content" contenteditable="true">
+                      <!-- Generated referral message will appear here -->
+                    </div>
+                  </div>
+                  
+                  <div class="output-meta">
+                    <div class="meta-item">
+                      <span class="meta-label">Company:</span>
+                      <span id="referral-company-name">-</span>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">Role:</span>
+                      <span id="referral-job-title">-</span>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">Generated with:</span>
+                      <span id="referral-model">-</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="referral-error" class="error-state" style="display:none">
+                  <div class="error-icon">⚠️</div>
+                  <div class="error-message">
+                    <h4>Generation Failed</h4>
+                    <p id="referral-error-text">Something went wrong. Please try again.</p>
+                    <button class="button-secondary" onclick="generateReferralMessage()">Retry</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Elevator Pitch Tab -->
+          <div id="capability-elevator-pitch" class="capability-content">
+            <div class="grid-2">
+              <!-- Left Column: Pitch Controls -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Executive Pitch Settings</h3>
+                  <p class="card-subtitle">Generate a role-specific elevator pitch for networking and interviews</p>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Pitch Length</label>
+                  <div class="segmented-control">
+                    <button class="segment-option" data-length="20">20 seconds</button>
+                    <button class="segment-option active" data-length="30">30 seconds</button>
+                    <button class="segment-option" data-length="45">45 seconds</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Target Audience</label>
+                  <select id="pitch-audience" class="form-input">
+                    <option value="recruiter">Recruiter</option>
+                    <option value="hiring-manager" selected>Hiring Manager</option>
+                    <option value="executive">Executive / VP</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Tone</label>
+                  <select id="pitch-tone" class="form-input">
+                    <option value="professional" selected>Professional</option>
+                    <option value="confident">Confident</option>
+                    <option value="consultative">Consultative</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Perspective</label>
+                  <div class="radio-group">
+                    <label class="radio-option">
+                      <input type="radio" name="perspective" value="first-person" checked>
+                      <span class="radio-label">First person ("I")</span>
+                    </label>
+                    <label class="radio-option">
+                      <input type="radio" name="perspective" value="third-person">
+                      <span class="radio-label">Third person ("This candidate")</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button class="button-primary button-full" id="generate-pitch-btn">
+                  <span id="generate-pitch-text">Generate Executive Pitch</span>
+                  <span class="loading" id="generate-pitch-loading" style="display:none"></span>
+                </button>
+
+                <!-- Usage Indicator for Free Users -->
+                <div id="pitch-usage-indicator" class="usage-indicator" style="display:none">
+                  <div class="usage-text">
+                    <span id="pitch-usage-count">0</span> of <span id="pitch-usage-limit">1</span> free generations used today
+                  </div>
+                  <div class="usage-bar">
+                    <div class="usage-fill" id="pitch-usage-fill"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Generated Pitch -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Executive Pitch</h3>
+                  <div class="card-actions">
+                    <button class="button-secondary" id="regenerate-pitch-btn" style="display:none">Regenerate</button>
+                    <button class="button-secondary" id="copy-all-pitch-btn" style="display:none">Copy All</button>
+                  </div>
+                </div>
+
+                <!-- Inline Soft Gate (appears when quota exceeded) -->
+                <div id="pitch-inline-gate" class="inline-soft-gate" style="display:none">
+                  <div class="gate-icon">🚀</div>
+                  <h4 class="gate-title">Unlock Full Access</h4>
+                  <p class="gate-message">Upgrade to generate unlimited, role-specific outputs and reuse them across applications.</p>
+                  <div class="gate-actions">
+                    <button class="button-primary" onclick="showPaywallModal('generate')">Upgrade to Pro</button>
+                    <button class="button-secondary" onclick="hideInlineGate('pitch')">Not now</button>
+                  </div>
+                </div>
+
+                <div id="pitch-output" class="pitch-output" style="display:none">
+                  <!-- Structured Output Sections -->
+                  <div class="pitch-section">
+                    <div class="section-header">
+                      <h4 class="section-title">What I Do</h4>
+                      <button class="copy-section-btn" data-section="what-i-do" data-action="copy">Copy</button>
+                    </div>
+                    <div class="section-content editable" id="section-what-i-do" contenteditable="true">
+                      <!-- Generated content -->
+                    </div>
+                  </div>
+
+                  <div class="pitch-section">
+                    <div class="section-header">
+                      <h4 class="section-title">The Problem I Solve</h4>
+                      <button class="copy-section-btn" data-section="problem-solve" data-action="copy">Copy</button>
+                    </div>
+                    <div class="section-content editable" id="section-problem-solve" contenteditable="true">
+                      <!-- Generated content -->
+                    </div>
+                  </div>
+
+                  <div class="pitch-section">
+                    <div class="section-header">
+                      <h4 class="section-title">What Makes Me Different</h4>
+                      <button class="copy-section-btn" data-section="different" data-action="copy">Copy</button>
+                    </div>
+                    <div class="section-content editable" id="section-different" contenteditable="true">
+                      <!-- Generated content -->
+                    </div>
+                  </div>
+
+                  <div class="pitch-section">
+                    <div class="section-header">
+                      <h4 class="section-title">How I Help the Company</h4>
+                      <button class="copy-section-btn" data-section="help-company" data-action="copy">Copy</button>
+                    </div>
+                    <div class="section-content editable" id="section-help-company" contenteditable="true">
+                      <!-- Generated content -->
+                    </div>
+                  </div>
+
+                  <!-- Output Variants -->
+                  <div class="output-variants">
+                    <div class="variant-tabs">
+                      <button class="variant-tab active" data-variant="full">Full Pitch</button>
+                      <button class="variant-tab" data-variant="bullets">Bullet Version</button>
+                      <button class="variant-tab" data-variant="oneliner">One-Liner</button>
+                    </div>
+
+                    <div class="variant-content">
+                      <div id="variant-full" class="variant-section active">
+                        <div class="variant-output" id="full-pitch-output"></div>
+                        <button class="copy-variant-btn" data-variant="full" data-action="copy">Copy Full Pitch</button>
+                      </div>
+                      <div id="variant-bullets" class="variant-section">
+                        <div class="variant-output" id="bullets-pitch-output"></div>
+                        <button class="copy-variant-btn" data-variant="bullets" data-action="copy">Copy Bullets</button>
+                      </div>
+                      <div id="variant-oneliner" class="variant-section">
+                        <div class="variant-output" id="oneliner-pitch-output"></div>
+                        <button class="copy-variant-btn" data-variant="oneliner" data-action="copy">Copy One-Liner</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Cross-Feature Actions -->
+                  <div class="cross-feature-actions">
+                    <h4 class="actions-title">Use This Pitch</h4>
+                    <div class="action-buttons">
+                      <button class="button-secondary" id="use-in-cover-letter" data-action="reuse">Use in Cover Letter</button>
+                      <button class="button-secondary" id="use-in-referral" data-action="reuse">Use in Referral Message</button>
+                      <button class="button-secondary" id="copy-for-interview" data-action="save">Save for Interview Prep</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="pitch-empty-state" class="empty-state">
+                  <div class="empty-icon">🎯</div>
+                  <h4>Generate Your Executive Pitch</h4>
+                  <p>Create a compelling 30-second pitch tailored to your target role and audience.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resume Optimizer Tab -->
+      <section class="section" id="tab-optimizer">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Resume Optimizer</h2>
+            <p class="card-subtitle">
+              Optimize your resume for ATS systems and specific job requirements to increase your interview chances.
+            </p>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Current Resume</label>
+              <div class="upload-zone" id="optimizer-upload-zone">
+                <input type="file" id="optimizer-resume-input" accept=".pdf,.doc,.docx" style="display: none;">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Upload resume to optimize</div>
+                <div class="upload-subtext">PDF, DOC, or DOCX</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Target Job Description</label>
+              <textarea 
+                id="optimizer-job-description" 
+                class="form-input form-textarea"
+                placeholder="Paste the job description you're targeting..."
+              ></textarea>
+            </div>
+          </div>
+
+          <button class="button-primary button-full" id="optimize-resume-btn" disabled>
+            <span id="optimize-btn-text">Optimize Resume</span>
+            <span class="loading" id="optimize-loading" style="display:none"></span>
+          </button>
+        </div>
+
+        <div id="optimizer-results" class="results-container" style="display: none;">
+          <!-- Optimization results will be populated here -->
+        </div>
+      </section>
+
+      <!-- Job Matching Tab -->
+      <section class="section" id="tab-search">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">AI Job Matching</h2>
+            <p class="card-subtitle">
+              Find jobs that match your profile and get ranked recommendations based on your resume analysis.
+            </p>
+          </div>
+          
+          <div class="upload-zone" id="search-upload-zone">
+            <input type="file" id="search-resume-input" accept=".pdf,.doc,.docx" style="display: none;">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Upload resume to find matching jobs</div>
+            <div class="upload-subtext">We'll extract your profile and find relevant opportunities</div>
+            <div class="file-name" id="search-file-name"></div>
+          </div>
+          
+          <button class="button-primary button-full" id="extract-btn" disabled>
+            <span id="extract-btn-text">Extract Profile & Find Jobs</span>
+            <span class="loading" id="extract-loading" style="display:none"></span>
+          </button>
+        </div>
+
+        <div id="job-results" class="results-container" style="display:none">
+          <!-- Job matching results will be populated here -->
+        </div>
+      </section>
+
+      <!-- Target Companies Tab -->
+      <section class="section" id="tab-companies">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Target Companies</h2>
+            <p class="card-subtitle">
+              Manage your target companies and track job opportunities at organizations you want to work for.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: var(--space-md); margin-bottom: var(--space-lg);">
+            <button class="button-primary">Add Company</button>
+            <button class="button-secondary">Browse Suggestions</button>
+            <button class="button-secondary">Search Selected</button>
+          </div>
+
+          <div id="companies-container">
+            <div style="text-align: center; padding: var(--space-xl); color: var(--color-text-muted);">
+              <div style="font-size: 3rem; margin-bottom: var(--space-md);">🏢</div>
+              <h3 style="margin-bottom: var(--space-sm); color: var(--color-text-primary);">No target companies yet</h3>
+              <p>Add companies you're interested in working for to track their job openings</p>
+              <button class="button-primary" style="margin-top: var(--space-md);">
+                Get Started with Suggestions
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Networking Tab -->
+      <section class="section" id="tab-networking">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Networking - ICA Management</h2>
+            <p class="card-subtitle">
+              Import and categorize your LinkedIn contacts to identify Ideal Contact Advocates (ICAs) who can help with referrals and networking.
+            </p>
+          </div>
+          
+          <div class="grid-2">
+            <!-- Left Column: Upload -->
+            <div class="form-group">
+              <label class="form-label">Import LinkedIn Contacts</label>
+              <div class="upload-zone" id="networking-upload-zone">
+                <input type="file" id="networking-csv-input" accept=".csv" style="display: none;">
+                <div class="upload-icon">📊</div>
+                <div class="upload-text">Drop your LinkedIn Connections.csv here or click to browse</div>
+                <div class="upload-subtext">Export from LinkedIn: My Network → Connections → Manage synced and imported contacts → Export contacts</div>
+                <div class="file-name" id="networking-file-name"></div>
+              </div>
+            </div>
+            
+            <!-- Right Column: Instructions -->
+            <div class="form-group">
+              <label class="form-label">How to Export from LinkedIn</label>
+              <div class="instructions-card">
+                <ol class="instructions-list">
+                  <li>Go to <strong>LinkedIn.com</strong> → <strong>My Network</strong></li>
+                  <li>Click <strong>Connections</strong> in the left sidebar</li>
+                  <li>Click <strong>Manage synced and imported contacts</strong></li>
+                  <li>Click <strong>Export contacts</strong></li>
+                  <li>Download the <strong>Connections.csv</strong> file</li>
+                  <li>Upload it here to analyze your network</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <button class="button-primary button-full" id="upload-networking-btn" disabled>
+            <span id="upload-networking-text">Upload & Analyze Contacts</span>
+            <span class="loading" id="upload-networking-loading" style="display:none"></span>
+          </button>
+        </div>
+
+        <!-- Contacts Analysis Results -->
+        <div id="networking-results" class="results-container" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Contact Analysis Results</h3>
+              <div class="card-actions">
+                <button class="button-secondary" id="export-contacts-btn">Export Analysis</button>
+                <button class="button-secondary" id="clear-contacts-btn">Clear Data</button>
+              </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-number" id="total-contacts">0</div>
+                <div class="stat-label">Total Contacts</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="ica-contacts">0</div>
+                <div class="stat-label">Potential ICAs</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="target-companies">0</div>
+                <div class="stat-label">Target Companies</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="recent-connections">0</div>
+                <div class="stat-label">Recent Connections</div>
+              </div>
+            </div>
+
+            <!-- Contacts Table -->
+            <div class="table-container">
+              <table class="contacts-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Position</th>
+                    <th>ICA Category</th>
+                    <th>Connected</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="contacts-table-body">
+                  <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--color-text-muted);">
+                      No contacts found. Upload your LinkedIn Connections CSV to get started.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Paywall Modal -->
+  <div class="modal-overlay" id="paywall-modal" style="display: none;"></div>
+    <div class="modal paywall-modal">
+      <button class="modal-close" onclick="hidePaywallModal()">&times;</button>
+      
+      <div class="modal-header">
+        <h2>Unlock Professional Positioning</h2>
+        <p>Generate elevator pitches, cover letters, and referral messages tailored to every role.</p>
+      </div>
+      
+      <div class="paywall-content">
+        <div class="paywall-benefits">
+          <div class="benefit-item">
+            <div class="benefit-icon">🚀</div>
+            <div class="benefit-text">
+              <h4>Unlimited Generations</h4>
+              <p>Create as many pitches, cover letters, and referral messages as you need</p>
+            </div>
+          </div>
+          
+          <div class="benefit-item">
+            <div class="benefit-icon">🔄</div>
+            <div class="benefit-text">
+              <h4>Regenerate & Refine</h4>
+              <p>Perfect your messaging with unlimited regeneration options</p>
+            </div>
+          </div>
+          
+          <div class="benefit-item">
+            <div class="benefit-icon">📋</div>
+            <div class="benefit-text">
+              <h4>Copy & Export</h4>
+              <p>Copy sections or full outputs for immediate use in applications</p>
+            </div>
+          </div>
+          
+          <div class="benefit-item">
+            <div class="benefit-icon">🔗</div>
+            <div class="benefit-text">
+              <h4>Reuse Across Applications</h4>
+              <p>Use your elevator pitch in cover letters and referral messages</p>
+            </div>
+          </div>
+          
+          <div class="benefit-item">
+            <div class="benefit-icon">💾</div>
+            <div class="benefit-text">
+              <h4>Save Multiple Versions</h4>
+              <p>Keep different versions for different roles and companies</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="paywall-pricing">
+          <div class="pricing-card">
+            <div class="pricing-header">
+              <h3>Pro</h3>
+              <div class="price">
+                <span class="price-amount">$29</span>
+                <span class="price-period">/month</span>
+              </div>
+              <p class="price-note">Cancel anytime</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="paywall-actions">
+          <button class="button-primary button-full" id="upgrade-stripe-btn">
+            <span>Upgrade with Stripe</span>
+          </button>
+          <button class="button-secondary button-full" onclick="hidePaywallModal()">
+            Maybe later
+          </button>
+        </div>
+        
+        <div class="paywall-footer">
+          <p>✓ Secure payment with Stripe</p>
+          <p>✓ Cancel anytime from your account</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab Navigation
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // File Upload Handlers
+    function setupFileUpload(zoneId, inputId, callback) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(inputId);
+      
+      zone.addEventListener('click', () => input.click());
+      zone.addEventListener('dragover', e => {
+        e.preventDefault();
+        zone.style.borderColor = 'var(--color-primary-500)';
+      });
+      zone.addEventListener('dragleave', () => {
+        zone.style.borderColor = 'var(--color-border-muted)';
+      });
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        if (e.dataTransfer.files[0]) callback(e.dataTransfer.files[0]);
+      });
+      input.addEventListener('change', e => {
+        if (e.target.files[0]) callback(e.target.files[0]);
+      });
+    }
+
+    // Setup file uploads
+    setupFileUpload('analyze-upload-zone', 'analyze-resume-input', handleAnalyzeFile);
+    setupFileUpload('optimizer-upload-zone', 'optimizer-resume-input', handleOptimizerFile);
+    setupFileUpload('search-upload-zone', 'search-resume-input', handleSearchFile);
+
+    function handleAnalyzeFile(file) {
+      if (!file.name.match(/\.(pdf|doc|docx)$/i)) {
+        showToast('Please upload PDF or Word document', 'error');
+        return;
+      }
+      
+      // Store file for analysis
+      window.analyzeFile = file;
+      
+      document.getElementById('analyze-file-name').textContent = '✓ ' + file.name;
+      document.getElementById('analyze-upload-zone').classList.add('has-file');
+      checkAnalyzeReady();
+    }
+
+    function handleOptimizerFile(file) {
+      if (!file.name.match(/\.(pdf|doc|docx)$/i)) {
+        showToast('Please upload PDF or Word document', 'error');
+        return;
+      }
+      document.getElementById('optimizer-upload-zone').classList.add('has-file');
+      checkOptimizerReady();
+    }
+
+    function handleSearchFile(file) {
+      if (!file.name.match(/\.(pdf|doc|docx)$/i)) {
+        showToast('Please upload PDF or Word document', 'error');
+        return;
+      }
+      document.getElementById('search-file-name').textContent = '✓ ' + file.name;
+      document.getElementById('search-upload-zone').classList.add('has-file');
+      document.getElementById('extract-btn').disabled = false;
+    }
+
+    function checkAnalyzeReady() {
+      const hasFile = document.getElementById('analyze-upload-zone').classList.contains('has-file');
+      const hasJobDesc = document.getElementById('job-description').value.trim().length > 0;
+      document.getElementById('analyze-btn').disabled = !(hasFile && hasJobDesc);
+    }
+
+    // Handle analyze button click
+    async function handleAnalyzeClick() {
+      console.log('🔍 Analyze button clicked'); // Debug log
+      
+      const analyzeBtn = document.getElementById('analyze-btn');
+      const btnText = document.getElementById('analyze-btn-text');
+      const loadingSpinner = document.getElementById('analyze-loading');
+      const jobDescInput = document.getElementById('job-description');
+      const llmProviderSelect = document.getElementById('llm-provider-select');
+      
+      // Validation
+      if (!window.analyzeFile) {
+        showToast('No resume file selected', 'error');
+        return;
+      }
+      
+      const jobDescription = jobDescInput.value.trim();
+      if (!jobDescription || jobDescription.length < 50) {
+        showToast('Job description must be at least 50 characters', 'error');
+        return;
+      }
+      
+      try {
+        // Show loading state
+        analyzeBtn.disabled = true;
+        btnText.textContent = 'Analyzing...';
+        loadingSpinner.style.display = 'inline-block';
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('resume', window.analyzeFile);
+        formData.append('jobDescription', jobDescription);
+        
+        // Add LLM provider if selected
+        const selectedProvider = llmProviderSelect.value;
+        if (selectedProvider) {
+          formData.append('llmProvider', selectedProvider);
+        }
+        
+        console.log('📤 Sending analysis request to /api/analyze-match'); // Debug log
+        
+        // Make API request
+        const response = await fetch('/api/analyze-match', {
+          method: 'POST',
+          body: formData
+        });
+        
+        console.log('📥 Response status:', response.status); // Debug log
+        
+        const result = await response.json();
+        console.log('📥 Response data:', result); // Debug log
+        
+        if (!response.ok) {
+          throw new Error(result.error || `HTTP ${response.status}`);
+        }
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Analysis failed');
+        }
+        
+        // Display results
+        displayAnalysisResults(result.data);
+        
+        // Show success message
+        showToast('Analysis completed successfully!', 'success');
+        
+      } catch (error) {
+        console.error('❌ Analysis error:', error);
+        showToast(error.message || 'Analysis failed. Please try again.', 'error');
+      } finally {
+        // Reset button state
+        analyzeBtn.disabled = false;
+        btnText.textContent = 'Analyze Resume Match';
+        loadingSpinner.style.display = 'none';
+      }
+    }
+
+    // Display analysis results
+    function displayAnalysisResults(data) {
+      console.log('📊 Displaying analysis results:', data);
+      
+      const resultsContainer = document.getElementById('analysis-results');
+      
+      // Show results container
+      resultsContainer.style.display = 'block';
+      
+      // Scroll to results
+      resultsContainer.scrollIntoView({ behavior: 'smooth' });
+      
+      // Update overall score
+      const overallScore = data.overallScore || 0;
+      document.getElementById('overall-score').textContent = overallScore + '%';
+      
+      // Update verdict
+      const verdict = data.verdict || 'Analysis Complete';
+      document.getElementById('match-verdict').textContent = verdict;
+      
+      // Update summary
+      const summary = data.summary || 'Analysis completed successfully.';
+      document.getElementById('match-summary').textContent = summary;
+      
+      // Update six-second scan if available
+      if (data.sixSecondScan) {
+        const scanSection = document.getElementById('six-second-scan');
+        if (scanSection) {
+          scanSection.innerHTML = `
+            <h4>Six-Second Scan Results</h4>
+            <p><strong>First Impression:</strong> ${data.sixSecondScan.firstImpression || 'N/A'}</p>
+            <p><strong>Would Read More:</strong> ${data.sixSecondScan.wouldReadMore ? 'Yes' : 'No'}</p>
+            <p><strong>Reason:</strong> ${data.sixSecondScan.whyOrWhyNot || 'N/A'}</p>
+          `;
+        }
+      }
+      
+      // Update ATS analysis if available
+      if (data.atsAnalysis) {
+        const atsSection = document.getElementById('ats-analysis');
+        if (atsSection) {
+          atsSection.innerHTML = `
+            <h4>ATS Analysis</h4>
+            <p><strong>ATS Score:</strong> ${data.atsAnalysis.score || 0}%</p>
+            <p><strong>Likely to Pass:</strong> ${data.atsAnalysis.likelyToPass ? 'Yes' : 'No'}</p>
+            <p><strong>Keywords Found:</strong> ${(data.atsAnalysis.keywordsFound || []).join(', ') || 'None'}</p>
+            <p><strong>Missing Keywords:</strong> ${(data.atsAnalysis.criticalKeywordsMissing || []).join(', ') || 'None'}</p>
+          `;
+        }
+      }
+      
+      // Update strengths if available
+      if (data.strengths && data.strengths.length > 0) {
+        const strengthsSection = document.getElementById('strengths-list');
+        if (strengthsSection) {
+          strengthsSection.innerHTML = data.strengths.map(strength => `
+            <div class="strength-item">
+              <h5>${strength.skill || 'Strength'}</h5>
+              <p>${strength.howItHelps || 'Beneficial for the role'}</p>
+            </div>
+          `).join('');
+        }
+      }
+      
+      // Update dealbreakers if available
+      if (data.dealbreakers && data.dealbreakers.length > 0) {
+        const dealbreakerSection = document.getElementById('dealbreakers-list');
+        if (dealbreakerSection) {
+          dealbreakerSection.innerHTML = data.dealbreakers.map(dealbreaker => `
+            <div class="dealbreaker-item">
+              <h5>${dealbreaker.requirement || 'Issue'}</h5>
+              <p><strong>Status:</strong> ${dealbreaker.status || 'Unknown'}</p>
+              <p><strong>Fix:</strong> ${dealbreaker.urgentFix || 'Address this requirement'}</p>
+            </div>
+          `).join('');
+        }
+      }
+      
+      // Update recommendations if available
+      if (data.resumeRewrites && data.resumeRewrites.length > 0) {
+        const recommendationsSection = document.getElementById('recommendations-list');
+        if (recommendationsSection) {
+          recommendationsSection.innerHTML = data.resumeRewrites.map(rewrite => `
+            <div class="recommendation-item">
+              <h5>${rewrite.section || 'Recommendation'}</h5>
+              <p><strong>Current:</strong> ${rewrite.currentText || 'N/A'}</p>
+              <p><strong>Improved:</strong> ${rewrite.rewrittenText || 'N/A'}</p>
+              <p><strong>Why Better:</strong> ${rewrite.whyBetter || 'Improvement needed'}</p>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    function checkOptimizerReady() {
+      const hasFile = document.getElementById('optimizer-upload-zone').classList.contains('has-file');
+      const hasJobDesc = document.getElementById('optimizer-job-description').value.trim().length > 0;
+      document.getElementById('optimize-resume-btn').disabled = !(hasFile && hasJobDesc);
+    }
+
+    // Event listeners
+    document.getElementById('job-description').addEventListener('input', checkAnalyzeReady);
+    document.getElementById('optimizer-job-description').addEventListener('input', checkOptimizerReady);
+
+    // Add click handler for analyze button
+    document.getElementById('analyze-btn').addEventListener('click', handleAnalyzeClick);
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load LLM providers or other initialization
+      console.log('JobMatch AI initialized');
+      loadLLMProviders();
+      initializeElevatorPitch();
+      initializePaywallSystem();
+    });
+
+    // Load LLM providers for the dropdown
+    async function loadLLMProviders() {
+      try {
+        const response = await fetch('/api/llm-providers');
+        const data = await response.json();
+        
+        if (data.success && data.data.providers) {
+          const select = document.getElementById('llm-provider-select');
+          
+          // Clear loading option
+          select.innerHTML = '';
+          
+          // Add providers
+          data.data.providers.forEach(provider => {
+            const option = document.createElement('option');
+            option.value = provider.name;
+            option.textContent = provider.displayName;
+            option.disabled = !provider.available;
+            
+            // Mark default provider as selected
+            if (provider.name === data.data.default) {
+              option.selected = true;
+            }
+            
+            select.appendChild(option);
+          });
+          
+          console.log(`✅ Loaded ${data.data.providers.length} LLM providers`);
+        } else {
+          console.error('Failed to load LLM providers:', data.error);
+          const select = document.getElementById('llm-provider-select');
+          select.innerHTML = '<option value="">No AI models available</option>';
+        }
+      } catch (error) {
+        console.error('Error loading LLM providers:', error);
+        const select = document.getElementById('llm-provider-select');
+        select.innerHTML = '<option value="">Error loading AI models</option>';
+      }
+    }
+
+    // ========== COVER LETTER GENERATION ==========
+    async function generateCoverLetter() {
+      console.log('📝 Generating cover letter...');
+      
+      // Check if analysis has been run
+      if (!window.currentAnalysisData || !window.currentSessionId) {
+        showToast('Please run Match Analysis first', 'error');
+        // Switch to match analysis tab
+        document.querySelectorAll('.switcher-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.capability-content').forEach(c => c.classList.remove('active'));
+        document.querySelector('[data-capability="match"]').classList.add('active');
+        document.getElementById('capability-match').classList.add('active');
+        return;
+      }
+
+      // Check quota before generation
+      if (!checkGenerationQuota('coverLetter')) {
+        return;
+      }
+
+      const generateBtn = document.getElementById('generate-cover-letter-btn');
+      const regenerateBtn = document.getElementById('regenerate-cover-letter-btn');
+      const loadingSpinner = document.getElementById('generate-cover-letter-loading');
+      const btnText = document.getElementById('generate-cover-letter-text');
+      const outputDiv = document.getElementById('cover-letter-output');
+      const errorDiv = document.getElementById('cover-letter-error');
+      const companyInput = document.getElementById('cover-letter-company');
+
+      try {
+        // Show loading state
+        generateBtn.disabled = true;
+        btnText.textContent = 'Generating...';
+        loadingSpinner.style.display = 'inline-block';
+        outputDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        // Get job description from the analysis
+        const jobDescription = document.getElementById('job-description').value.trim();
+        const companyName = companyInput.value.trim() || null;
+
+        // Prepare request payload
+        const payload = {
+          sessionId: window.currentSessionId,
+          jobDescription: jobDescription,
+          analysisData: window.currentAnalysisData,
+          companyName: companyName
+        };
+
+        console.log('📤 Sending cover letter request to /api/generate-specific-cover-letter');
+
+        // Make API request
+        const response = await fetch('/api/generate-specific-cover-letter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        console.log('📥 Cover letter response status:', response.status);
+
+        const result = await response.json();
+        console.log('📥 Cover letter response data:', result);
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Generation failed');
+        }
+
+        if (result.success && result.data) {
+          // Display the generated cover letter
+          const contentDiv = document.getElementById('cover-letter-content');
+          const companyNameSpan = document.getElementById('cover-letter-company-name');
+          const modelSpan = document.getElementById('cover-letter-model');
+
+          contentDiv.textContent = result.data.coverLetter;
+          companyNameSpan.textContent = result.data.companyName || 'Unknown';
+          modelSpan.textContent = result.data.modelUsed || 'AI';
+
+          // Show output and action buttons
+          outputDiv.style.display = 'block';
+          regenerateBtn.style.display = 'inline-block';
+          document.getElementById('copy-cover-letter-btn').style.display = 'inline-block';
+
+          // Update usage count
+          incrementUsageCount('coverLetter');
+
+          showToast('Cover letter generated successfully!', 'success');
+        } else {
+          throw new Error('Invalid response format');
+        }
+
+      } catch (error) {
+        console.error('❌ Cover letter generation error:', error);
+        
+        // Show error state
+        const errorTextElement = document.getElementById('cover-letter-error-text');
+        errorTextElement.textContent = error.message || 'Something went wrong. Please try again.';
+        errorDiv.style.display = 'block';
+        
+        showToast('Cover letter generation failed', 'error');
+      } finally {
+        // Reset loading state
+        generateBtn.disabled = false;
+        btnText.textContent = 'Generate Cover Letter';
+        loadingSpinner.style.display = 'none';
+      }
+    }
+
+    // ========== REFERRAL MESSAGE GENERATION ==========
+    async function generateReferralMessage() {
+      console.log('🤝 Generating referral message...');
+      
+      // Check if analysis has been run
+      if (!window.currentAnalysisData || !window.currentSessionId) {
+        showToast('Please run Match Analysis first', 'error');
+        // Switch to match analysis tab
+        document.querySelectorAll('.switcher-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.capability-content').forEach(c => c.classList.remove('active'));
+        document.querySelector('[data-capability="match"]').classList.add('active');
+        document.getElementById('capability-match').classList.add('active');
+        return;
+      }
+
+      // Check quota before generation
+      if (!checkGenerationQuota('referral')) {
+        return;
+      }
+
+      const generateBtn = document.getElementById('generate-referral-btn');
+      const regenerateBtn = document.getElementById('regenerate-referral-btn');
+      const loadingSpinner = document.getElementById('generate-referral-loading');
+      const btnText = document.getElementById('generate-referral-text');
+      const outputDiv = document.getElementById('referral-output');
+      const errorDiv = document.getElementById('referral-error');
+      const contactNameInput = document.getElementById('referral-contact-name');
+      const companyInput = document.getElementById('referral-company');
+
+      try {
+        // Show loading state
+        generateBtn.disabled = true;
+        btnText.textContent = 'Generating...';
+        loadingSpinner.style.display = 'inline-block';
+        outputDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        // Get job description from the analysis
+        const jobDescription = document.getElementById('job-description').value.trim();
+        const referralName = contactNameInput.value.trim() || null;
+        const companyName = companyInput.value.trim() || null;
+
+        // Prepare request payload
+        const payload = {
+          sessionId: window.currentSessionId,
+          jobDescription: jobDescription,
+          analysisData: window.currentAnalysisData,
+          companyName: companyName,
+          referralName: referralName
+        };
+
+        console.log('📤 Sending referral request to /api/generate-referral-message');
+
+        // Make API request
+        const response = await fetch('/api/generate-referral-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        console.log('📥 Referral response status:', response.status);
+
+        const result = await response.json();
+        console.log('📥 Referral response data:', result);
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Generation failed');
+        }
+
+        if (result.success && result.data) {
+          // Display the generated referral message
+          const contentDiv = document.getElementById('referral-content');
+          const companyNameSpan = document.getElementById('referral-company-name');
+          const jobTitleSpan = document.getElementById('referral-job-title');
+          const modelSpan = document.getElementById('referral-model');
+
+          contentDiv.textContent = result.data.referralMessage;
+          companyNameSpan.textContent = result.data.companyName || 'Unknown';
+          jobTitleSpan.textContent = result.data.jobTitle || 'Unknown';
+          modelSpan.textContent = result.data.modelUsed || 'AI';
+
+          // Show output and action buttons
+          outputDiv.style.display = 'block';
+          regenerateBtn.style.display = 'inline-block';
+          document.getElementById('copy-referral-btn').style.display = 'inline-block';
+
+          // Update usage count
+          incrementUsageCount('referral');
+
+          showToast('Referral message generated successfully!', 'success');
+        } else {
+          throw new Error('Invalid response format');
+        }
+
+      } catch (error) {
+        console.error('❌ Referral generation error:', error);
+        
+        // Show error state
+        const errorTextElement = document.getElementById('referral-error-text');
+        errorTextElement.textContent = error.message || 'Something went wrong. Please try again.';
+        errorDiv.style.display = 'block';
+        
+        showToast('Referral generation failed', 'error');
+      } finally {
+        // Reset loading state
+        generateBtn.disabled = false;
+        btnText.textContent = 'Generate Referral Message';
+        loadingSpinner.style.display = 'none';
+      }
+    }
+
+    // ========== COVER LETTER GENERATION ==========
+    async function generateCoverLetter() {
+      console.log('📝 Generating cover letter...');
+      
+      // Check if analysis has been run
+      if (!window.currentAnalysisData || !window.currentSessionId) {
+        showToast('Please run Match Analysis first', 'error');
+        return;
+      }
+
+      const generateBtn = document.getElementById('generate-cover-letter-btn');
+      const loadingSpinner = document.getElementById('generate-cover-letter-loading');
+      const btnText = document.getElementById('generate-cover-letter-text');
+      const outputDiv = document.getElementById('cover-letter-output');
+      const errorDiv = document.getElementById('cover-letter-error');
+      const companyInput = document.getElementById('cover-letter-company');
+
+      try {
+        // Show loading state
+        generateBtn.disabled = true;
+        btnText.textContent = 'Generating...';
+        loadingSpinner.style.display = 'inline-block';
+        if (outputDiv) outputDiv.style.display = 'none';
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        // Get job description from the analysis
+        const jobDescription = document.getElementById('job-description').value.trim();
+        const companyName = companyInput ? companyInput.value.trim() || null : null;
+
+        // Prepare request payload
+        const payload = {
+          sessionId: window.currentSessionId,
+          jobDescription: jobDescription,
+          analysisData: window.currentAnalysisData,
+          companyName: companyName
+        };
+
+        console.log('📤 Sending cover letter request to /api/generate-specific-cover-letter');
+
+        // Make API request
+        const response = await fetch('/api/generate-specific-cover-letter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        console.log('📥 Cover letter response status:', response.status);
+
+        const result = await response.json();
+        console.log('📥 Cover letter response data:', result);
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Generation failed');
+        }
+
+        if (result.success && result.data) {
+          // Display the generated cover letter
+          const contentDiv = document.getElementById('cover-letter-content');
+          const companyNameSpan = document.getElementById('cover-letter-company-name');
+          const modelSpan = document.getElementById('cover-letter-model');
+
+          if (contentDiv) contentDiv.textContent = result.data.coverLetter;
+          if (companyNameSpan) companyNameSpan.textContent = result.data.companyName || 'Unknown';
+          if (modelSpan) modelSpan.textContent = result.data.modelUsed || 'AI';
+
+          // Show output and action buttons
+          if (outputDiv) outputDiv.style.display = 'block';
+          const regenerateBtn = document.getElementById('regenerate-cover-letter-btn');
+          const copyBtn = document.getElementById('copy-cover-letter-btn');
+          if (regenerateBtn) regenerateBtn.style.display = 'inline-block';
+          if (copyBtn) copyBtn.style.display = 'inline-block';
+
+          showToast('Cover letter generated successfully!', 'success');
+        } else {
+          throw new Error('Invalid response format');
+        }
+
+      } catch (error) {
+        console.error('❌ Cover letter generation error:', error);
+        
+        // Show error state
+        if (errorDiv) {
+          const errorTextElement = document.getElementById('cover-letter-error-text');
+          if (errorTextElement) errorTextElement.textContent = error.message || 'Something went wrong. Please try again.';
+          errorDiv.style.display = 'block';
+        }
+        
+        showToast('Cover letter generation failed', 'error');
+      } finally {
+        // Reset loading state
+        generateBtn.disabled = false;
+        btnText.textContent = 'Generate Cover Letter';
+        loadingSpinner.style.display = 'none';
+      }
+    }
+
+    // ========== REFERRAL MESSAGE GENERATION ==========
+    async function generateReferralMessage() {
+      console.log('🤝 Generating referral message...');
+      
+      // Check if analysis has been run
+      if (!window.currentAnalysisData || !window.currentSessionId) {
+        showToast('Please run Match Analysis first', 'error');
+        return;
+      }
+
+      const generateBtn = document.getElementById('generate-referral-btn');
+      const loadingSpinner = document.getElementById('generate-referral-loading');
+      const btnText = document.getElementById('generate-referral-text');
+      const outputDiv = document.getElementById('referral-output');
+      const errorDiv = document.getElementById('referral-error');
+      const contactNameInput = document.getElementById('referral-contact-name');
+      const companyInput = document.getElementById('referral-company');
+
+      try {
+        // Show loading state
+        generateBtn.disabled = true;
+        btnText.textContent = 'Generating...';
+        loadingSpinner.style.display = 'inline-block';
+        if (outputDiv) outputDiv.style.display = 'none';
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        // Get job description from the analysis
+        const jobDescription = document.getElementById('job-description').value.trim();
+        const referralName = contactNameInput ? contactNameInput.value.trim() || null : null;
+        const companyName = companyInput ? companyInput.value.trim() || null : null;
+
+        // Prepare request payload
+        const payload = {
+          sessionId: window.currentSessionId,
+          jobDescription: jobDescription,
+          analysisData: window.currentAnalysisData,
+          companyName: companyName,
+          referralName: referralName
+        };
+
+        console.log('📤 Sending referral request to /api/generate-referral-message');
+
+        // Make API request
+        const response = await fetch('/api/generate-referral-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        console.log('📥 Referral response status:', response.status);
+
+        const result = await response.json();
+        console.log('📥 Referral response data:', result);
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Generation failed');
+        }
+
+        if (result.success && result.data) {
+          // Display the generated referral message
+          const contentDiv = document.getElementById('referral-content');
+          const companyNameSpan = document.getElementById('referral-company-name');
+          const jobTitleSpan = document.getElementById('referral-job-title');
+          const modelSpan = document.getElementById('referral-model');
+
+          if (contentDiv) contentDiv.textContent = result.data.referralMessage;
+          if (companyNameSpan) companyNameSpan.textContent = result.data.companyName || 'Unknown';
+          if (jobTitleSpan) jobTitleSpan.textContent = result.data.jobTitle || 'Unknown';
+          if (modelSpan) modelSpan.textContent = result.data.modelUsed || 'AI';
+
+          // Show output and action buttons
+          if (outputDiv) outputDiv.style.display = 'block';
+          const regenerateBtn = document.getElementById('regenerate-referral-btn');
+          const copyBtn = document.getElementById('copy-referral-btn');
+          if (regenerateBtn) regenerateBtn.style.display = 'inline-block';
+          if (copyBtn) copyBtn.style.display = 'inline-block';
+
+          showToast('Referral message generated successfully!', 'success');
+        } else {
+          throw new Error('Invalid response format');
+        }
+
+      } catch (error) {
+        console.error('❌ Referral generation error:', error);
+        
+        // Show error state
+        if (errorDiv) {
+          const errorTextElement = document.getElementById('referral-error-text');
+          if (errorTextElement) errorTextElement.textContent = error.message || 'Something went wrong. Please try again.';
+          errorDiv.style.display = 'block';
+        }
+        
+        showToast('Referral generation failed', 'error');
+      } finally {
+        // Reset loading state
+        generateBtn.disabled = false;
+        btnText.textContent = 'Generate Referral Message';
+        loadingSpinner.style.display = 'none';
+      }
+    }
+
+    // ========== COPY FUNCTIONS ==========
+    function copyCoverLetter() {
+      if (!userEntitlements.capabilities.canCopy) {
+        showPaywallModal('copy');
+        return;
+      }
+      
+      const content = document.getElementById('cover-letter-content').textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        showToast('Cover letter copied to clipboard!', 'success');
+        trackPaywallEvent('copy_success', { feature: 'cover_letter' });
+      }).catch(() => {
+        showToast('Failed to copy to clipboard', 'error');
+      });
+    }
+
+    function copyReferralMessage() {
+      if (!userEntitlements.capabilities.canCopy) {
+        showPaywallModal('copy');
+        return;
+      }
+      
+      const content = document.getElementById('referral-content').textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        showToast('Referral message copied to clipboard!', 'success');
+        trackPaywallEvent('copy_success', { feature: 'referral' });
+      }).catch(() => {
+        showToast('Failed to copy to clipboard', 'error');
+      });
+    }
+    function copyCoverLetter() {
+      if (!userEntitlements.capabilities.canCopy) {
+        showPaywallModal('copy');
+        return;
+      }
+      
+      const content = document.getElementById('cover-letter-content').textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        showToast('Cover letter copied to clipboard!', 'success');
+        trackPaywallEvent('copy_success', { feature: 'cover_letter' });
+      }).catch(() => {
+        showToast('Failed to copy to clipboard', 'error');
+      });
+    }
+
+    function copyReferralMessage() {
+      if (!userEntitlements.capabilities.canCopy) {
+        showPaywallModal('copy');
+        return;
+      }
+      
+      const content = document.getElementById('referral-content').textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        showToast('Referral message copied to clipboard!', 'success');
+        trackPaywallEvent('copy_success', { feature: 'referral' });
+      }).catch(() => {
+        showToast('Failed to copy to clipboard', 'error');
+      });
+    }
+
+    // ========== PAYWALL SYSTEM ==========
+    let userEntitlements = {
+      isPro: false,
+      limits: {
+        elevatorPitch: 1,
+        coverLetter: 1,
+        referral: 1
+      },
+      usage: {
+        elevatorPitch: 0,
+        coverLetter: 0,
+        referral: 0
+      },
+      capabilities: {
+        canGenerateUnlimited: false,
+        canRegenerate: false,
+        canCopy: false,
+        canSave: false,
+        canReuseAcrossFeatures: false
+      }
+    };
+
+    function initializePaywallSystem() {
+      // Load user entitlements from API or localStorage (for demo)
+      loadUserEntitlements();
+      
+      // Update UI based on entitlements
+      updateUIForEntitlements();
+      
+      // Set up paywall event listeners
+      setupPaywallListeners();
+      
+      // Add dev mode controls if in development
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        addDevModeControls();
+      }
+    }
+
+    function addDevModeControls() {
+      // Create dev mode panel
+      const devPanel = document.createElement('div');
+      devPanel.id = 'dev-mode-panel';
+      devPanel.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 12px;
+        z-index: 9999;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      `;
+      
+      devPanel.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 8px;">🛠️ Dev Mode</div>
+        <button onclick="toggleProStatus()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">
+          ${userEntitlements.isPro ? 'Switch to Free' : 'Switch to Pro'}
+        </button>
+        <button onclick="resetUsage()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">
+          Reset Usage
+        </button>
+        <button onclick="testPaywall()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">
+          Test Paywall
+        </button>
+        <div style="margin-top: 5px; font-size: 10px;">
+          Status: ${userEntitlements.isPro ? 'Pro' : 'Free'}<br>
+          Usage: ${userEntitlements.usage.elevatorPitch}/${userEntitlements.limits.elevatorPitch}
+        </div>
+      `;
+      
+      document.body.appendChild(devPanel);
+    }
+
+    function toggleProStatus() {
+      userEntitlements.isPro = !userEntitlements.isPro;
+      
+      if (userEntitlements.isPro) {
+        simulateSuccessfulUpgrade();
+      } else {
+        // Reset to free tier
+        userEntitlements.capabilities = {
+          canGenerateUnlimited: false,
+          canCopy: false,
+          canSave: false,
+          canReuseAcrossFeatures: false,
+          canRegenerate: false
+        };
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('userEntitlements', JSON.stringify(userEntitlements));
+      
+      // Update UI
+      updateUIForEntitlements();
+      
+      // Update dev panel
+      const devPanel = document.getElementById('dev-mode-panel');
+      if (devPanel) {
+        devPanel.querySelector('button').textContent = userEntitlements.isPro ? 'Switch to Free' : 'Switch to Pro';
+        devPanel.querySelector('div:last-child').innerHTML = `
+          Status: ${userEntitlements.isPro ? 'Pro' : 'Free'}<br>
+          Usage: ${userEntitlements.usage.elevatorPitch}/${userEntitlements.limits.elevatorPitch}
+        `;
+      }
+      
+      showToast(`Switched to ${userEntitlements.isPro ? 'Pro' : 'Free'} mode`, 'success');
+    }
+
+    function resetUsage() {
+      userEntitlements.usage = {
+        elevatorPitch: 0,
+        coverLetter: 0,
+        referral: 0
+      };
+      
+      localStorage.setItem('userEntitlements', JSON.stringify(userEntitlements));
+      updateUIForEntitlements();
+      
+      // Update dev panel
+      const devPanel = document.getElementById('dev-mode-panel');
+      if (devPanel) {
+        devPanel.querySelector('div:last-child').innerHTML = `
+          Status: ${userEntitlements.isPro ? 'Pro' : 'Free'}<br>
+          Usage: ${userEntitlements.usage.elevatorPitch}/${userEntitlements.limits.elevatorPitch}
+        `;
+      }
+      
+      showToast('Usage reset to 0', 'success');
+    }
+
+    function testPaywall() {
+      showPaywallModal('copy');
+    }
+
+    async function loadUserEntitlements() {
+      try {
+        // In production, this would be an API call
+        // const response = await fetch('/api/user/entitlements');
+        // const data = await response.json();
+        // userEntitlements = data;
+        
+        // For demo, load from localStorage
+        const saved = localStorage.getItem('userEntitlements');
+        if (saved) {
+          userEntitlements = { ...userEntitlements, ...JSON.parse(saved) };
+        }
+      } catch (error) {
+        console.error('Failed to load entitlements:', error);
+      }
+    }
+
+    function updateUIForEntitlements() {
+      // Update usage indicators
+      updateUsageIndicators();
+      
+      // Enable/disable buttons based on capabilities
+      updateButtonStates();
+      
+      // Show/hide pro features
+      updateProFeatureVisibility();
+    }
+
+    function updateUsageIndicators() {
+      const pitchIndicator = document.getElementById('pitch-usage-indicator');
+      const pitchCount = document.getElementById('pitch-usage-count');
+      const pitchLimit = document.getElementById('pitch-usage-limit');
+      const pitchFill = document.getElementById('pitch-usage-fill');
+      
+      if (!userEntitlements.isPro) {
+        pitchIndicator.style.display = 'block';
+        pitchCount.textContent = userEntitlements.usage.elevatorPitch;
+        pitchLimit.textContent = userEntitlements.limits.elevatorPitch;
+        
+        const percentage = (userEntitlements.usage.elevatorPitch / userEntitlements.limits.elevatorPitch) * 100;
+        pitchFill.style.width = `${Math.min(percentage, 100)}%`;
+      } else {
+        pitchIndicator.style.display = 'none';
+      }
+    }
+
+    function updateButtonStates() {
+      // Regenerate buttons
+      const regenerateButtons = document.querySelectorAll('[id*="regenerate"]');
+      regenerateButtons.forEach(btn => {
+        if (!userEntitlements.capabilities.canRegenerate) {
+          btn.disabled = true;
+          btn.onclick = () => showPaywallModal('regenerate');
+        }
+      });
+      
+      // Copy buttons
+      const copyButtons = document.querySelectorAll('[data-action="copy"]');
+      copyButtons.forEach(btn => {
+        if (!userEntitlements.capabilities.canCopy) {
+          btn.disabled = true;
+          btn.onclick = () => showPaywallModal('copy');
+        }
+      });
+      
+      // Reuse buttons
+      const reuseButtons = document.querySelectorAll('[data-action="reuse"]');
+      reuseButtons.forEach(btn => {
+        if (!userEntitlements.capabilities.canReuseAcrossFeatures) {
+          btn.disabled = true;
+          btn.onclick = () => showPaywallModal('reuse');
+        }
+      });
+      
+      // Save buttons
+      const saveButtons = document.querySelectorAll('[data-action="save"]');
+      saveButtons.forEach(btn => {
+        if (!userEntitlements.capabilities.canSave) {
+          btn.disabled = true;
+          btn.onclick = () => showPaywallModal('save');
+        }
+      });
+    }
+
+    function updateProFeatureVisibility() {
+      if (userEntitlements.isPro) {
+        // Show pro badge in header
+        const authSection = document.querySelector('.auth-section');
+        if (!authSection.querySelector('.pro-badge')) {
+          const proBadge = document.createElement('div');
+          proBadge.className = 'pro-badge';
+          proBadge.innerHTML = '⭐ Pro';
+          authSection.prepend(proBadge);
+        }
+      }
+    }
+
+    function setupPaywallListeners() {
+      // Stripe upgrade button
+      document.getElementById('upgrade-stripe-btn').addEventListener('click', initiateStripeCheckout);
+      
+      // Close modal when clicking overlay
+      document.getElementById('paywall-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'paywall-modal') {
+          hidePaywallModal();
+        }
+      });
+    }
+
+    function checkGenerationQuota(feature) {
+      if (userEntitlements.isPro) {
+        return true; // Unlimited for pro users
+      }
+      
+      const usage = userEntitlements.usage[feature];
+      const limit = userEntitlements.limits[feature];
+      
+      return usage < limit;
+    }
+
+    function incrementUsage(feature) {
+      if (!userEntitlements.isPro) {
+        userEntitlements.usage[feature]++;
+        saveUserEntitlements();
+        updateUsageIndicators();
+      }
+    }
+
+    function saveUserEntitlements() {
+      localStorage.setItem('userEntitlements', JSON.stringify(userEntitlements));
+    }
+
+    function showPaywallModal(action) {
+      const modal = document.getElementById('paywall-modal');
+      modal.classList.add('show');
+      modal.style.display = 'flex';
+      
+      // Track paywall trigger
+      trackPaywallEvent('paywall_shown', { action, feature: 'elevator_pitch' });
+    }
+
+    function hidePaywallModal() {
+      const modal = document.getElementById('paywall-modal');
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+    }
+
+    function showInlineGate(feature) {
+      const gate = document.getElementById(`${feature}-inline-gate`);
+      const output = document.getElementById(`${feature}-output`);
+      const emptyState = document.getElementById(`${feature}-empty-state`);
+      
+      gate.style.display = 'block';
+      output.style.display = 'none';
+      emptyState.style.display = 'none';
+    }
+
+    function hideInlineGate(feature) {
+      const gate = document.getElementById(`${feature}-inline-gate`);
+      const emptyState = document.getElementById(`${feature}-empty-state`);
+      
+      gate.style.display = 'none';
+      emptyState.style.display = 'block';
+    }
+
+    async function initiateStripeCheckout() {
+      try {
+        // In production, this would create a Stripe checkout session
+        // const response = await fetch('/api/create-checkout-session', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ priceId: 'price_pro_monthly' })
+        // });
+        // const { url } = await response.json();
+        // window.location.href = url;
+        
+        // For demo, simulate successful upgrade
+        simulateSuccessfulUpgrade();
+      } catch (error) {
+        console.error('Stripe checkout failed:', error);
+        showToast('Payment failed. Please try again.', 'error');
+      }
+    }
+
+    function simulateSuccessfulUpgrade() {
+      // Simulate successful Stripe payment
+      userEntitlements.isPro = true;
+      userEntitlements.capabilities = {
+        canGenerateUnlimited: true,
+        canRegenerate: true,
+        canCopy: true,
+        canSave: true,
+        canReuseAcrossFeatures: true
+      };
+      
+      saveUserEntitlements();
+      updateUIForEntitlements();
+      hidePaywallModal();
+      
+      showToast('Welcome to Pro! All features unlocked.', 'success');
+      
+      // Track successful upgrade
+      trackPaywallEvent('upgrade_completed', { plan: 'pro' });
+    }
+
+    function trackPaywallEvent(event, data) {
+      // In production, send to analytics
+      console.log('Analytics:', event, data);
+    }
+
+    // ========== ELEVATOR PITCH FUNCTIONALITY ==========
+    function initializeElevatorPitch() {
+      // Capability switcher
+      document.querySelectorAll('.switcher-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.switcher-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.capability-content').forEach(c => c.classList.remove('active'));
+          
+          tab.classList.add('active');
+          document.getElementById(`capability-${tab.dataset.capability}`).classList.add('active');
+        });
+      });
+
+      // Segmented control for pitch length
+      document.querySelectorAll('.segment-option').forEach(option => {
+        option.addEventListener('click', () => {
+          document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('active'));
+          option.classList.add('active');
+        });
+      });
+
+      // Variant tabs
+      document.querySelectorAll('.variant-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.variant-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.variant-section').forEach(s => s.classList.remove('active'));
+          
+          tab.classList.add('active');
+          document.getElementById(`variant-${tab.dataset.variant}`).classList.add('active');
+        });
+      });
+
+      // Generate pitch button
+      document.getElementById('generate-pitch-btn').addEventListener('click', generateElevatorPitch);
+      
+      // Regenerate button
+      document.getElementById('regenerate-pitch-btn').addEventListener('click', generateElevatorPitch);
+
+      // Cover Letter buttons
+      document.getElementById('generate-cover-letter-btn').addEventListener('click', generateCoverLetter);
+      document.getElementById('regenerate-cover-letter-btn').addEventListener('click', generateCoverLetter);
+
+      // Referral buttons
+      document.getElementById('generate-referral-btn').addEventListener('click', generateReferralMessage);
+      document.getElementById('regenerate-referral-btn').addEventListener('click', generateReferralMessage);
+
+      // Copy buttons
+      document.getElementById('copy-all-pitch-btn').addEventListener('click', copyAllPitch);
+      document.getElementById('copy-cover-letter-btn').addEventListener('click', copyCoverLetter);
+      document.getElementById('copy-referral-btn').addEventListener('click', copyReferralMessage);
+      
+      document.querySelectorAll('.copy-section-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const section = e.target.dataset.section;
+          copySectionContent(section);
+        });
+      });
+
+      // Cross-feature actions
+      document.getElementById('use-in-cover-letter').addEventListener('click', () => {
+        useInOtherFeature('cover-letter');
+      });
+      
+      document.getElementById('use-in-referral').addEventListener('click', () => {
+        useInOtherFeature('referral');
+      });
+      
+      document.getElementById('copy-for-interview').addEventListener('click', () => {
+        copyForInterview();
+      });
+    }
+
+    async function generateElevatorPitch() {
+      // Check quota before generation
+      if (!checkGenerationQuota('elevatorPitch')) {
+        showInlineGate('pitch');
+        trackPaywallEvent('quota_exceeded', { feature: 'elevator_pitch' });
+        return;
+      }
+
+      const generateBtn = document.getElementById('generate-pitch-btn');
+      const regenerateBtn = document.getElementById('regenerate-pitch-btn');
+      const loadingSpinner = document.getElementById('generate-pitch-loading');
+      const btnText = document.getElementById('generate-pitch-text');
+
+      // Show loading state
+      generateBtn.disabled = true;
+      regenerateBtn.style.display = 'none';
+      loadingSpinner.style.display = 'inline-block';
+      btnText.textContent = 'Generating...';
+
+      try {
+        // Get form values
+        const pitchLength = document.querySelector('.segment-option.active').dataset.length;
+        const audience = document.getElementById('pitch-audience').value;
+        const tone = document.getElementById('pitch-tone').value;
+        const perspective = document.querySelector('input[name="perspective"]:checked').value;
+
+        // Simulate API call (replace with actual API endpoint)
+        const pitchData = await simulateElevatorPitchGeneration({
+          pitchLength,
+          audience,
+          tone,
+          perspective
+        });
+
+        // Increment usage for free users
+        incrementUsage('elevatorPitch');
+
+        // Display results
+        displayElevatorPitch(pitchData);
+        
+        // Show controls
+        document.getElementById('pitch-output').style.display = 'block';
+        document.getElementById('pitch-empty-state').style.display = 'none';
+        document.getElementById('pitch-inline-gate').style.display = 'none';
+        
+        // Update button visibility based on entitlements
+        if (userEntitlements.capabilities.canCopy) {
+          document.getElementById('copy-all-pitch-btn').style.display = 'inline-flex';
+        }
+        if (userEntitlements.capabilities.canRegenerate) {
+          regenerateBtn.style.display = 'inline-flex';
+        }
+
+        showToast('Executive pitch generated successfully!', 'success');
+        trackPaywallEvent('generation_success', { feature: 'elevator_pitch' });
+
+      } catch (error) {
+        console.error('Error generating pitch:', error);
+        showToast('Failed to generate pitch. Please try again.', 'error');
+      } finally {
+        // Reset button state
+        generateBtn.disabled = false;
+        loadingSpinner.style.display = 'none';
+        btnText.textContent = 'Generate Executive Pitch';
+      }
+    }
+
+    // Simulate API response (replace with actual API call)
+    async function simulateElevatorPitchGeneration(params) {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      return {
+        whatIDo: "I lead AI and data-driven delivery, specializing in building reliable systems that move complex initiatives from concept to production.",
+        problemISolve: "I consistently solve execution risk—unblocking complex systems, debugging hard problems, and delivering projects on time and within budget, even when conditions change.",
+        whatMakesMeDifferent: "What differentiates me is that I don't disengage when obstacles appear—I stay accountable through ambiguity and see initiatives through to completion.",
+        howIHelp: "For your team, this means faster execution, fewer delivery surprises, and leadership confidence that critical initiatives will ship as planned.",
+        fullPitch: "I lead AI and data-driven delivery, specializing in building reliable systems that move complex initiatives from concept to production. I consistently solve execution risk—unblocking complex systems, debugging hard problems, and delivering projects on time and within budget, even when conditions change. What differentiates me is that I don't disengage when obstacles appear—I stay accountable through ambiguity and see initiatives through to completion. For your team, this means faster execution, fewer delivery surprises, and leadership confidence that critical initiatives will ship as planned.",
+        bulletVersion: "• Lead AI and data-driven delivery with focus on reliable production systems\n• Solve execution risk by unblocking complex problems and delivering on time\n• Stay accountable through ambiguity and see initiatives to completion\n• Enable faster execution and leadership confidence in critical deliveries",
+        oneLiner: "I'm an AI delivery leader who turns complex technical challenges into reliable business outcomes through accountable execution."
+      };
+    }
+
+    function displayElevatorPitch(pitchData) {
+      // Populate structured sections
+      document.getElementById('section-what-i-do').textContent = pitchData.whatIDo;
+      document.getElementById('section-problem-solve').textContent = pitchData.problemISolve;
+      document.getElementById('section-different').textContent = pitchData.whatMakesMeDifferent;
+      document.getElementById('section-help-company').textContent = pitchData.howIHelp;
+
+      // Populate variants
+      document.getElementById('full-pitch-output').textContent = pitchData.fullPitch;
+      document.getElementById('bullets-pitch-output').textContent = pitchData.bulletVersion;
+      document.getElementById('oneliner-pitch-output').textContent = pitchData.oneLiner;
+
+      // Add keyword highlighting (simulate)
+      highlightKeywords();
+    }
+
+    function highlightKeywords() {
+      // Simulate keyword highlighting from job description
+      const keywords = ['AI', 'delivery', 'systems', 'execution', 'leadership'];
+      
+      document.querySelectorAll('.section-content, .variant-output').forEach(element => {
+        let content = element.innerHTML;
+        keywords.forEach(keyword => {
+          const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+          content = content.replace(regex, `<span class="keyword-highlight">${keyword}</span>`);
+        });
+        element.innerHTML = content;
+      });
+    }
+
+    function copyAllPitch() {
+      if (!userEntitlements.capabilities.canCopy) {
+        showPaywallModal('copy');
+        return;
+      }
+      
+      const fullPitch = document.getElementById('full-pitch-output').textContent;
+      navigator.clipboard.writeText(fullPitch).then(() => {
+        showToast('Full pitch copied to clipboard!', 'success');
+        trackPaywallEvent('copy_success', { feature: 'elevator_pitch', type: 'full' });
+      }).catch(() => {
+        showToast('Failed to copy pitch', 'error');
+      });
+    }
+
+    function copySectionContent(section) {
+      if (!userEntitlements.capabilities.canCopy) {
+        showPaywallModal('copy');
+        return;
+      }
+      
+      const content = document.getElementById(`section-${section}`).textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        showToast('Section copied to clipboard!', 'success');
+        trackPaywallEvent('copy_success', { feature: 'elevator_pitch', type: 'section', section });
+      }).catch(() => {
+        showToast('Failed to copy section', 'error');
+      });
+    }
+
+    function useInOtherFeature(feature) {
+      if (!userEntitlements.capabilities.canReuseAcrossFeatures) {
+        showPaywallModal('reuse');
+        return;
+      }
+      
+      const fullPitch = document.getElementById('full-pitch-output').textContent;
+      
+      // Switch to the target feature tab
+      document.querySelectorAll('.switcher-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.capability-content').forEach(c => c.classList.remove('active'));
+      
+      document.querySelector(`[data-capability="${feature}"]`).classList.add('active');
+      document.getElementById(`capability-${feature}`).classList.add('active');
+      
+      // Pre-populate the content (this would integrate with the actual feature)
+      showToast(`Pitch content ready for ${feature.replace('-', ' ')}!`, 'success');
+      trackPaywallEvent('reuse_success', { from: 'elevator_pitch', to: feature });
+    }
+
+    function copyForInterview() {
+      if (!userEntitlements.capabilities.canSave) {
+        showPaywallModal('save');
+        return;
+      }
+      
+      const structured = `EXECUTIVE PITCH - INTERVIEW PREP
+
+What I Do:
+${document.getElementById('section-what-i-do').textContent}
+
+Problem I Solve:
+${document.getElementById('section-problem-solve').textContent}
+
+What Makes Me Different:
+${document.getElementById('section-different').textContent}
+
+How I Help:
+${document.getElementById('section-help-company').textContent}
+
+FULL PITCH:
+${document.getElementById('full-pitch-output').textContent}`;
+
+      navigator.clipboard.writeText(structured).then(() => {
+        showToast('Interview prep version copied!', 'success');
+        trackPaywallEvent('save_success', { feature: 'elevator_pitch', type: 'interview_prep' });
+      }).catch(() => {
+        showToast('Failed to copy interview prep', 'error');
+      });
+    }
+  </script>
+</body>
+</html>
+
+<style>
+/* Analysis Results Styles */
+.analysis-summary {
+  margin-bottom: var(--space-lg);
+}
+
+.score-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+}
+
+.score-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: conic-gradient(var(--color-primary-500) 0deg, var(--color-border-light) 0deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.score-circle::before {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: var(--color-bg-surface);
+  border-radius: 50%;
+}
+
+.score-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.score-details {
+  flex: 1;
+}
+
+.verdict {
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+}
+
+.summary {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.analysis-sections {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.analysis-section {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  padding: var(--space-lg);
+}
+
+.analysis-section h4 {
+  margin: 0 0 var(--space-md) 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.section-content {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.strength-item,
+.dealbreaker-item,
+.recommendation-item {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.strength-item:last-child,
+.dealbreaker-item:last-child,
+.recommendation-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.strength-item h5,
+.dealbreaker-item h5,
+.recommendation-item h5 {
+  margin: 0 0 var(--space-xs) 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+</style>
