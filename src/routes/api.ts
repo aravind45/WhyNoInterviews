@@ -35,6 +35,7 @@ import {
 } from '../types';
 import { paywallMiddleware } from '../middleware/paywall';
 import { checkLifetimeLimit } from '../middleware/rateLimit';
+import { rateLimitLLM, incrementLLMUsageFromRequest } from '../middleware/llmRateLimit';
 import { AnalyticsService } from '../services/analyticsService';
 import mockInterviewRouter from './mockInterview';
 
@@ -289,6 +290,7 @@ router.post(
   '/analyze',
   paywallMiddleware,
   checkLifetimeLimit,
+  rateLimitLLM,
   asyncHandler(async (req: Request, res: Response) => {
     const startTime = Date.now();
 
@@ -548,6 +550,9 @@ router.post(
           totalTime,
         },
       });
+
+      // Increment LLM usage counter (successful API call)
+      await incrementLLMUsageFromRequest(req);
 
       res.json({
         success: true,

@@ -10,12 +10,14 @@ import { getProvider, getDefaultProvider } from '../services/llmProvider';
 import { generateInterviewQuestions } from '../services/questionGenerator';
 import { analyzeInterviewVideo } from '../services/videoAnalysis';
 import { generateInterviewFeedback } from '../services/feedbackGenerator';
+import { rateLimitLLM, incrementLLMUsageFromRequest } from '../middleware/llmRateLimit';
 
 const router = Router();
 
 // POST /api/generate-interview-questions
 router.post(
   '/generate-interview-questions',
+  rateLimitLLM,
   asyncHandler(async (req: Request, res: Response) => {
     const { jobRole, interviewType, experienceLevel, duration, jobDescription } = req.body;
 
@@ -36,6 +38,9 @@ router.post(
       },
       provider,
     );
+
+    // Increment LLM usage counter
+    await incrementLLMUsageFromRequest(req);
 
     res.json({ success: true, data: questions });
   }),
@@ -179,6 +184,7 @@ router.post(
 // GET /api/interview-results/:sessionToken – compile feedback for the whole session
 router.get(
   '/interview-results/:sessionToken',
+  rateLimitLLM,
   asyncHandler(async (req: Request, res: Response) => {
     const { sessionToken } = req.params;
 
@@ -208,11 +214,11 @@ router.get(
     const avgConfidence =
       feedback.detailedFeedback?.length > 0
         ? Math.round(
-            feedback.detailedFeedback.reduce(
-              (sum: number, f: any) => sum + (f.tone?.confident || 0),
-              0,
-            ) / feedback.detailedFeedback.length,
-          )
+          feedback.detailedFeedback.reduce(
+            (sum: number, f: any) => sum + (f.tone?.confident || 0),
+            0,
+          ) / feedback.detailedFeedback.length,
+        )
         : 0;
 
     // Store the results in the database for dashboard access
@@ -249,6 +255,9 @@ router.get(
       logger.error('Error storing interview results:', error);
       // Don't fail the request if storage fails
     }
+
+    // Increment LLM usage counter (successful feedback generation)
+    await incrementLLMUsageFromRequest(req);
 
     res.json({ success: true, data: feedback });
   }),
@@ -338,15 +347,15 @@ router.get(
         totalQuestions: parseInt(row.total_questions) || 0,
         results: row.overall_score
           ? {
-              overallScore: row.overall_score,
-              categoryScores: {
-                communication: row.communication_score,
-                technical: row.technical_score,
-                confidence: row.confidence_score,
-              },
-              strengths: row.strengths ? JSON.parse(row.strengths) : [],
-              improvements: row.improvements ? JSON.parse(row.improvements) : [],
-            }
+            overallScore: row.overall_score,
+            categoryScores: {
+              communication: row.communication_score,
+              technical: row.technical_score,
+              confidence: row.confidence_score,
+            },
+            strengths: row.strengths ? JSON.parse(row.strengths) : [],
+            improvements: row.improvements ? JSON.parse(row.improvements) : [],
+          }
           : null,
       }));
 
@@ -355,9 +364,9 @@ router.get(
       const avgScore =
         completedInterviews.length > 0
           ? Math.round(
-              completedInterviews.reduce((sum, i) => sum + (i.results?.overallScore || 0), 0) /
-                completedInterviews.length,
-            )
+            completedInterviews.reduce((sum, i) => sum + (i.results?.overallScore || 0), 0) /
+            completedInterviews.length,
+          )
           : 0;
 
       const summary = {
