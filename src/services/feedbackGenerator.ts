@@ -38,6 +38,7 @@ export interface InterviewFeedback {
     communication: RubricScore;
     technicalKnowledge: RubricScore;
     problemSolving: RubricScore;
+    confidence: RubricScore;
   };
   strengths: string[];
   growthAreas: string[];
@@ -115,6 +116,13 @@ export async function generateInterviewFeedback(sessionId: string): Promise<Inte
           showInsights: false,
         },
         problemSolving: {
+          score: 0,
+          maxScore: 5,
+          feedback: 'Pending',
+          improvements: 'Pending',
+          showInsights: false,
+        },
+        confidence: {
           score: 0,
           maxScore: 5,
           feedback: 'Pending',
@@ -326,6 +334,13 @@ PROBLEM SOLVING (1-5):
 - Shows analytical thinking
 - Learns from past experiences
 
+CONFIDENCE (1-5):
+- Minimal filler words (um, uh, like, you know)
+- Consistent pacing and vocal delivery
+- Appropriate response length (90-150s optimal)
+- Smooth, professional delivery without hesitation
+- Strong vocal presence and conviction
+
 FEEDBACK STRUCTURE REQUIREMENTS:
 
 1. RUBRIC SCORES: Provide specific 1-5 scores with detailed, evidence-based feedback
@@ -499,6 +514,7 @@ Focus on specific, actionable feedback with examples from their actual responses
       'communication',
       'technicalKnowledge',
       'problemSolving',
+      'confidence',
     ] as const;
     rubricKeys.forEach((key) => {
       if (!feedback.rubrics[key]) {
@@ -600,10 +616,51 @@ function generateRuleBasedFeedback(session: any, responses: any[]): InterviewFee
         'Use a consistent framework for problem-solving: identify the problem, explore options, explain your decision process, and describe results.',
       showInsights: responseCount >= 3,
     },
+    confidence: (() => {
+      // Calculate confidence based on vocal patterns
+      const totalFillerWords = responses.reduce((sum, r) => sum + countFillerWords(r.transcript), 0);
+      const avgFillerWords = responseCount > 0 ? totalFillerWords / responseCount : 0;
+
+      // Filler word scoring (40% weight): < 3 per response = excellent
+      const fillerScore = avgFillerWords < 3 ? 5 : avgFillerWords < 5 ? 4 : avgFillerWords < 8 ? 3 : avgFillerWords < 12 ? 2 : 1;
+
+      // Pacing consistency (30% weight): check if responses are appropriate length
+      const avgDuration = responses.reduce((sum, r) => sum + (r.response_duration_seconds || 0), 0) / (responseCount || 1);
+      const pacingScore = avgDuration >= 60 && avgDuration <= 180 ? 5 : avgDuration >= 45 && avgDuration <= 240 ? 4 : 3;
+
+      // Response completion (20% weight)
+      const completionScore = responseCount >= 3 ? 5 : responseCount >= 2 ? 4 : responseCount >= 1 ? 3 : 1;
+
+      // Transcript quality (10% weight)
+      const qualityScore = hasTranscripts ? 5 : 3;
+
+      // Weighted average
+      const confidenceScore = Math.round(
+        (fillerScore * 0.4 + pacingScore * 0.3 + completionScore * 0.2 + qualityScore * 0.1)
+      );
+
+      return {
+        score: Math.max(1, Math.min(5, confidenceScore)),
+        maxScore: 5,
+        feedback: totalFillerWords < 10
+          ? `You demonstrated strong confidence with minimal filler words (${totalFillerWords} total). Your delivery was smooth and professional, showing comfort with the interview format.`
+          : totalFillerWords < 20
+            ? `You showed good confidence overall. You had ${totalFillerWords} filler words across all responses, which is reasonable but could be improved for even stronger delivery.`
+            : `You showed developing confidence. With ${totalFillerWords} filler words (avg ${Math.round(avgFillerWords)} per response), there's room to improve your delivery confidence through practice.`,
+        improvements: totalFillerWords > 15
+          ? `REDUCE FILLER WORDS: You averaged ${Math.round(avgFillerWords)} filler words per response. Practice pausing 1-2 seconds instead of saying "um" or "uh." Record yourself answering questions and count filler words - aim for < 3 per response. This single change will dramatically boost your perceived confidence.`
+          : avgDuration < 60
+            ? `EXPAND RESPONSES: Your average response was ${Math.round(avgDuration)}s. Aim for 90-150s per response using the STAR method. Longer, structured responses show confidence in your experience.`
+            : avgDuration > 180
+              ? `TIGHTEN RESPONSES: Your average response was ${Math.round(avgDuration)}s. Practice being more concise - aim for 90-150s. Rambling can signal nervousness. Focus on key points: Problem → Solution → Impact.`
+              : `MAINTAIN CONSISTENCY: Keep practicing to build confidence. Your pacing is good (${Math.round(avgDuration)}s avg). Focus on reducing any remaining filler words and maintaining this steady delivery in high-pressure situations.`,
+        showInsights: totalFillerWords > 10 || responseCount >= 2,
+      };
+    })(),
   };
 
   // Calculate overall score (convert 1-5 to 0-100 scale)
-  const avgRubricScore = Object.values(rubrics).reduce((sum, rubric) => sum + rubric.score, 0) / 6;
+  const avgRubricScore = Object.values(rubrics).reduce((sum, rubric) => sum + rubric.score, 0) / 7;
   const overallScore = Math.round((avgRubricScore - 1) * 25); // Convert 1-5 to 0-100
 
   // Generate strengths based on performance
