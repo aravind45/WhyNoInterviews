@@ -2651,6 +2651,12 @@
             <div class="flex gap-4 mb-4">
               <input type="text" class="input" id="search-query" placeholder="Job title or keywords..." style="flex:1">
               <input type="text" class="input" id="search-location" placeholder="Location" style="width:150px">
+              <select class="input" id="search-date-posted" style="width:140px">
+                <option value="month">Past Month</option>
+                <option value="week">Past Week</option>
+                <option value="today">Past 24h</option>
+                <option value="any">Any Time</option>
+              </select>
             </div>
 
             <div>
@@ -8517,6 +8523,181 @@
     }
   </script>
 
+  <script>
+    // ========== JOB MATCHING SEARCH (New) ==========
+
+    async function initiateJobSearch() {
+      const queryInput = document.getElementById('search-query');
+      const locationInput = document.getElementById('search-location');
+      const dateInput = document.getElementById('search-date-posted'); // New
+      const searchBtn = document.getElementById('search-jobs-btn');
+      const searchBtnText = document.getElementById('search-btn-text');
+      const searchLoading = document.getElementById('search-loading');
+
+      const jobTitle = queryInput.value.trim();
+      const location = locationInput.value.trim();
+      const datePosted = dateInput ? dateInput.value : 'month'; // Default to month
+
+      if (!jobTitle) {
+        showToast('Please enter a job title or keyword', 'error');
+        return;
+      }
+
+      if (!location) {
+        showToast('Please enter a location', 'error');
+        return;
+      }
+
+      // UI Loading State
+      if (searchBtn) searchBtn.disabled = true;
+      if (searchBtnText) searchBtnText.style.display = 'none';
+      if (searchLoading) searchLoading.style.display = 'inline-block';
+
+      try {
+        const sessionId = window.sessionId || localStorage.getItem('jobmatch_session');
+
+        const response = await fetch('/api/jobs/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': currentUser?.id || sessionId || 'anonymous'
+          },
+          body: JSON.stringify({
+            jobTitle,
+            location,
+            datePosted,
+            count: 20
+          })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || data.error || 'Search failed');
+        }
+
+        showToast(`Searching for jobs posted in the past ${datePosted === 'today' ? '24h' : datePosted}...`, 'info');
+
+        // Start polling
+        const runId = data.data.runId;
+        pollJobUpdates(runId);
+
+      } catch (error) {
+        console.error('Search error:', error);
+        showToast(error.message, 'error');
+        resetSearchButton();
+      }
+    }
+
+    // ... (resetSearchButton and pollJobUpdates remain same, skipping to renderJobResults) ...
+
+    function renderJobResults(jobs) {
+      const resultsContainer = document.getElementById('job-results');
+      const jobList = document.getElementById('job-list');
+      const suggestSection = document.getElementById('suggestions-section');
+
+      if (!resultsContainer || !suggestSection) return;
+
+      resultsContainer.style.display = 'block';
+      suggestSection.style.display = 'block';
+
+      // Update count
+      const countEl = document.getElementById('jobs-count');
+      if (countEl) countEl.innerText = jobs.length;
+
+      // Clear previous list
+      if (jobList) jobList.innerHTML = '';
+
+      if (jobs.length === 0) {
+        jobList.innerHTML = '<div style="text-align:center; padding: 40px; color: #64748b;">No jobs found matching your criteria. Try widening your search or location.</div>';
+        return;
+      }
+
+      jobs.forEach(job => {
+        const card = document.createElement('div');
+        card.className = 'job-card';
+        card.style.cssText = `
+              background: white; 
+              padding: 20px; 
+              border-radius: 16px; 
+              border: 1px solid #E2E8F0; 
+              margin-bottom: 16px;
+              box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+              transition: all 0.2s ease;
+              position: relative;
+              overflow: hidden;
+           `;
+        card.onmouseover = () => {
+          card.style.transform = 'translateY(-2px)';
+          card.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+          card.style.borderColor = '#CBD5E1';
+        };
+        card.onmouseout = () => {
+          card.style.transform = 'none';
+          card.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+          card.style.borderColor = '#E2E8F0';
+        };
+
+        const postedDateStr = job.postedAt || job.datePosted;
+        let postedLabel = 'Recently';
+        let isNew = false;
+
+        if (postedDateStr) {
+          const date = new Date(postedDateStr);
+          // Check if valid date
+          if (!isNaN(date.getTime())) {
+            postedLabel = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            // If < 2 days
+            const hoursDiff = (new Date() - date) / (1000 * 60 * 60);
+            if (hoursDiff < 48) isNew = true;
+          } else {
+            // Fallback if string like "2 days ago"
+            postedLabel = postedDateStr;
+            if (String(postedDateStr).includes('hours') || String(postedDateStr).includes('minute')) isNew = true;
+          }
+        }
+
+        card.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:start; gap: 16px;">
+                  <div style="flex: 1;">
+                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
+                        ${isNew ? '<span style="background: #DEF7EC; color: #046C4E; font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase;">New</span>' : ''}
+                        <h4 style="font-size:1.25rem; font-weight:700; color:#1E293B; margin:0; line-height: 1.4;">${job.title || job.positionName}</h4>
+                      </div>
+                      <div style="color:#64748B; font-size:0.95rem; margin-bottom:12px; display:flex; align-items:center; gap: 6px;">
+                          <span style="font-weight: 600; color: #475569;">${job.company || job.companyName}</span>
+                          <span>•</span>
+                          <span>${job.location}</span>
+                      </div>
+                  </div>
+                  ${job.companyLogo ? `<img src="${job.companyLogo}" style="width:48px; height:48px; border-radius:10px; object-fit:contain; border: 1px solid #F1F5F9; padding: 4px; background: white;">` : '<div style="width:48px; height:48px; background:#F8FAFC; border-radius:10px; display:flex; align-items:center; justify-content:center; border: 1px solid #E2E8F0;"><span style="font-size:1.5rem;">🏢</span></div>'}
+              </div>
+              
+              <div style="font-size:0.9rem; color:#475569; margin-bottom:16px; line-height: 1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                  ${job.description || 'No description available.'}
+              </div>
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; padding-top: 16px; border-top: 1px solid #F1F5F9;">
+                  <div style="display:flex; align-items:center; gap: 6px; font-size:0.85rem; color:#94A3B8;">
+                    <span>📅 Posted ${postedLabel}</span>
+                  </div>
+                  <a href="${job.url || job.jobUrl || '#'}" target="_blank" class="btn btn-primary btn-sm" style="padding: 8px 16px; display: flex; align-items: center; gap: 6px;">
+                    Apply Now <span>→</span>
+                  </a>
+              </div>
+           `;
+        jobList.appendChild(card);
+      });
+    }
+
+    // Bind Event Listener
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('search-jobs-btn');
+      if (btn) {
+        btn.addEventListener('click', initiateJobSearch);
+      }
+    });
+  </script>
 </body>
 
 </html>
