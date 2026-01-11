@@ -1,8 +1,5 @@
 import { getPool } from '../database/connection';
-import Groq from 'groq-sdk';
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+import { getProvider, getDefaultProvider, type LLMProvider } from './llmProvider';
 
 interface CreateAssessmentParams {
   userId?: string;
@@ -86,20 +83,23 @@ export class PracticeService {
     );
 
     try {
-      const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
+      const provider = getProvider(getDefaultProvider());
+      
+      if (!provider.isAvailable()) {
+        throw new Error('No AI provider available');
+      }
+
+      const response = await provider.generateText(prompt, {
         temperature: 0.7,
-        max_tokens: 3000,
+        maxTokens: 3000,
       });
 
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
+      if (!response) {
         throw new Error('No response from AI');
       }
 
       // Parse JSON response
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(response);
       return parsed.questions || [];
     } catch (error) {
       console.error('Error generating questions:', error);
@@ -419,15 +419,18 @@ Provide constructive feedback in JSON format:
 Be encouraging but honest. Focus on actionable advice.`;
 
     try {
-      const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
+      const provider = getProvider(getDefaultProvider());
+      
+      if (!provider.isAvailable()) {
+        return null;
+      }
+
+      const response = await provider.generateText(prompt, {
         temperature: 0.5,
-        max_tokens: 500,
+        maxTokens: 500,
       });
 
-      const content = completion.choices[0]?.message?.content;
-      return content ? JSON.parse(content) : null;
+      return response ? JSON.parse(response) : null;
     } catch (error) {
       console.error('Error generating feedback:', error);
       return null;
@@ -458,14 +461,18 @@ Provide a brief, strategic hint (2-3 sentences) that guides their thinking WITHO
 Hint:`;
 
     try {
-      const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
+      const provider = getProvider(getDefaultProvider());
+      
+      if (!provider.isAvailable()) {
+        throw new Error('No AI provider available');
+      }
+
+      const response = await provider.generateText(prompt, {
         temperature: 0.6,
-        max_tokens: 200,
+        maxTokens: 200,
       });
 
-      return completion.choices[0]?.message?.content || 'Unable to generate hint';
+      return response || 'Unable to generate hint';
     } catch (error) {
       console.error('Error generating hint:', error);
       throw new Error('Failed to generate hint');
@@ -504,14 +511,18 @@ Provide a comprehensive explanation covering:
 Explanation:`;
 
     try {
-      const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
+      const provider = getProvider(getDefaultProvider());
+      
+      if (!provider.isAvailable()) {
+        throw new Error('No AI provider available');
+      }
+
+      const response = await provider.generateText(prompt, {
         temperature: 0.5,
-        max_tokens: 500,
+        maxTokens: 500,
       });
 
-      return completion.choices[0]?.message?.content || 'Unable to generate explanation';
+      return response || 'Unable to generate explanation';
     } catch (error) {
       console.error('Error generating explanation:', error);
       throw new Error('Failed to generate explanation');
@@ -623,20 +634,23 @@ CRITICAL RULES:
 - Tailor questions to the specific job requirements mentioned`;
 
     try {
-      const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
+      const provider = getProvider(getDefaultProvider());
+      
+      if (!provider.isAvailable()) {
+        throw new Error('No AI provider available');
+      }
+
+      const response = await provider.generateText(prompt, {
         temperature: 0.6,
-        max_tokens: 4000,
+        maxTokens: 4000,
       });
 
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
+      if (!response) {
         throw new Error('No response from AI');
       }
 
       // Parse JSON response
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(response);
       return parsed;
     } catch (error) {
       console.error('Error generating job-based interview prep:', error);
