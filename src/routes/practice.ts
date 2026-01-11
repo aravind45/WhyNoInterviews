@@ -23,17 +23,40 @@ const sessionMiddleware = async (req: RequestWithSession, res: express.Response,
     }
 
     const pool = getPool();
-    const result = await pool.query(
+    let result = await pool.query(
       'SELECT id, user_id FROM user_sessions WHERE session_id = $1 AND is_active = true',
       [sessionId]
     );
 
+    // If session doesn't exist, create it (similar to ICA route behavior)
     if (result.rows.length === 0) {
-      // Create a temporary session if not found? 
-      // Actually, for practice assessments, we should ensure the session exists.
-      // But if it's a new visitor, they might not have a session in DB yet.
-      // For now, let's treat it as unauthorized to force consistent session creation.
-      return res.status(401).json({ success: false, error: 'Invalid or expired session' });
+      console.log(`Creating new session for practice interview: ${sessionId}`);
+      
+      try {
+        const insertResult = await pool.query(
+          `INSERT INTO user_sessions (session_id, ip_address, user_agent, expires_at, is_active)
+           VALUES ($1, $2, $3, NOW() + INTERVAL '7 days', true)
+           RETURNING id, user_id`,
+          [sessionId, req.ip || 'unknown', req.get('User-Agent') || 'unknown']
+        );
+        
+        result = insertResult;
+        console.log(`✅ Created new session: ${sessionId}`);
+      } catch (insertError: any) {
+        // If insert fails due to duplicate key, try to select again
+        if (insertError.code === '23505') {
+          result = await pool.query(
+            'SELECT id, user_id FROM user_sessions WHERE session_id = $1 AND is_active = true',
+            [sessionId]
+          );
+        } else {
+          throw insertError;
+        }
+      }
+    }
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, error: 'Failed to create or find session' });
     }
 
     req.sessionData = {
