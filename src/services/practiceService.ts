@@ -89,10 +89,7 @@ export class PracticeService {
         throw new Error('No AI provider available');
       }
 
-      const response = await provider.generateText(prompt, {
-        temperature: 0.7,
-        maxTokens: 3000,
-      });
+      const response = await provider.generateText(prompt);
 
       if (!response) {
         throw new Error('No response from AI');
@@ -425,10 +422,7 @@ Be encouraging but honest. Focus on actionable advice.`;
         return null;
       }
 
-      const response = await provider.generateText(prompt, {
-        temperature: 0.5,
-        maxTokens: 500,
-      });
+      const response = await provider.generateText(prompt);
 
       return response ? JSON.parse(response) : null;
     } catch (error) {
@@ -467,10 +461,7 @@ Hint:`;
         throw new Error('No AI provider available');
       }
 
-      const response = await provider.generateText(prompt, {
-        temperature: 0.6,
-        maxTokens: 200,
-      });
+      const response = await provider.generateText(prompt);
 
       return response || 'Unable to generate hint';
     } catch (error) {
@@ -517,10 +508,7 @@ Explanation:`;
         throw new Error('No AI provider available');
       }
 
-      const response = await provider.generateText(prompt, {
-        temperature: 0.5,
-        maxTokens: 500,
-      });
+      const response = await provider.generateText(prompt);
 
       return response || 'Unable to generate explanation';
     } catch (error) {
@@ -640,10 +628,7 @@ CRITICAL RULES:
         throw new Error('No AI provider available');
       }
 
-      const response = await provider.generateText(prompt, {
-        temperature: 0.6,
-        maxTokens: 4000,
-      });
+      const response = await provider.generateText(prompt);
 
       if (!response) {
         throw new Error('No response from AI');
