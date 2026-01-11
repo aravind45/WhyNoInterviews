@@ -546,6 +546,134 @@ Explanation:`;
       sessionId,
     ]);
   }
+
+  /**
+   * Generate job description-based interview prep with SAR answers
+   */
+  async generateJobBasedInterviewPrep(params: {
+    jobDescription: string;
+    resumeText?: string;
+    companyName?: string;
+  }): Promise<any> {
+    const { jobDescription, resumeText, companyName } = params;
+
+    // Extract company name from job description if not provided
+    const extractedCompanyName = companyName || this.extractCompanyName(jobDescription);
+
+    // Extract achievements from resume for SAR answers
+    const achievements = resumeText ? this.extractAchievements(resumeText) : [];
+
+    const prompt = `You are an expert interview coach. Generate personalized interview questions and SAR (Situation-Action-Result) based answers for this specific job.
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 3000)}
+
+${resumeText ? `CANDIDATE'S RESUME CONTEXT:
+${resumeText.substring(0, 2000)}` : ''}
+
+${extractedCompanyName ? `COMPANY: ${extractedCompanyName}` : ''}
+
+KEY ACHIEVEMENTS FROM RESUME:
+${achievements.length > 0 ? achievements.map((a, i) => `${i + 1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
+
+Generate 15 interview questions specifically tailored to this job description, with personalized SAR-based answers using ONLY the candidate's actual experience.
+
+For each question, provide:
+1. The question text
+2. A personalized answer using the SAR (Situation-Action-Result) framework
+3. Tips for delivering the answer effectively
+
+Focus on:
+- Questions that directly relate to the job requirements
+- Behavioral questions that can be answered with specific examples from the resume
+- Technical questions relevant to the role
+- Company-specific questions if company name is available
+
+Return ONLY valid JSON in this format:
+{
+  "companyName": "${extractedCompanyName || 'the company'}",
+  "questions": [
+    {
+      "question": "Tell me about a time when you...",
+      "sarAnswer": {
+        "situation": "Specific situation from resume",
+        "action": "Actions taken by the candidate",
+        "result": "Measurable results achieved"
+      },
+      "fullAnswer": "Complete answer combining SAR elements naturally",
+      "tips": "Brief tip on how to deliver this answer effectively"
+    }
+  ],
+  "questionsToAsk": [
+    "What does success look like in this role?",
+    "What are the biggest challenges the team is currently facing?",
+    "How does this role contribute to the company's goals?",
+    "What opportunities are there for professional development?",
+    "Can you describe the team I'd be working with?",
+    "What are the next steps in the interview process?"
+  ]
+}
+
+CRITICAL RULES:
+- Use ONLY information from the provided resume
+- Do NOT fabricate achievements, skills, or experience
+- If resume lacks specific examples, suggest general professional responses
+- Keep answers authentic and factual
+- Focus on measurable results where possible
+- Tailor questions to the specific job requirements mentioned`;
+
+    try {
+      const completion = await groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.6,
+        max_tokens: 4000,
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No response from AI');
+      }
+
+      // Parse JSON response
+      const parsed = JSON.parse(content);
+      return parsed;
+    } catch (error) {
+      console.error('Error generating job-based interview prep:', error);
+      throw new Error('Failed to generate interview preparation');
+    }
+  }
+
+  /**
+   * Extract company name from job description
+   */
+  private extractCompanyName(jobDescription: string): string {
+    const companyMatch = jobDescription.match(
+      /(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i,
+    );
+    return companyMatch?.[1]?.trim() || '';
+  }
+
+  /**
+   * Extract achievements from resume text
+   */
+  private extractAchievements(resumeText: string): string[] {
+    const achievementPatterns = [
+      /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
+      /\d+%[^.]+\./gi,
+      /\$[\d,]+[^.]+\./gi,
+      /(?:achieved|delivered|completed|exceeded)[^.]+(?:\d+|significant|substantial)[^.]+\./gi,
+    ];
+
+    let achievements: string[] = [];
+    achievementPatterns.forEach((pattern) => {
+      const matches = resumeText.match(pattern);
+      if (matches) achievements.push(...matches);
+    });
+
+    // Remove duplicates and limit to top 10
+    return [...new Set(achievements)].slice(0, 10);
+  }
 }
 
 export const practiceService = new PracticeService();

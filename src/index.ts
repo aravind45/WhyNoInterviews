@@ -77,12 +77,14 @@ import configRouter from './routes/config';
 import practiceRouter from './routes/practice';
 import communityRouter from './routes/community';
 import jobSearchRouter from './routes/jobSearch'; // Import new route
+import libraryRouter from './routes/library'; // Import library route
 
 app.use('/api', mockInterviewRouter); // Routes in file are like /interview-session
 app.use('/api', configRouter); // Config endpoint
 app.use('/api/practice', practiceRouter); // Practice interview routes
 app.use('/api/community', communityRouter); // Community routes
 app.use('/api/jobs', jobSearchRouter); // Job search routes
+app.use('/api/library', libraryRouter); // Mount library routes
 
 const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
 

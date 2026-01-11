@@ -434,6 +434,50 @@ router.post('/ai-explanation', sessionMiddleware, async (req: RequestWithSession
 });
 
 /**
+ * Generate job description-based interview prep with SAR answers
+ * POST /api/practice/generate-job-based-prep
+ */
+router.post('/generate-job-based-prep', sessionMiddleware, async (req: RequestWithSession, res: express.Response) => {
+  try {
+    const { jobDescription, resumeText, companyName } = req.body;
+    const sessionId = req.sessionData?.dbId;
+    const token = req.sessionData?.id;
+
+    if (!sessionId) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    if (!jobDescription) {
+      return res.status(400).json({ success: false, error: 'Job description is required' });
+    }
+
+    // Generate job-specific interview prep with SAR answers
+    const interviewPrep = await practiceService.generateJobBasedInterviewPrep({
+      jobDescription,
+      resumeText,
+      companyName,
+    });
+
+    res.json({ success: true, data: interviewPrep });
+
+    // Analytics
+    await AnalyticsService.logEvent({
+      sessionId: token,
+      eventName: 'job_based_interview_prep_generated',
+      eventCategory: 'practice',
+      properties: {
+        hasResumeText: !!resumeText,
+        hasCompanyName: !!companyName,
+        questionCount: interviewPrep.questions?.length || 0,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error generating job-based interview prep:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
  * Get user's practice results
  * GET /api/practice/results
  */

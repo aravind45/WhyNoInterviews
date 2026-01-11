@@ -762,6 +762,21 @@ CREATE TRIGGER update_linkedin_contacts_updated_at
 -- ============================================
 
 -- Fix: Add missing columns to interview_results
+
+-- Library / Saved Items
+CREATE TABLE IF NOT EXISTS saved_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL, -- 'cover_letter', 'elevator_pitch', 'interview_prep'
+  content TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_saved_items_user_id ON saved_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_saved_items_type ON saved_items(type);
+
 ALTER TABLE interview_results 
 ADD COLUMN IF NOT EXISTS strengths JSONB,
 ADD COLUMN IF NOT EXISTS improvements JSONB,
