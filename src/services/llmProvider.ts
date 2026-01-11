@@ -74,9 +74,7 @@ export const getProvider = (provider: LLMProvider): LLMProviderService => {
         displayName: 'GPT-4 (OpenAI)',
         isAvailable: openaiService.isOpenAIAvailable,
         analyzeResume: openaiService.analyzeResume,
-        generateText: async (prompt: string) => {
-          throw new Error('OpenAI text generation not implemented yet');
-        },
+        generateText: openaiService.generateText,
       };
     case 'groq':
     default:

@@ -242,3 +242,38 @@ const parseAnalysisResponse = (
     throw new Error('Invalid response format from OpenAI');
   }
 };
+/**
+ * Generate text using OpenAI
+ */
+export const generateText = async (prompt: string): Promise<string> => {
+  if (!openaiClient) {
+    throw new Error('OpenAI client not initialized');
+  }
+
+  try {
+    logger.info('Calling OpenAI API for text generation');
+
+    const response = await openaiClient.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('Empty response from OpenAI');
+    }
+
+    logger.info('✓ Received text generation response from OpenAI');
+    return content;
+  } catch (error: any) {
+    logger.error('OpenAI text generation error:', error);
+    throw new Error(`OpenAI text generation failed: ${error.message}`);
+  }
+};
