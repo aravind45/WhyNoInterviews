@@ -654,7 +654,17 @@ CRITICAL RULES:
           throw new Error('No response from AI');
         }
         
-        const parsed = JSON.parse(response);
+        // Parse JSON response  
+        let jsonText = response;
+        
+        // Strip markdown code blocks if present (OpenAI sometimes wraps JSON in ```json blocks)
+        if (jsonText.includes('```json')) {
+          jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+        } else if (jsonText.includes('```')) {
+          jsonText = jsonText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
+        }
+        
+        const parsed = JSON.parse(jsonText);
         return parsed;
       }
 
@@ -665,7 +675,16 @@ CRITICAL RULES:
       }
 
       // Parse JSON response
-      const parsed = JSON.parse(response);
+      let jsonText = response;
+      
+      // Strip markdown code blocks if present (OpenAI sometimes wraps JSON in ```json blocks)
+      if (jsonText.includes('```json')) {
+        jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+      } else if (jsonText.includes('```')) {
+        jsonText = jsonText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
+      }
+      
+      const parsed = JSON.parse(jsonText);
       return parsed;
     } catch (error) {
       console.error('Error generating job-based interview prep:', error);
