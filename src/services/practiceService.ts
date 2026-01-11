@@ -83,10 +83,25 @@ export class PracticeService {
     );
 
     try {
-      const provider = getProvider(getDefaultProvider());
+      // Force use of Groq provider as originally requested
+      const provider = getProvider('groq');
       
       if (!provider.isAvailable()) {
-        throw new Error('No AI provider available');
+        // Fallback to default provider if Groq not available (local development)
+        console.log('Groq not available for question generation, using fallback');
+        const fallbackProvider = getProvider(getDefaultProvider());
+        
+        if (!fallbackProvider.isAvailable()) {
+          throw new Error('No AI provider available');
+        }
+        
+        const response = await fallbackProvider.generateText(prompt);
+        if (!response) {
+          throw new Error('No response from AI');
+        }
+        
+        const parsed = JSON.parse(response);
+        return parsed.questions || [];
       }
 
       const response = await provider.generateText(prompt);
@@ -622,10 +637,25 @@ CRITICAL RULES:
 - Tailor questions to the specific job requirements mentioned`;
 
     try {
-      const provider = getProvider(getDefaultProvider());
+      // Force use of Groq provider as originally requested
+      const provider = getProvider('groq');
       
       if (!provider.isAvailable()) {
-        throw new Error('No AI provider available');
+        // Fallback to default provider if Groq not available (local development)
+        console.log('Groq not available, falling back to default provider');
+        const fallbackProvider = getProvider(getDefaultProvider());
+        
+        if (!fallbackProvider.isAvailable()) {
+          throw new Error('No AI provider available');
+        }
+        
+        const response = await fallbackProvider.generateText(prompt);
+        if (!response) {
+          throw new Error('No response from AI');
+        }
+        
+        const parsed = JSON.parse(response);
+        return parsed;
       }
 
       const response = await provider.generateText(prompt);
