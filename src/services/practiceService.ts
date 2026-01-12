@@ -83,34 +83,35 @@ export class PracticeService {
     );
 
     try {
-      // Force use of Groq provider as originally requested
-      const provider = getProvider('groq');
-      
-      if (!provider.isAvailable()) {
-        // Fallback to default provider if Groq not available (local development)
-        console.log('Groq not available for question generation, using fallback');
-        const fallbackProvider = getProvider(getDefaultProvider());
-        
-        if (!fallbackProvider.isAvailable()) {
-          throw new Error('No AI provider available');
+
+      // Primary: Try Groq first
+      try {
+        const provider = getProvider('groq');
+        if (provider.isAvailable()) {
+          const response = await provider.generateText(prompt);
+          if (response) {
+            const parsed = JSON.parse(response);
+            return parsed.questions || [];
+          }
         }
-        
-        const response = await fallbackProvider.generateText(prompt);
-        if (!response) {
-          throw new Error('No response from AI');
-        }
-        
-        const parsed = JSON.parse(response);
-        return parsed.questions || [];
+      } catch (groqError) {
+        console.warn('Groq provider failed, attempting fallback...', groqError);
       }
 
-      const response = await provider.generateText(prompt);
+      // Fallback: Explicitly try OpenAI if Groq failed
+      console.warn('Attempting fallback to OpenAI...');
+      const fallbackProvider = getProvider('openai');
 
+      if (!fallbackProvider.isAvailable()) {
+        console.error('OpenAI fallback not available');
+        throw new Error('No AI provider available (Groq failed, OpenAI not configured)');
+      }
+
+      const response = await fallbackProvider.generateText(prompt);
       if (!response) {
         throw new Error('No response from AI');
       }
 
-      // Parse JSON response
       const parsed = JSON.parse(response);
       return parsed.questions || [];
     } catch (error) {
@@ -118,6 +119,7 @@ export class PracticeService {
       throw new Error('Failed to generate questions');
     }
   }
+
 
   /**
    * Build prompt for AI question generation
@@ -432,7 +434,7 @@ Be encouraging but honest. Focus on actionable advice.`;
 
     try {
       const provider = getProvider(getDefaultProvider());
-      
+
       if (!provider.isAvailable()) {
         return null;
       }
@@ -470,15 +472,24 @@ Provide a brief, strategic hint (2-3 sentences) that guides their thinking WITHO
 Hint:`;
 
     try {
-      const provider = getProvider(getDefaultProvider());
-      
-      if (!provider.isAvailable()) {
-        throw new Error('No AI provider available');
+      // Use default provide which handles selection, but wrap in try catch to be safe
+      try {
+        const provider = getProvider(getDefaultProvider());
+        if (!provider.isAvailable()) {
+          throw new Error('No AI provider available');
+        }
+        const response = await provider.generateText(prompt);
+        return response || 'Unable to generate hint';
+      } catch (err) {
+        console.error('Error using default provider for hint, attempting forced fallback to OpenAI if not already used', err);
+        // Last resort fallback
+        const openai = getProvider('openai');
+        if (openai.isAvailable()) {
+          const response = await openai.generateText(prompt);
+          return response || 'Unable to generate hint';
+        }
+        throw err;
       }
-
-      const response = await provider.generateText(prompt);
-
-      return response || 'Unable to generate hint';
     } catch (error) {
       console.error('Error generating hint:', error);
       throw new Error('Failed to generate hint');
@@ -518,7 +529,7 @@ Explanation:`;
 
     try {
       const provider = getProvider(getDefaultProvider());
-      
+
       if (!provider.isAvailable()) {
         throw new Error('No AI provider available');
       }
@@ -637,60 +648,56 @@ CRITICAL RULES:
 - Tailor questions to the specific job requirements mentioned`;
 
     try {
-      // Force use of Groq provider as originally requested
-      const provider = getProvider('groq');
-      
-      if (!provider.isAvailable()) {
-        // Fallback to default provider if Groq not available (local development)
-        console.log('Groq not available, falling back to default provider');
-        const fallbackProvider = getProvider(getDefaultProvider());
-        
-        if (!fallbackProvider.isAvailable()) {
-          throw new Error('No AI provider available');
+
+      // Primary: Try Groq first
+      try {
+        const provider = getProvider('groq');
+        if (provider.isAvailable()) {
+          const response = await provider.generateText(prompt);
+          if (response) {
+            return this.parseJobPrepResponse(response);
+          }
         }
-        
-        const response = await fallbackProvider.generateText(prompt);
-        if (!response) {
-          throw new Error('No response from AI');
-        }
-        
-        // Parse JSON response  
-        let jsonText = response;
-        
-        // Strip markdown code blocks if present (OpenAI sometimes wraps JSON in ```json blocks)
-        if (jsonText.includes('```json')) {
-          jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-        } else if (jsonText.includes('```')) {
-          jsonText = jsonText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
-        }
-        
-        const parsed = JSON.parse(jsonText);
-        return parsed;
+      } catch (groqError) {
+        console.warn('Groq provider failed for job prep, attempting fallback...', groqError);
       }
 
-      const response = await provider.generateText(prompt);
+      // Fallback: Explicitly try OpenAI if Groq failed
+      console.warn('Attempting fallback to OpenAI...');
+      const fallbackProvider = getProvider('openai');
 
+      if (!fallbackProvider.isAvailable()) {
+        console.error('OpenAI fallback not available');
+        throw new Error('No AI provider available (Groq failed, OpenAI not configured)');
+      }
+
+      const response = await fallbackProvider.generateText(prompt);
       if (!response) {
         throw new Error('No response from AI');
       }
 
-      // Parse JSON response
-      let jsonText = response;
-      
-      // Strip markdown code blocks if present (OpenAI sometimes wraps JSON in ```json blocks)
-      if (jsonText.includes('```json')) {
-        jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-      } else if (jsonText.includes('```')) {
-        jsonText = jsonText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
-      }
-      
-      const parsed = JSON.parse(jsonText);
-      return parsed;
+      return this.parseJobPrepResponse(response);
+
     } catch (error) {
       console.error('Error generating job-based interview prep:', error);
       throw new Error('Failed to generate interview preparation');
     }
   }
+
+
+  /**
+   * Helper to parse job prep response
+   */
+  private parseJobPrepResponse(jsonText: string): any {
+    // Strip markdown code blocks if present (OpenAI sometimes wraps JSON in ```json blocks)
+    if (jsonText.includes('```json')) {
+      jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+    } else if (jsonText.includes('```')) {
+      jsonText = jsonText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
+    }
+    return JSON.parse(jsonText);
+  }
+
 
   /**
    * Extract company name from job description
